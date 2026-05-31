@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carl Tampus — Portfolio</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <header class="nav-wrapper">
+    <nav class="nav container">
+      <span class="nav-logo">carl.dev</span>
+      <div class="nav-links">
+        <a href="#about">about</a>
+        <a href="#projects">projects</a>
+        <a href="#contact">contact</a>
+      </div>
+      <button class="nav-menu-btn" aria-label="Toggle menu" id="menuBtn">
+        <span></span><span></span><span></span>
+      </button>
+    </nav>
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="#about">about</a>
+      <a href="#projects">projects</a>
+      <a href="#contact">contact</a>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- HERO -->
+    <section class="hero container" id="about">
+      <div class="hero-content">
+        <div class="hero-tag">
+          <span class="dot"></span>
+          available for internships &amp; freelance
+        </div>
+        <h1 class="hero-title">
+          Carl Tampus<br>
+          <em>CS Student &amp; Developer</em>
+        </h1>
+        <p class="hero-desc">
+          I build desktop software and tools that solve real problems —
+          from health monitoring systems to data-driven academic tools.
+          Based in Iloilo, Philippines.
+        </p>
+        <div class="hero-cta">
+          <a href="#projects" class="btn-primary">view projects</a>
+          <a href="resume.pdf" class="btn-ghost" target="_blank">download CV</a>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="profile-img-placeholder">CT</div>
+        <div class="hero-stats">
+          <div class="stat">
+            <span class="stat-num" data-target="3">0</span>
+            <span class="stat-label">projects</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num" data-target="2">0</span>
+            <span class="stat-label">years coding</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num" data-target="8">0</span>
+            <span class="stat-label">technologies</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section class="skills-section container">
+      <div class="section-label">skills &amp; technologies</div>
+      <div class="skills-grid">
+        <div class="skill-group">
+          <span class="skill-group-title">Languages</span>
+          <div class="skill-pills">
+            <span class="pill">C#</span>
+            <span class="pill">C</span>
+            <span class="pill">HTML / CSS</span>
+            <span class="pill">JavaScript</span>
+          </div>
+        </div>
+        <div class="skill-group">
+          <span class="skill-group-title">Frameworks &amp; UI</span>
+          <div class="skill-pills">
+            <span class="pill">WinUI 3</span>
+            <span class="pill">WinForms</span>
+            <span class="pill">.NET</span>
+          </div>
+        </div>
+        <div class="skill-group">
+          <span class="skill-group-title">Databases</span>
+          <div class="skill-pills">
+            <span class="pill">SQLite</span>
+            <span class="pill">MySQL</span>
+            <span class="pill">MS Access</span>
+          </div>
+        </div>
+        <div class="skill-group">
+          <span class="skill-group-title">CS Concepts</span>
+          <div class="skill-pills">
+            <span class="pill">Data Structures</span>
+            <span class="pill">Algorithms</span>
+            <span class="pill">Numerical Methods</span>
+            <span class="pill">Linear Algebra</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section class="projects-section container" id="projects">
+      <div class="section-label">selected projects</div>
+      <div class="projects-grid" id="projectsGrid">
+
+        <article class="project-card">
+          <div class="project-header">
+            <div class="project-icon">🏥</div>
+            <a href="#" class="project-link-btn" target="_blank" title="View project">↗</a>
+          </div>
+          <h3 class="project-title">HealthNest</h3>
+          <p class="project-desc">
+            Maternal &amp; child health monitoring desktop app with patient
+            case management, scheduling, case status tracking, and
+            appointment calendar.
+          </p>
+          <div class="project-tags">
+            <span class="tag">WinUI 3</span>
+            <span class="tag">C#</span>
+            <span class="tag">SQLite</span>
+            <span class="tag">.NET</span>
+          </div>
+          <div class="project-footer">
+            <a href="#" class="project-cta">view project →</a>
+          </div>
+        </article>
+
+        <article class="project-card">
+          <div class="project-header">
+            <div class="project-icon">🏛️</div>
+            <a href="#" class="project-link-btn" target="_blank" title="View project">↗</a>
+          </div>
+          <h3 class="project-title">Barangay Case Management</h3>
+          <p class="project-desc">
+            Social services case management system for local government with
+            resident records, case tracking, and SMS notifications via
+            the PhilSMS API.
+          </p>
+          <div class="project-tags">
+            <span class="tag">WinForms</span>
+            <span class="tag">C#</span>
+            <span class="tag">SQLite</span>
+            <span class="tag">PhilSMS</span>
+          </div>
+          <div class="project-footer">
+            <a href="#" class="project-cta">view project →</a>
+          </div>
+        </article>
+
+        <article class="project-card">
+          <div class="project-header">
+            <div class="project-icon">🩺</div>
+            <a href="#" class="project-link-btn" target="_blank" title="View project">↗</a>
+          </div>
+          <h3 class="project-title">NurseDesk</h3>
+          <p class="project-desc">
+            School clinic management system for student health records,
+            medicine inventory, and health log tracking for school
+            nurses.
+          </p>
+          <div class="project-tags">
+            <span class="tag">WinForms</span>
+            <span class="tag">C#</span>
+            <span class="tag">SQLite</span>
+          </div>
+          <div class="project-footer">
+            <a href="#" class="project-cta">view project →</a>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="contact-section container" id="contact">
+      <div class="section-label">get in touch</div>
+      <div class="contact-wrapper">
+        <div class="contact-info">
+          <h2 class="contact-heading">Let's work together.</h2>
+          <p class="contact-sub">
+            Open to internships, freelance projects, and collaborations.
+            I reply within 24 hours.
+          </p>
+          <div class="contact-links">
+            <a href="mailto:your@email.com" class="contact-item">
+              <span class="contact-icon">✉</span>
+              your@email.com
+            </a>
+            <a href="https://github.com/yourusername" target="_blank" class="contact-item">
+              <span class="contact-icon">⌥</span>
+              github.com/yourusername
+            </a>
+            <a href="https://linkedin.com/in/yourusername" target="_blank" class="contact-item">
+              <span class="contact-icon">in</span>
+              linkedin.com/in/yourusername
+            </a>
+          </div>
+        </div>
+        <form class="contact-form" id="contactForm" onsubmit="handleSubmit(event)">
+          <div class="form-group">
+            <label for="name">name</label>
+            <input type="text" id="name" name="name" placeholder="Your name" required />
+          </div>
+          <div class="form-group">
+            <label for="email">email</label>
+            <input type="email" id="email" name="email" placeholder="your@email.com" required />
+          </div>
+          <div class="form-group">
+            <label for="message">message</label>
+            <textarea id="message" name="message" rows="4" placeholder="What's on your mind?" required></textarea>
+          </div>
+          <button type="submit" class="btn-primary full-width">send message</button>
+          <p class="form-note" id="formNote"></p>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer container">
+    <span>built with HTML, CSS &amp; JS</span>
+    <span>© 2026 Carl Tampus</span>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
