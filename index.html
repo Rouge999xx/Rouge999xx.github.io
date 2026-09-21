@@ -1,242 +1,415 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Carl Tampus — Portfolio</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="description" content="Portfolio of Carl Marvic Tampus — computer engineering student and developer building practical desktop software and digital tools." />
+  <meta name="theme-color" content="#08090c" />
+  <title>Carl Tampus — Developer Portfolio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="preloader" id="preloader" aria-hidden="true">
+    <div class="preloader-mark">CT<span>/</span></div>
+    <div class="preloader-line"><i></i></div>
+  </div>
 
-  <!-- NAV -->
-  <header class="nav-wrapper">
-    <nav class="nav container">
-      <span class="nav-logo">Carl Marvic Tampus</span>
-      <div class="nav-links">
-        <a href="#about">about</a>
-        <a href="#projects">projects</a>
-        <a href="#contact">contact</a>
+  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+  <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+  <div class="grid-overlay" aria-hidden="true"></div>
+
+  <header class="site-header" id="siteHeader">
+    <nav class="nav-shell">
+      <a class="brand" href="#home" aria-label="Carl Tampus home">
+        <span class="brand-bracket">[</span>CT<span class="brand-bracket">]</span>
+        <span class="brand-status" aria-hidden="true"></span>
+      </a>
+
+      <div class="nav-links" id="navLinks">
+        <a href="#projects" data-nav="projects">Projects</a>
+        <a href="#stack" data-nav="stack">Stack</a>
+        <a href="#about" data-nav="about">About</a>
+        <a href="#contact" data-nav="contact">Contact</a>
       </div>
-      <button class="nav-menu-btn" aria-label="Toggle menu" id="menuBtn">
-        <span></span><span></span><span></span>
-      </button>
+
+      <div class="nav-actions">
+        <button class="icon-button command-trigger" id="commandTrigger" type="button" aria-label="Open command palette">
+          <span>⌘</span><kbd>K</kbd>
+        </button>
+        <button class="icon-button theme-toggle" id="themeToggle" type="button" aria-label="Switch color theme">
+          <svg class="sun-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+        </button>
+        <button class="menu-toggle" id="menuToggle" type="button" aria-label="Toggle navigation" aria-expanded="false">
+          <span></span><span></span>
+        </button>
+      </div>
     </nav>
-    <div class="mobile-menu" id="mobileMenu">
-      <a href="#about">about</a>
-      <a href="#projects">projects</a>
-      <a href="#contact">contact</a>
-    </div>
   </header>
 
   <main>
-
-    <!-- HERO -->
-    <section class="hero container" id="about">
-      <div class="hero-content">
-        <div class="hero-tag">
-          <span class="dot"></span>
-          available for internships &amp; freelance
+    <section class="hero section-shell" id="home">
+      <div class="hero-copy">
+        <div class="eyebrow reveal">
+          <span class="status-dot"></span>
+          <span>Available for internships & freelance</span>
         </div>
-        <h1 class="hero-title">
-          Carl Tampus<br>
-          <em>BSCpE Student &amp; Developer</em>
+
+        <h1 class="hero-title reveal">
+          <span class="hero-line">I build software</span>
+          <span class="hero-line hero-line-accent">that feels <em>alive.</em></span>
         </h1>
-        <p class="hero-desc">
-          I build desktop software and tools that solve real problems —
-          from health monitoring systems to data-driven academic tools.
-          Based in Iloilo, Philippines.
+
+        <p class="hero-intro reveal">
+          I'm <strong>Carl Tampus</strong>, a Computer Engineering student creating
+          useful desktop systems, automation tools, and polished digital experiences.
         </p>
-        <div class="hero-cta">
-          <a href="#projects" class="btn-primary">view projects</a>
-          <a href="resume.pdf" class="btn-ghost" target="_blank">download CV</a>
+
+        <div class="role-row reveal" aria-live="polite">
+          <span class="role-label">currently exploring</span>
+          <span class="role-value" id="roleRotator">software engineering</span>
+          <span class="typing-caret" aria-hidden="true"></span>
+        </div>
+
+        <div class="hero-actions reveal">
+          <a class="primary-button magnetic" href="#projects">
+            <span>Explore my work</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <button class="text-button magnetic" id="copyEmailHero" type="button">
+            <span>Copy email</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+
+        <div class="hero-meta reveal">
+          <div><span>01</span><p>Philippines<br><strong>GMT +8</strong></p></div>
+          <div><span>02</span><p>Focus<br><strong>Desktop + Web</strong></p></div>
+          <div><span>03</span><p>Status<br><strong>Open to work</strong></p></div>
         </div>
       </div>
-      <div class="hero-card">
-        <img src="2x2_CarlMarvicTampus.png" alt="Carl Tampus" class="profile-img-placeholder" />
-        <div class="hero-stats">
-          <div class="stat">
-            <span class="stat-num" data-target="3">0</span>
-            <span class="stat-label">projects</span>
+
+      <div class="hero-visual reveal" id="heroVisual">
+        <div class="orbit orbit-one" aria-hidden="true"></div>
+        <div class="orbit orbit-two" aria-hidden="true"></div>
+        <div class="profile-frame tilt-card" data-tilt-strength="5">
+          <div class="profile-topbar">
+            <span class="window-dots"><i></i><i></i><i></i></span>
+            <span>profile.exe</span>
+            <span>● live</span>
           </div>
-          <div class="stat">
-            <span class="stat-num" data-target="2">0</span>
-            <span class="stat-label">years coding</span>
+          <div class="profile-image-wrap">
+            <img src="2x2_CarlMarvicTampus.png" alt="Portrait of Carl Tampus" />
+            <div class="scan-line" aria-hidden="true"></div>
+            <span class="image-tag tag-top">BSCpE</span>
+            <span class="image-tag tag-bottom">DEV / 2026</span>
           </div>
-          <div class="stat">
-            <span class="stat-num" data-target="8">0</span>
-            <span class="stat-label">technologies</span>
+          <div class="profile-terminal" aria-hidden="true">
+            <span><b>carl@portfolio</b>:~$ whoami</span>
+            <strong>builder · problem solver · student</strong>
+          </div>
+        </div>
+        <div class="floating-card floating-card-a" aria-hidden="true">
+          <span class="mini-label">projects</span>
+          <strong>03</strong>
+          <i>featured builds</i>
+        </div>
+        <div class="floating-card floating-card-b" aria-hidden="true">
+          <span class="pulse-ring"></span>
+          <p>systems<br><strong>online</strong></p>
+        </div>
+      </div>
+
+      <a class="scroll-cue" href="#projects" aria-label="Scroll to projects">
+        <span>scroll</span>
+        <i></i>
+      </a>
+    </section>
+
+    <section class="ticker" aria-label="Technologies">
+      <div class="ticker-track">
+        <span>C#</span><i>✦</i><span>WINUI 3</span><i>✦</i><span>JAVASCRIPT</span><i>✦</i><span>SQLITE</span><i>✦</i><span>.NET</span><i>✦</i><span>C</span><i>✦</i><span>HTML / CSS</span><i>✦</i><span>WINFORMS</span><i>✦</i>
+        <span>C#</span><i>✦</i><span>WINUI 3</span><i>✦</i><span>JAVASCRIPT</span><i>✦</i><span>SQLITE</span><i>✦</i><span>.NET</span><i>✦</i><span>C</span><i>✦</i><span>HTML / CSS</span><i>✦</i><span>WINFORMS</span><i>✦</i>
+      </div>
+    </section>
+
+    <section class="projects section-shell" id="projects">
+      <div class="section-heading reveal">
+        <div>
+          <span class="section-index">01 / SELECTED WORK</span>
+          <h2>Projects built around<br><em>real problems.</em></h2>
+        </div>
+        <p>Interactive case previews. Filter by focus, then open a project to see the thinking behind it.</p>
+      </div>
+
+      <div class="project-toolbar reveal">
+        <div class="filter-group" role="group" aria-label="Filter projects">
+          <button class="filter-button is-active" type="button" data-filter="all">All <span>03</span></button>
+          <button class="filter-button" type="button" data-filter="desktop">Desktop <span>03</span></button>
+          <button class="filter-button" type="button" data-filter="health">Health <span>02</span></button>
+          <button class="filter-button" type="button" data-filter="civic">Civic <span>01</span></button>
+        </div>
+        <span class="toolbar-hint">Hover to interact · click to inspect</span>
+      </div>
+
+      <div class="project-list">
+        <article class="project-card tilt-card reveal" data-category="desktop health" data-project="healthnest" tabindex="0">
+          <div class="project-number">01</div>
+          <div class="project-visual visual-healthnest" aria-hidden="true">
+            <div class="mock-window">
+              <div class="mock-sidebar">
+                <span class="mock-logo"></span><i></i><i></i><i></i><i></i>
+              </div>
+              <div class="mock-content">
+                <div class="mock-head"><strong>HealthNest</strong><span>● Active</span></div>
+                <div class="mock-stats"><i></i><i></i><i></i></div>
+                <div class="mock-chart"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+                <div class="mock-row"><i></i><i></i><i></i></div>
+              </div>
+            </div>
+            <span class="visual-caption">PATIENT DASHBOARD / WINUI</span>
+          </div>
+          <div class="project-copy">
+            <div class="project-topline">
+              <span>Healthcare · Desktop</span>
+              <button class="round-arrow" type="button" aria-label="Open HealthNest project details">
+                <svg viewBox="0 0 24 24"><path d="M5 19 19 5M9 5h10v10"/></svg>
+              </button>
+            </div>
+            <h3>HealthNest</h3>
+            <p>Maternal and child health monitoring with patient case management, appointment scheduling, and longitudinal status tracking.</p>
+            <div class="project-tags"><span>WinUI 3</span><span>C#</span><span>SQLite</span><span>.NET</span></div>
+          </div>
+        </article>
+
+        <article class="project-card tilt-card reveal" data-category="desktop civic" data-project="barangay" tabindex="0">
+          <div class="project-number">02</div>
+          <div class="project-visual visual-barangay" aria-hidden="true">
+            <div class="civic-ui">
+              <div class="civic-nav"><b>BCMS</b><i></i><i></i><i></i></div>
+              <div class="civic-main">
+                <div class="civic-title"><span></span><i></i></div>
+                <div class="civic-table">
+                  <span></span><span></span><span></span><span></span>
+                </div>
+                <div class="sms-toast"><i></i><div><b>SMS sent</b><small>Resident notified</small></div></div>
+              </div>
+            </div>
+            <span class="visual-caption">CASE TRACKING / SMS WORKFLOW</span>
+          </div>
+          <div class="project-copy">
+            <div class="project-topline">
+              <span>Civic Tech · Desktop</span>
+              <button class="round-arrow" type="button" aria-label="Open Barangay Case Management project details">
+                <svg viewBox="0 0 24 24"><path d="M5 19 19 5M9 5h10v10"/></svg>
+              </button>
+            </div>
+            <h3>Barangay Case Management</h3>
+            <p>A local government social-services workflow for resident records, case tracking, and SMS notifications through the PhilSMS API.</p>
+            <div class="project-tags"><span>WinForms</span><span>C#</span><span>SQLite</span><span>PhilSMS</span></div>
+          </div>
+        </article>
+
+        <article class="project-card tilt-card reveal" data-category="desktop health" data-project="nursedesk" tabindex="0">
+          <div class="project-number">03</div>
+          <div class="project-visual visual-nursedesk" aria-hidden="true">
+            <div class="nurse-ui">
+              <div class="nurse-header"><span>+</span><b>NurseDesk</b><i></i></div>
+              <div class="nurse-grid">
+                <div class="nurse-panel"><small>STUDENTS</small><strong>1,248</strong><span></span></div>
+                <div class="nurse-panel"><small>MEDICINE</small><strong>86%</strong><span></span></div>
+                <div class="nurse-log"><i></i><i></i><i></i><i></i></div>
+              </div>
+            </div>
+            <span class="visual-caption">CLINIC RECORDS / INVENTORY</span>
+          </div>
+          <div class="project-copy">
+            <div class="project-topline">
+              <span>Health Tech · Desktop</span>
+              <button class="round-arrow" type="button" aria-label="Open NurseDesk project details">
+                <svg viewBox="0 0 24 24"><path d="M5 19 19 5M9 5h10v10"/></svg>
+              </button>
+            </div>
+            <h3>NurseDesk</h3>
+            <p>A school clinic management system for student health records, medicine inventory, and day-to-day health log tracking.</p>
+            <div class="project-tags"><span>WinForms</span><span>C#</span><span>SQLite</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="stack section-shell" id="stack">
+      <div class="section-heading reveal">
+        <div>
+          <span class="section-index">02 / TOOLBOX</span>
+          <h2>Tools I use to turn<br><em>ideas into systems.</em></h2>
+        </div>
+        <p>Move across the stack to see how each layer fits into the way I build.</p>
+      </div>
+
+      <div class="stack-layout">
+        <div class="stack-console reveal">
+          <div class="console-bar">
+            <span><i></i><i></i><i></i></span>
+            <b>~/carl/skills</b>
+            <small>interactive</small>
+          </div>
+          <div class="console-body">
+            <p><span class="prompt">→</span> select a layer</p>
+            <div class="stack-selector" id="stackSelector">
+              <button class="stack-button is-active" data-stack="languages" type="button"><span>01</span>Languages</button>
+              <button class="stack-button" data-stack="desktop" type="button"><span>02</span>Desktop & UI</button>
+              <button class="stack-button" data-stack="data" type="button"><span>03</span>Data</button>
+              <button class="stack-button" data-stack="concepts" type="button"><span>04</span>Foundations</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack-display tilt-card reveal" id="stackDisplay">
+          <div class="stack-display-head">
+            <span id="stackIndex">01</span>
+            <p id="stackKicker">Core languages</p>
+          </div>
+          <h3 id="stackTitle">Languages</h3>
+          <p id="stackDescription">The languages I reach for when building application logic, systems exercises, and interactive interfaces.</p>
+          <div class="skill-cloud" id="skillCloud">
+            <span>C#</span><span>C</span><span>JavaScript</span><span>HTML</span><span>CSS</span>
+          </div>
+          <div class="stack-meter">
+            <span>build mode</span>
+            <div><i id="stackMeter"></i></div>
+            <b id="stackMeterLabel">ACTIVE</b>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- SKILLS -->
-    <section class="skills-section container">
-      <div class="section-label">skills &amp; technologies</div>
-      <div class="skills-grid">
-        <div class="skill-group">
-          <span class="skill-group-title">Languages</span>
-          <div class="skill-pills">
-            <span class="pill">C#</span>
-            <span class="pill">C</span>
-            <span class="pill">HTML / CSS</span>
-            <span class="pill">JavaScript</span>
-          </div>
+    <section class="about section-shell" id="about">
+      <div class="about-grid">
+        <div class="about-sticky reveal">
+          <span class="section-index">03 / ABOUT</span>
+          <h2>Engineering mindset.<br><em>Human-centered output.</em></h2>
         </div>
-        <div class="skill-group">
-          <span class="skill-group-title">Frameworks &amp; UI</span>
-          <div class="skill-pills">
-            <span class="pill">WinUI 3</span>
-            <span class="pill">WinForms</span>
-            <span class="pill">.NET</span>
+
+        <div class="about-content">
+          <p class="about-lead reveal">
+            I like projects where software has a clear job: organize messy information,
+            reduce repetitive work, and make a process easier for the person using it.
+          </p>
+
+          <div class="principle-list">
+            <article class="principle reveal">
+              <span>01</span>
+              <div><h3>Build for the workflow</h3><p>I start with what the user actually needs to accomplish, then shape the interface around that sequence.</p></div>
+            </article>
+            <article class="principle reveal">
+              <span>02</span>
+              <div><h3>Make complexity legible</h3><p>Good software can be technically deep without feeling complicated. Structure, hierarchy, and feedback matter.</p></div>
+            </article>
+            <article class="principle reveal">
+              <span>03</span>
+              <div><h3>Iterate in public</h3><p>I learn by building, testing, breaking, and refining—turning classroom concepts into working systems.</p></div>
+            </article>
           </div>
-        </div>
-        <div class="skill-group">
-          <span class="skill-group-title">Databases</span>
-          <div class="skill-pills">
-            <span class="pill">SQLite</span>
-            <span class="pill">MySQL</span>
-            <span class="pill">MS Access</span>
-          </div>
-        </div>
-        <div class="skill-group">
-          <span class="skill-group-title">CS Concepts</span>
-          <div class="skill-pills">
-            <span class="pill">Data Structures</span>
-            <span class="pill">Algorithms</span>
-            <span class="pill">Numerical Methods</span>
-            <span class="pill">Linear Algebra</span>
+
+          <div class="about-facts reveal">
+            <div><span>Degree</span><strong>B.S. Computer Engineering</strong></div>
+            <div><span>Current lane</span><strong>Desktop apps & automation</strong></div>
+            <div><span>Based in</span><strong>Iloilo, Philippines</strong></div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- PROJECTS -->
-    <section class="projects-section container" id="projects">
-      <div class="section-label">selected projects</div>
-      <div class="projects-grid" id="projectsGrid">
-
-        <article class="project-card">
-          <div class="project-header">
-            <div class="project-icon">🏥</div>
-            <a href="#" class="project-link-btn" target="_blank" title="View project">↗</a>
-          </div>
-          <h3 class="project-title">HealthNest</h3>
-          <p class="project-desc">
-            Maternal &amp; child health monitoring desktop app with patient
-            case management, scheduling, case status tracking, and
-            appointment calendar.
-          </p>
-          <div class="project-tags">
-            <span class="tag">WinUI 3</span>
-            <span class="tag">C#</span>
-            <span class="tag">SQLite</span>
-            <span class="tag">.NET</span>
-          </div>
-          <div class="project-footer">
-            <a href="#" class="project-cta">view project →</a>
-          </div>
-        </article>
-
-        <article class="project-card">
-          <div class="project-header">
-            <div class="project-icon">🏛️</div>
-            <a href="#" class="project-link-btn" target="_blank" title="View project">↗</a>
-          </div>
-          <h3 class="project-title">Barangay Case Management</h3>
-          <p class="project-desc">
-            Social services case management system for local government with
-            resident records, case tracking, and SMS notifications via
-            the PhilSMS API.
-          </p>
-          <div class="project-tags">
-            <span class="tag">WinForms</span>
-            <span class="tag">C#</span>
-            <span class="tag">SQLite</span>
-            <span class="tag">PhilSMS</span>
-          </div>
-          <div class="project-footer">
-            <a href="#" class="project-cta">view project →</a>
-          </div>
-        </article>
-
-        <article class="project-card">
-          <div class="project-header">
-            <div class="project-icon">🩺</div>
-            <a href="#" class="project-link-btn" target="_blank" title="View project">↗</a>
-          </div>
-          <h3 class="project-title">NurseDesk</h3>
-          <p class="project-desc">
-            School clinic management system for student health records,
-            medicine inventory, and health log tracking for school
-            nurses.
-          </p>
-          <div class="project-tags">
-            <span class="tag">WinForms</span>
-            <span class="tag">C#</span>
-            <span class="tag">SQLite</span>
-          </div>
-          <div class="project-footer">
-            <a href="#" class="project-cta">view project →</a>
-          </div>
-        </article>
-
-      </div>
-    </section>
-
-    <!-- CONTACT -->
-    <section class="contact-section container" id="contact">
-      <div class="section-label">get in touch</div>
-      <div class="contact-wrapper">
-        <div class="contact-info">
-          <h2 class="contact-heading">Let's work together.</h2>
-          <p class="contact-sub">
-            Open to internships, freelance projects, and collaborations.
-            I reply within 24 hours.
-          </p>
-          <div class="contact-links">
-            <a href="mailto:carltampus5@gmail.com" class="contact-item">
-              <span class="contact-icon">✉</span>
-              carltampus5@gmail.com
+    <section class="contact section-shell" id="contact">
+      <div class="contact-card reveal">
+        <div class="contact-noise" aria-hidden="true"></div>
+        <div class="contact-copy">
+          <span class="section-index">04 / CONTACT</span>
+          <h2>Have something<br>worth <em>building?</em></h2>
+          <p>I'm open to internships, freelance work, and interesting collaborations.</p>
+          <div class="contact-actions">
+            <a class="primary-button light magnetic" href="mailto:carltampus5@gmail.com">
+              <span>Start a conversation</span>
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </a>
-            <a href="https://github.com/Rouge999xx" target="_blank" class="contact-item">
-              <span class="contact-icon">⌥</span>
-              github.com/Rouge999xx
-            </a>
-            <a href="https://linkedin.com/in/carl-marvic-tampus-478a932b8" target="_blank" class="contact-item">
-              <span class="contact-icon">in</span>
-              linkedin.com/in/carl-marvic-tampus-478a932b8
-            </a>
+            <button class="copy-address" id="copyEmailContact" type="button">carltampus5@gmail.com <span>copy</span></button>
           </div>
         </div>
-        <form class="contact-form" id="contactForm" onsubmit="handleSubmit(event)">
-          <div class="form-group">
-            <label for="name">name</label>
-            <input type="text" id="name" name="name" placeholder="Your name" required />
-          </div>
-          <div class="form-group">
-            <label for="email">email</label>
-            <input type="email" id="email" name="email" placeholder="your@email.com" required />
-          </div>
-          <div class="form-group">
-            <label for="message">message</label>
-            <textarea id="message" name="message" rows="4" placeholder="What's on your mind?" required></textarea>
-          </div>
-          <button type="submit" class="btn-primary full-width">send message</button>
-          <p class="form-note" id="formNote"></p>
+
+        <form class="contact-form" id="contactForm">
+          <label>
+            <span>Your name</span>
+            <input type="text" name="name" placeholder="Jane Doe" required />
+          </label>
+          <label>
+            <span>Email address</span>
+            <input type="email" name="email" placeholder="jane@example.com" required />
+          </label>
+          <label>
+            <span>Tell me about the project</span>
+            <textarea name="message" rows="5" placeholder="A quick overview..." required></textarea>
+          </label>
+          <button class="form-submit" type="submit"><span>Send message</span><i>↗</i></button>
+          <p class="form-status" id="formStatus" aria-live="polite"></p>
         </form>
       </div>
     </section>
-
   </main>
 
-  <footer class="footer container">
-    <span>built with HTML, CSS &amp; JS</span>
-    <span>© 2026 Carl Tampus</span>
+  <footer class="footer section-shell">
+    <div class="footer-brand">
+      <span>CT/</span>
+      <p>Designed & built by Carl Tampus<br><small>HTML · CSS · JavaScript</small></p>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/Rouge999xx" target="_blank" rel="noreferrer">GitHub ↗</a>
+      <a href="https://linkedin.com/in/carl-marvic-tampus-478a932b8" target="_blank" rel="noreferrer">LinkedIn ↗</a>
+      <a href="mailto:carltampus5@gmail.com">Email ↗</a>
+    </div>
+    <div class="footer-end"><span>© <b id="year"></b></span><a href="#home">Back to top ↑</a></div>
   </footer>
+
+  <div class="modal-backdrop" id="projectModal" aria-hidden="true">
+    <div class="project-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="modal-close" id="modalClose" type="button" aria-label="Close project details">×</button>
+      <div class="modal-index" id="modalIndex">01</div>
+      <span class="modal-kicker" id="modalKicker">Healthcare · Desktop</span>
+      <h2 id="modalTitle">HealthNest</h2>
+      <p class="modal-summary" id="modalSummary"></p>
+      <div class="modal-details">
+        <div><span>Problem</span><p id="modalProblem"></p></div>
+        <div><span>Approach</span><p id="modalApproach"></p></div>
+      </div>
+      <div class="modal-tags" id="modalTags"></div>
+      <p class="modal-note">Project preview · repository links can be added when you want to publish the source.</p>
+    </div>
+  </div>
+
+  <div class="command-backdrop" id="commandPalette" aria-hidden="true">
+    <div class="command-panel" role="dialog" aria-modal="true" aria-label="Command palette">
+      <div class="command-search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="commandInput" type="text" placeholder="Type a command or search..." autocomplete="off" />
+        <kbd>ESC</kbd>
+      </div>
+      <div class="command-list" id="commandList">
+        <button data-action="projects" type="button"><span><i>↳</i> Go to projects</span><kbd>P</kbd></button>
+        <button data-action="stack" type="button"><span><i>⌘</i> View tech stack</span><kbd>S</kbd></button>
+        <button data-action="about" type="button"><span><i>◎</i> Read about me</span><kbd>A</kbd></button>
+        <button data-action="contact" type="button"><span><i>✉</i> Contact me</span><kbd>C</kbd></button>
+        <button data-action="copy" type="button"><span><i>⎘</i> Copy email address</span><kbd>E</kbd></button>
+        <button data-action="theme" type="button"><span><i>◐</i> Toggle theme</span><kbd>T</kbd></button>
+        <a href="https://github.com/Rouge999xx" target="_blank" rel="noreferrer"><span><i>↗</i> Open GitHub</span><kbd>G</kbd></a>
+      </div>
+      <div class="command-footer"><span>↑↓ navigate</span><span>↵ select</span><span>esc close</span></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><p>Email copied to clipboard</p></div>
 
   <script src="main.js"></script>
 </body>
