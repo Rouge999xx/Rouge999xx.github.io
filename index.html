@@ -8,7 +8,7 @@
   <title>Carl Tampus — Developer Portfolio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -20,15 +20,25 @@
   <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
   <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
   <div class="grid-overlay" aria-hidden="true"></div>
+  <canvas class="particle-field" id="particleField" aria-hidden="true"></canvas>
 
   <header class="site-header" id="siteHeader">
     <nav class="nav-shell">
       <a class="brand" href="#home" aria-label="Carl Tampus home">
-        <span class="brand-bracket">[</span>CT<span class="brand-bracket">]</span>
-        <span class="brand-status" aria-hidden="true"></span>
+        <span class="brand-mark" aria-hidden="true">
+          <span class="brand-c">C</span>
+          <span class="brand-t">T</span>
+          <i class="brand-slash"></i>
+        </span>
+        <span class="brand-wordmark">
+          <strong>CARL TAMPUS</strong>
+          <small>SOFTWARE + SYSTEMS</small>
+        </span>
       </a>
 
       <div class="nav-links" id="navLinks">
+        <span class="nav-hover-pill" id="navHoverPill" aria-hidden="true"></span>
+        <a href="#lab3d" data-nav="lab3d">3D Lab</a>
         <a href="#projects" data-nav="projects">Projects</a>
         <a href="#stack" data-nav="stack">Stack</a>
         <a href="#about" data-nav="about">About</a>
@@ -75,11 +85,11 @@
         </div>
 
         <div class="hero-actions reveal">
-          <a class="primary-button magnetic" href="#projects">
+          <a class="primary-button hero-cta" href="#projects">
             <span>Explore my work</span>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </a>
-          <button class="text-button magnetic" id="copyEmailHero" type="button">
+          <button class="text-button hero-cta" id="copyEmailHero" type="button">
             <span>Copy email</span>
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           </button>
@@ -136,6 +146,105 @@
       </div>
     </section>
 
+    <section class="lab3d section-shell" id="lab3d">
+      <div class="section-heading reveal">
+        <div>
+          <span class="section-index">00 / 3D LAB</span>
+          <h2>Grab the interface.<br><em>Explore the stack in 3D.</em></h2>
+        </div>
+        <p>A small interactive experiment built with native CSS 3D transforms and JavaScript. Drag, flick, snap, or use the controls.</p>
+      </div>
+
+      <div class="core-lab reveal">
+        <div class="core-copy">
+          <div class="core-copy-top">
+            <span class="core-live"><i></i> INTERACTIVE OBJECT</span>
+            <span class="core-coordinates" id="coreCoordinates">X −18° · Y 28°</span>
+          </div>
+
+          <div class="core-readout">
+            <span>ACTIVE FACE</span>
+            <h3 id="coreActiveTitle">Build</h3>
+            <p id="coreActiveDescription">Application logic, architecture, and the parts that make an idea actually work.</p>
+          </div>
+
+          <div class="core-view-grid" id="coreViewGrid" aria-label="Snap 3D object to a face">
+            <span class="selector-hover-pill" aria-hidden="true"></span>
+            <button class="core-view is-active" type="button" data-core-view="front"><span>01</span>Build</button>
+            <button class="core-view" type="button" data-core-view="right"><span>02</span>Interface</button>
+            <button class="core-view" type="button" data-core-view="back"><span>03</span>Data</button>
+            <button class="core-view" type="button" data-core-view="left"><span>04</span>Systems</button>
+            <button class="core-view" type="button" data-core-view="top"><span>05</span>Automate</button>
+            <button class="core-view" type="button" data-core-view="bottom"><span>06</span>Ship</button>
+          </div>
+
+          <div class="core-hint">
+            <span>drag / flick</span>
+            <span>arrow keys</span>
+            <span>tap a layer</span>
+          </div>
+        </div>
+
+        <div class="core-stage-wrap">
+          <div class="core-stage" id="coreStage" tabindex="0" aria-label="Interactive 3D technology cube. Drag to rotate or use arrow keys.">
+            <div class="core-radar radar-a" aria-hidden="true"></div>
+            <div class="core-radar radar-b" aria-hidden="true"></div>
+            <div class="core-scene">
+              <div class="tech-core" id="techCore">
+                <div class="core-face core-front">
+                  <span class="face-index">01</span>
+                  <strong>BUILD</strong>
+                  <small>C# · C · JS</small>
+                  <i class="face-glyph">&lt;/&gt;</i>
+                </div>
+                <div class="core-face core-back">
+                  <span class="face-index">03</span>
+                  <strong>DATA</strong>
+                  <small>SQL · SQLite</small>
+                  <i class="face-glyph">DB</i>
+                </div>
+                <div class="core-face core-right">
+                  <span class="face-index">02</span>
+                  <strong>INTERFACE</strong>
+                  <small>WinUI · Web</small>
+                  <i class="face-glyph">UI</i>
+                </div>
+                <div class="core-face core-left">
+                  <span class="face-index">04</span>
+                  <strong>SYSTEMS</strong>
+                  <small>.NET · Logic</small>
+                  <i class="face-glyph">SYS</i>
+                </div>
+                <div class="core-face core-top">
+                  <span class="face-index">05</span>
+                  <strong>AUTOMATE</strong>
+                  <small>Tools · Flow</small>
+                  <i class="face-glyph">AUTO</i>
+                </div>
+                <div class="core-face core-bottom">
+                  <span class="face-index">06</span>
+                  <strong>SHIP</strong>
+                  <small>Git · Deploy</small>
+                  <i class="face-glyph">↗</i>
+                </div>
+                <div class="core-nucleus" aria-hidden="true"><span>CT</span></div>
+              </div>
+            </div>
+            <div class="core-shadow" aria-hidden="true"></div>
+          </div>
+
+          <div class="core-controls" aria-label="3D object controls">
+            <button type="button" data-core-nudge="left" aria-label="Rotate left">←</button>
+            <button type="button" data-core-nudge="up" aria-label="Rotate up">↑</button>
+            <button type="button" data-core-nudge="down" aria-label="Rotate down">↓</button>
+            <button type="button" data-core-nudge="right" aria-label="Rotate right">→</button>
+            <button class="core-auto is-active" id="coreAuto" type="button" aria-pressed="true"><i></i><span>AUTO</span></button>
+            <button type="button" data-core-reset aria-label="Reset 3D object">RESET</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="projects section-shell" id="projects">
       <div class="section-heading reveal">
         <div>
@@ -146,11 +255,13 @@
       </div>
 
       <div class="project-toolbar reveal">
-        <div class="filter-group" role="group" aria-label="Filter projects">
-          <button class="filter-button is-active" type="button" data-filter="all">All <span>03</span></button>
+        <div class="filter-group" id="projectFilterGroup" role="group" aria-label="Filter projects">
+          <span class="selector-hover-pill" aria-hidden="true"></span>
+          <button class="filter-button is-active" type="button" data-filter="all">All <span>04</span></button>
           <button class="filter-button" type="button" data-filter="desktop">Desktop <span>03</span></button>
           <button class="filter-button" type="button" data-filter="health">Health <span>02</span></button>
           <button class="filter-button" type="button" data-filter="civic">Civic <span>01</span></button>
+          <button class="filter-button" type="button" data-filter="automation">Automation <span>01</span></button>
         </div>
         <span class="toolbar-hint">Hover to interact · click to inspect</span>
       </div>
@@ -238,6 +349,129 @@
             <div class="project-tags"><span>WinForms</span><span>C#</span><span>SQLite</span></div>
           </div>
         </article>
+        <article class="project-card tilt-card reveal" data-category="automation" data-project="flowauto" tabindex="0">
+          <div class="project-number">04</div>
+          <div class="project-visual visual-flow-auto">
+            <div class="flow-preview" data-flow-preview>
+              <div class="flow-preview-sidebar">
+                <div class="flow-preview-brand">
+                  <img src="flow-auto-icon.svg" alt="" />
+                  <span><strong>flow</strong><b>auto</b><small>BETA</small></span>
+                </div>
+                <div class="flow-preview-nav" aria-hidden="true">
+                  <span class="is-active">Scenes &amp; batches</span>
+                  <span>Story &amp; continuity</span>
+                  <span>Generation settings</span>
+                  <span>Connect Flow</span>
+                  <span>Activity</span>
+                </div>
+                <div class="flow-preview-status"><i></i> Extension workspace</div>
+              </div>
+
+              <div class="flow-preview-main">
+                <div class="flow-preview-topbar">
+                  <span>Workspace <i>›</i> ANG LIHIM</span>
+                  <b>SOURCE UI PREVIEW</b>
+                </div>
+
+                <div class="flow-snapshot-stage">
+                  <div class="flow-snapshot is-active" data-flow-snapshot="scenes">
+                    <div class="flow-snapshot-heading">
+                      <div>
+                        <small>THE DIRECTOR'S DESK</small>
+                        <strong>Your story. Scene by scene.</strong>
+                      </div>
+                      <span>+ Import prompts</span>
+                    </div>
+                    <div class="flow-mini-stats">
+                      <span><b>10</b><small>Scenes</small></span>
+                      <span><b>4</b><small>Batches</small></span>
+                      <span><b>4</b><small>References ready</small></span>
+                      <span class="done"><b>6</b><small>Videos downloaded</small></span>
+                    </div>
+                    <div class="flow-rules-strip"><i>✓</i><span>Global rules <b>Active · version 3</b></span><em>View &amp; edit ↗</em></div>
+                    <div class="flow-scene-grid">
+                      <div class="flow-scene-card">
+                        <div class="flow-scene-thumb"><span>01</span><i>8s</i></div>
+                        <small>BATCH 1 · READY</small><b>Ang Kulang na Pera</b><p>Rainy market bakery · continuity locked</p>
+                      </div>
+                      <div class="flow-scene-card">
+                        <div class="flow-scene-thumb alt"><span>02</span><i>8s</i></div>
+                        <small>BATCH 1 · COMPLETE</small><b>Ang Tinapay</b><p>Reference approved · video exported</p>
+                      </div>
+                      <div class="flow-scene-card">
+                        <div class="flow-scene-thumb violet"><span>03</span><i>8s</i></div>
+                        <small>BATCH 1 · REVIEW</small><b>Ang Pasya</b><p>Storyboard ready for approval</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flow-snapshot" data-flow-snapshot="settings">
+                    <div class="flow-snapshot-heading">
+                      <div>
+                        <small>SET THE CREATIVE DIRECTION</small>
+                        <strong>Your production preferences.</strong>
+                      </div>
+                      <span>Save settings</span>
+                    </div>
+                    <div class="flow-settings-grid">
+                      <div><small>MODEL</small><b>Veo 3.1 - Fast</b></div>
+                      <div><small>ASPECT RATIO</small><b>9:16</b></div>
+                      <div><small>SCENE DURATION</small><b>8 seconds</b></div>
+                      <div><small>REFERENCE MODE</small><b>Start frame</b></div>
+                    </div>
+                    <div class="flow-settings-panel">
+                      <span><i></i><b>Automatically export finished videos</b><small>Upscale through Flow and save numbered files.</small></span>
+                      <span><i class="on"></i><b>Pause after each batch</b><small>Review continuity before the next batch.</small></span>
+                      <span><i class="on"></i><b>1080p final export</b><small>Verify exported video dimensions.</small></span>
+                    </div>
+                  </div>
+
+                  <div class="flow-snapshot" data-flow-snapshot="connect">
+                    <div class="flow-snapshot-heading">
+                      <div>
+                        <small>MAKE THE CONNECTION</small>
+                        <strong>A bridge to your Flow project.</strong>
+                      </div>
+                      <span>Check controls</span>
+                    </div>
+                    <div class="flow-connect-card">
+                      <div class="flow-connect-status"><i></i><span><b>Flow project detected</b><small>Signed-in project tab connected</small></span></div>
+                      <div class="flow-connect-url">flow.google.com/project/••••••••</div>
+                    </div>
+                    <div class="flow-selector-list">
+                      <span><small>PROMPT TEXTBOX</small><b>ProseMirror prompt box</b><i>FOUND</i></span>
+                      <span><small>GENERATE BUTTON</small><b>Generate control</b><i>FOUND</i></span>
+                      <span><small>RESULT CARD</small><b>Repeated gallery container</b><i>3 CARDS</i></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flow-preview-switcher" role="group" aria-label="Flow Auto preview snapshots">
+                  <button class="is-active" type="button" data-flow-view="scenes">Scenes</button>
+                  <button type="button" data-flow-view="settings">Settings</button>
+                  <button type="button" data-flow-view="connect">Connect Flow</button>
+                </div>
+              </div>
+            </div>
+            <span class="visual-caption">REAL FLOW AUTO UI / INTERACTIVE SOURCE PREVIEW</span>
+          </div>
+          <div class="project-copy">
+            <div class="project-topline">
+              <span>Automation · Browser Extension</span>
+              <button class="round-arrow" type="button" aria-label="Open Flow Auto project details">
+                <svg viewBox="0 0 24 24"><path d="M5 19 19 5M9 5h10v10"/></svg>
+              </button>
+            </div>
+            <div class="flow-project-title">
+              <img src="flow-auto-icon.svg" alt="Flow Auto logo" />
+              <h3>Flow Auto</h3>
+            </div>
+            <p>A Chrome / Edge automation workspace for scene-based Google Flow production: prompt import, continuity, batch storyboards, queue recovery, 1080p export, and scene-numbered downloads.</p>
+            <div class="project-tags"><span>React</span><span>TypeScript</span><span>Chrome MV3</span><span>Vite</span></div>
+          </div>
+        </article>
+
       </div>
     </section>
 
@@ -260,6 +494,7 @@
           <div class="console-body">
             <p><span class="prompt">→</span> select a layer</p>
             <div class="stack-selector" id="stackSelector">
+              <span class="selector-hover-pill" aria-hidden="true"></span>
               <button class="stack-button is-active" data-stack="languages" type="button"><span>01</span>Languages</button>
               <button class="stack-button" data-stack="desktop" type="button"><span>02</span>Desktop & UI</button>
               <button class="stack-button" data-stack="data" type="button"><span>03</span>Data</button>
