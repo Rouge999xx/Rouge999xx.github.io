@@ -149,97 +149,47 @@
     <section class="lab3d section-shell" id="lab3d">
       <div class="section-heading reveal">
         <div>
-          <span class="section-index">00 / 3D LAB</span>
-          <h2>Grab the interface.<br><em>Explore the stack in 3D.</em></h2>
+          <span class="section-index">00 / 3D PLAYGROUND</span>
+          <h2>A little character.<br><em>A mind of his own.</em></h2>
         </div>
-        <p>A small interactive experiment built with native CSS 3D transforms and JavaScript. Drag, flick, snap, or use the controls.</p>
+        <p>Meet Pip, the resident ragdoll. Pick him up, or leave him for five seconds. He’ll head off to play with the page, inspect projects, and discover things to poke.</p>
       </div>
-
       <div class="core-lab reveal">
         <div class="core-copy">
           <div class="core-copy-top">
-            <span class="core-live"><i></i> INTERACTIVE OBJECT</span>
-            <span class="core-coordinates" id="coreCoordinates">X −18° · Y 28°</span>
+            <span class="core-live"><i></i> PIP / ONLINE</span>
+            <span class="core-coordinates" id="ragdollLocation">AT HOME</span>
           </div>
-
           <div class="core-readout">
-            <span>ACTIVE FACE</span>
-            <h3 id="coreActiveTitle">Build</h3>
-            <p id="coreActiveDescription">Application logic, architecture, and the parts that make an idea actually work.</p>
+            <span>YOUR LITTLE COMPANION</span>
+            <h3 id="ragdollTitle">Hello, human.</h3>
+            <p id="ragdollDescription">After five seconds without your attention, he finds his own adventures: hopping onto cards, poking buttons, and exploring the page.</p>
           </div>
-
-          <div class="core-view-grid" id="coreViewGrid" aria-label="Snap 3D object to a face">
+          <div class="core-view-grid" id="coreViewGrid" aria-label="Things to do with Pip">
             <span class="selector-hover-pill" aria-hidden="true"></span>
-            <button class="core-view is-active" type="button" data-core-view="front"><span>01</span>Build</button>
-            <button class="core-view" type="button" data-core-view="right"><span>02</span>Interface</button>
-            <button class="core-view" type="button" data-core-view="back"><span>03</span>Data</button>
-            <button class="core-view" type="button" data-core-view="left"><span>04</span>Systems</button>
-            <button class="core-view" type="button" data-core-view="top"><span>05</span>Automate</button>
-            <button class="core-view" type="button" data-core-view="bottom"><span>06</span>Ship</button>
+            <button class="core-view" type="button" data-pip-action="wave"><span>01</span>Say hello</button>
+            <button class="core-view" type="button" data-pip-action="dance"><span>02</span>Dance</button>
+            <button class="core-view" type="button" data-pip-action="jump"><span>03</span>Jump</button>
+            <button class="core-view" type="button" data-pip-action="sit"><span>04</span>Take a seat</button>
+            <button class="core-view" type="button" data-pip-action="follow" aria-pressed="false"><span>05</span>Follow me</button>
+            <button class="core-view" type="button" data-pip-action="explore"><span>06</span>Let him out</button>
           </div>
-
-          <div class="core-hint">
-            <span>drag / flick</span>
-            <span>arrow keys</span>
-            <span>tap a layer</span>
+          <div class="core-hint" id="ragdollHelp">
+            <span>grab a limb / toss</span><span>double tap to wave</span>
+            <span>arrows move · space jumps · H goes home</span>
           </div>
         </div>
-
         <div class="core-stage-wrap">
-          <div class="core-stage" id="coreStage" tabindex="0" aria-label="Interactive 3D technology cube. Drag to rotate or use arrow keys.">
-            <div class="core-radar radar-a" aria-hidden="true"></div>
-            <div class="core-radar radar-b" aria-hidden="true"></div>
-            <div class="core-scene">
-              <div class="tech-core" id="techCore">
-                <div class="core-face core-front">
-                  <span class="face-index">01</span>
-                  <strong>BUILD</strong>
-                  <small>C# · C · JS</small>
-                  <i class="face-glyph">&lt;/&gt;</i>
-                </div>
-                <div class="core-face core-back">
-                  <span class="face-index">03</span>
-                  <strong>DATA</strong>
-                  <small>SQL · SQLite</small>
-                  <i class="face-glyph">DB</i>
-                </div>
-                <div class="core-face core-right">
-                  <span class="face-index">02</span>
-                  <strong>INTERFACE</strong>
-                  <small>WinUI · Web</small>
-                  <i class="face-glyph">UI</i>
-                </div>
-                <div class="core-face core-left">
-                  <span class="face-index">04</span>
-                  <strong>SYSTEMS</strong>
-                  <small>.NET · Logic</small>
-                  <i class="face-glyph">SYS</i>
-                </div>
-                <div class="core-face core-top">
-                  <span class="face-index">05</span>
-                  <strong>AUTOMATE</strong>
-                  <small>Tools · Flow</small>
-                  <i class="face-glyph">AUTO</i>
-                </div>
-                <div class="core-face core-bottom">
-                  <span class="face-index">06</span>
-                  <strong>SHIP</strong>
-                  <small>Git · Deploy</small>
-                  <i class="face-glyph">↗</i>
-                </div>
-                <div class="core-nucleus" aria-hidden="true"><span>CT</span></div>
-              </div>
-            </div>
-            <div class="core-shadow" aria-hidden="true"></div>
+          <div class="core-stage ragdoll-home" id="ragdollHome" aria-label="Pip's home">
+            <div class="ragdoll-home-label"><span>01 / HOME BASE</span><small>SMALL BODY. BIG CURIOSITY.</small></div>
+            <div class="ragdoll-platform" aria-hidden="true"><i></i><span>PIP</span></div>
+            <p class="ragdoll-home-hint" id="ragdollHomeHint">Go on. Pick him up.</p>
+            <p class="ragdoll-fallback" id="ragdollFallback" hidden>3D rendering is unavailable in this browser. Try a browser with WebGL enabled to meet Pip.</p>
           </div>
-
-          <div class="core-controls" aria-label="3D object controls">
-            <button type="button" data-core-nudge="left" aria-label="Rotate left">←</button>
-            <button type="button" data-core-nudge="up" aria-label="Rotate up">↑</button>
-            <button type="button" data-core-nudge="down" aria-label="Rotate down">↓</button>
-            <button type="button" data-core-nudge="right" aria-label="Rotate right">→</button>
-            <button class="core-auto is-active" id="coreAuto" type="button" aria-pressed="true"><i></i><span>AUTO</span></button>
-            <button type="button" data-core-reset aria-label="Reset 3D object">RESET</button>
+          <div class="core-controls" aria-label="Companion controls">
+            <button class="core-auto" id="ragdollAuto" type="button" aria-pressed="true"><i></i><span>AUTONOMY ON</span></button>
+            <button id="ragdollReset" type="button">BACK HOME</button>
+            <button id="ragdollHide" type="button" aria-pressed="false">HIDE PIP</button>
           </div>
         </div>
       </div>
@@ -646,6 +596,22 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><p>Email copied to clipboard</p></div>
 
+  <div class="ragdoll-overlay" id="ragdollOverlay" hidden>
+    <canvas id="ragdollCanvas" aria-hidden="true"></canvas>
+    <div class="ragdoll-ground-shadow" id="ragdollShadow" aria-hidden="true"></div>
+    <button class="ragdoll-handle" id="ragdollHandle" type="button" aria-label="Pip the 3D ragdoll. Drag a limb to pick him up. Use arrow keys to move, Space to jump, W to wave, H to return home." aria-describedby="ragdollHelp"></button>
+    <span class="ragdoll-bubble" id="ragdollBubble" aria-hidden="true">Hello, human.</span>
+    <div class="ragdoll-pocket" id="ragdollPocket" hidden aria-label="Pip quick controls">
+      <button type="button" data-pip-action="wave" aria-label="Ask Pip to wave">Wave</button>
+      <button type="button" data-pip-action="autonomy" id="ragdollPocketAuto" aria-pressed="true">Pause</button>
+      <button type="button" data-pip-action="home">Home</button>
+      <button type="button" data-pip-action="hide">Hide</button>
+    </div>
+  </div>
+  <span class="sr-only" id="ragdollStatus" role="status" aria-live="polite"></span>
   <script src="main.js"></script>
+  <script src="ragdoll-physics.js"></script>
+  <script src="ragdoll-brain.js"></script>
+  <script src="ragdoll.js"></script>
 </body>
 </html>

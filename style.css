@@ -2465,6 +2465,55 @@ button:focus-visible {
 
 
 /* =====================
+   PIP — THE RESIDENT RAGDOLL
+   ===================== */
+.ragdoll-home { cursor: default; perspective: none; }
+.core-readout h3 { font-size: clamp(2.5rem, 4.6vw, 4.5rem); min-height: 1.85em; }
+.core-readout p { min-height: 8.5em; }
+.ragdoll-home-label { position: absolute; top: 20px; left: 16px; display: grid; gap: 7px; }
+.ragdoll-home-label span { font: 10px var(--font-micro); letter-spacing: .12em; color: var(--accent); }
+.ragdoll-home-label small { font: 7px var(--font-micro); letter-spacing: .16em; color: var(--muted-2); }
+.ragdoll-platform { position: absolute; top: 74%; left: 50%; width: min(72%, 320px); height: 80px; transform: translate(-50%, -50%); border: 1px solid var(--line-strong); border-radius: 50%; background: radial-gradient(ellipse, color-mix(in srgb, var(--accent) 10%, var(--surface)), var(--surface)); box-shadow: 0 14px 0 -2px var(--surface-2), 0 15px 0 -1px var(--line), 0 35px 60px rgba(0,0,0,.2); }
+.ragdoll-platform i { position: absolute; inset: 12px 24px; border: 1px dashed color-mix(in srgb, var(--accent) 28%, transparent); border-radius: 50%; }
+.ragdoll-platform span { position: absolute; bottom: -34px; left: 50%; transform: translateX(-50%); font: 8px var(--font-micro); letter-spacing: .3em; color: var(--muted-2); }
+.ragdoll-home-hint { position: absolute; bottom: 16px; font-size: 10px; color: var(--muted); }
+.ragdoll-fallback { position: absolute; max-width: 240px; text-align: center; font-size: 12px; color: var(--muted); }
+.ragdoll-overlay { position: fixed; inset: 0; z-index: 110; pointer-events: none; overflow: hidden; }
+.ragdoll-overlay[hidden], .ragdoll-pocket[hidden], .ragdoll-fallback[hidden] { display: none; }
+#ragdollCanvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.ragdoll-handle { position: absolute; padding: 0; margin: 0; border: 0; border-radius: 35%; background: transparent; cursor: grab; pointer-events: auto; touch-action: none; -webkit-tap-highlight-color: transparent; }
+.ragdoll-handle:focus-visible { outline: 2px dashed var(--accent); outline-offset: 6px; }
+.ragdoll-handle.is-dragging { cursor: grabbing; }
+.ragdoll-bubble { position: absolute; padding: 8px 12px; width: max-content; max-width: min(220px, calc(100vw - 16px)); border: 1px solid var(--line-strong); border-radius: 12px 12px 12px 2px; background: var(--surface); color: var(--text); font: 10px var(--font-micro); box-shadow: var(--shadow); opacity: 0; transition: opacity .18s ease; white-space: normal; }
+.ragdoll-bubble.is-visible { opacity: 1; }
+.ragdoll-ground-shadow { position: absolute; width: 78px; height: 18px; border-radius: 50%; background: radial-gradient(ellipse, rgba(0,0,0,.34), transparent 72%); }
+.ragdoll-pocket { position: fixed; right: 18px; bottom: 16px; display: flex; gap: 3px; padding: 5px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--surface); pointer-events: auto; box-shadow: var(--shadow); }
+.ragdoll-pocket button { min-height: 36px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font: 10px var(--font-micro); cursor: pointer; }
+.ragdoll-pocket button:hover { color: var(--text); background: var(--surface-2); }
+.ragdoll-pocket button:focus-visible, #coreViewGrid button:focus-visible, .core-controls button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+#ragdollAuto.is-active { color: var(--accent); }
+/* Pip's visits compose with existing card transforms and never capture input. */
+.pip-is-playing { outline: 1px dashed color-mix(in srgb, var(--accent) 70%, transparent); outline-offset: 6px; }
+.pip-is-perched { animation: pip-card-bounce 1.2s ease-in-out infinite !important; }
+.pip-is-poked { animation: pip-boop .8s ease-in-out infinite !important; }
+@keyframes pip-card-bounce { 0%, 100% { translate: 0 0; } 50% { translate: 0 3px; } }
+@keyframes pip-boop { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.25); } }
+@media (prefers-reduced-motion: reduce) {
+  .pip-is-perched, .pip-is-poked { animation: none !important; }
+  .pip-is-playing { outline-style: solid; }
+}
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+@media (max-width: 600px) {
+  .ragdoll-pocket { right: 8px; bottom: 8px; }
+  .ragdoll-pocket button { min-height: 40px; }
+  .ragdoll-bubble { font-size: 9px; }
+}
+/* Keep the narrow navigation out of the grid even on devices with a mouse. */
+@media (max-width: 980px) {
+  .nav-links { position: absolute; }
+}
+
+/* =====================
    FLOW AUTO — REAL SOURCE UI PREVIEW
    Actual logo + source-faithful interactive extension states.
    ===================== */
