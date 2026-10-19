@@ -1,8 +1,17 @@
 const EMAIL = 'carltampus5@gmail.com';
 
 const projectData = {
-  healthnest: {
+  flowauto: {
     index: '01',
+    kicker: 'Automation · Browser Extension',
+    title: 'Flow Auto',
+    summary: 'A local Chrome / Edge extension for scene-based Google Flow production: import structured prompts, make reference images in Flow, ChatGPT, Grok or Meta AI, preserve continuity across batches, run a durable generation queue, request Flow\'s 1080p upscale, and save scene-numbered exports. Its MCP server lets Claude and Gemini import scripts, edit scenes and settings, and run the queue.',
+    problem: 'Multi-scene Flow projects require repetitive setup, careful continuity tracking, manual batch coordination, export handling, and recovery when browser automation or generated results become ambiguous.',
+    approach: 'Flow Auto combines a React / TypeScript production dashboard with a Manifest V3 background queue and Flow DOM automation. It keeps project rules and scene state durable, validates controls, pauses safely on ambiguous results, and verifies numbered 1080p exports before marking scenes complete.',
+    tags: ['React', 'TypeScript', 'Chrome MV3', 'Vite', 'MCP', 'Automation']
+  },
+  healthnest: {
+    index: '02',
     kicker: 'Healthcare · Desktop',
     title: 'HealthNest',
     summary: 'A maternal and child health monitoring desktop application designed to keep patient cases, appointments, and status changes in one clear workflow.',
@@ -11,7 +20,7 @@ const projectData = {
     tags: ['WinUI 3', 'C#', 'SQLite', '.NET']
   },
   barangay: {
-    index: '02',
+    index: '03',
     kicker: 'Civic Tech · Desktop',
     title: 'Barangay Case Management',
     summary: 'A social-services case management system for local government workflows, combining resident records, case tracking, and direct SMS notifications.',
@@ -20,22 +29,13 @@ const projectData = {
     tags: ['WinForms', 'C#', 'SQLite', 'PhilSMS']
   },
   nursedesk: {
-    index: '03',
+    index: '04',
     kicker: 'Health Tech · Desktop',
     title: 'NurseDesk',
     summary: 'A school clinic management system that brings student health records, medicine inventory, and health-log activity into one operational dashboard.',
     problem: 'School clinic work mixes record keeping, inventory awareness, and daily visit logging—tasks that become cumbersome when handled separately.',
     approach: 'NurseDesk groups the clinic workflow into a practical desktop system where student records, medicine stock, and health encounters can be managed together.',
     tags: ['WinForms', 'C#', 'SQLite']
-  },
-  flowauto: {
-    index: '04',
-    kicker: 'Automation · Browser Extension',
-    title: 'Flow Auto',
-    summary: 'A local Chrome / Edge extension for scene-based Google Flow production: import structured prompts, preserve continuity across batches, manage storyboards, run a durable generation queue, recover interrupted jobs, request Flow\'s 1080p upscale, and save scene-numbered exports.',
-    problem: 'Multi-scene Flow projects require repetitive setup, careful continuity tracking, manual batch coordination, export handling, and recovery when browser automation or generated results become ambiguous.',
-    approach: 'Flow Auto combines a React / TypeScript production dashboard with a Manifest V3 background queue and Flow DOM automation. It keeps project rules and scene state durable, validates controls, pauses safely on ambiguous results, and verifies numbered 1080p exports before marking scenes complete.',
-    tags: ['React', 'TypeScript', 'Chrome MV3', 'Vite', 'Automation']
   }
 };
 
@@ -43,26 +43,32 @@ const stackData = {
   languages: {
     index: '01', kicker: 'Core languages', title: 'Languages',
     description: 'The languages I reach for when building application logic, systems exercises, and interactive interfaces.',
-    skills: ['C#', 'C', 'JavaScript', 'HTML', 'CSS'], meter: '88%'
+    skills: ['C#', 'C', 'JavaScript', 'TypeScript', 'HTML', 'CSS']
   },
   desktop: {
     index: '02', kicker: 'Application layer', title: 'Desktop & UI',
     description: 'My current comfort zone: building practical Windows applications with interfaces shaped around real workflows.',
-    skills: ['WinUI 3', 'WinForms', '.NET', 'XAML', 'UI Architecture'], meter: '82%'
+    skills: ['WinUI 3', 'WinForms', '.NET', 'XAML', 'React', 'UI Architecture']
   },
   data: {
     index: '03', kicker: 'Persistence layer', title: 'Data',
     description: 'Tools I use to structure, query, and persist application data across local and relational systems.',
-    skills: ['SQLite', 'MySQL', 'MS Access', 'SQL', 'Data Modeling'], meter: '76%'
+    skills: ['SQLite', 'MySQL', 'MS Access', 'SQL', 'Data Modeling']
   },
   concepts: {
     index: '04', kicker: 'Engineering foundations', title: 'Foundations',
     description: 'The computer-science and engineering concepts behind the implementation decisions I make.',
-    skills: ['Data Structures', 'Algorithms', 'Numerical Methods', 'Linear Algebra', 'Problem Solving'], meter: '84%'
+    skills: ['Data Structures', 'Algorithms', 'Numerical Methods', 'Linear Algebra', 'Problem Solving']
   }
 };
 
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Motion follows the OS setting unless the visitor flips the header switch (saved per browser).
+const prefersReducedMotion = document.documentElement.dataset.motion === 'reduced';
+
+function toggleMotion() {
+  try { localStorage.setItem('portfolio-motion', prefersReducedMotion ? 'full' : 'reduced'); } catch {}
+  location.reload();
+}
 
 const qs = (selector, root = document) => root.querySelector(selector);
 const qsa = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -92,43 +98,41 @@ async function copyEmail() {
 
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
-  localStorage.setItem('portfolio-theme', theme);
+  try { localStorage.setItem('portfolio-theme', theme); } catch {}
   const meta = qs('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', theme === 'dark' ? '#08090c' : '#f3f1eb');
+  if (meta) meta.setAttribute('content', theme === 'dark' ? '#070b14' : '#f8fafc');
 }
 
 function toggleTheme() {
   setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
 }
 
-(function initTheme() {
-  const saved = localStorage.getItem('portfolio-theme');
-  if (saved) setTheme(saved);
-})();
-
-window.addEventListener('load', () => {
-  setTimeout(() => qs('#preloader')?.classList.add('is-hidden'), 350);
-});
-
 qs('#year').textContent = new Date().getFullYear();
 qs('#themeToggle').addEventListener('click', toggleTheme);
-qs('#copyEmailHero').addEventListener('click', copyEmail);
+const motionToggle = qs('#motionToggle');
+if (motionToggle) {
+  motionToggle.setAttribute('aria-pressed', String(!prefersReducedMotion));
+  motionToggle.setAttribute('aria-label', prefersReducedMotion ? 'Turn page animations on' : 'Turn page animations off');
+  motionToggle.addEventListener('click', toggleMotion);
+}
+qs('#copyEmailHero')?.addEventListener('click', copyEmail);
 qs('#copyEmailContact').addEventListener('click', copyEmail);
 
 const menuToggle = qs('#menuToggle');
 const navLinks = qs('#navLinks');
-menuToggle.addEventListener('click', () => {
-  const open = navLinks.classList.toggle('is-open');
+function setMenu(open) {
+  navLinks.classList.toggle('is-open', open);
   menuToggle.setAttribute('aria-expanded', String(open));
+}
+menuToggle.addEventListener('click', () => setMenu(!navLinks.classList.contains('is-open')));
+qsa('a', navLinks).forEach(link => link.addEventListener('click', () => setMenu(false)));
+document.addEventListener('click', event => {
+  if (navLinks.classList.contains('is-open') && !event.target.closest('.nav-shell')) setMenu(false);
 });
-qsa('a', navLinks).forEach(link => link.addEventListener('click', () => {
-  navLinks.classList.remove('is-open');
-  menuToggle.setAttribute('aria-expanded', 'false');
-}));
 
 const navItems = qsa('a[data-nav]', navLinks);
 const navHoverPill = qs('#navHoverPill');
-const desktopNavHover = matchMedia('(hover: hover) and (pointer: fine)');
+const desktopNavHover = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1001px)');
 let navPointerInside = false;
 
 function positionNavPill(link, animate = true) {
@@ -156,8 +160,9 @@ function syncNavPill(animate = true) {
     return;
   }
 
-  const activeLink = qs('a[data-nav].is-active', navLinks) || navItems[0];
-  positionNavPill(activeLink, animate);
+  const activeLink = qs('a[data-nav].is-active', navLinks);
+  if (activeLink) positionNavPill(activeLink, animate);
+  else navHoverPill?.classList.remove('is-visible');
 }
 
 navItems.forEach(link => {
@@ -176,72 +181,53 @@ addEventListener('resize', () => syncNavPill(false), { passive: true });
 desktopNavHover.addEventListener?.('change', () => syncNavPill(false));
 requestAnimationFrame(() => syncNavPill(false));
 
+const scrollProgress = qs('#scrollProgress');
+const siteHeader = qs('#siteHeader');
 function updateScrollUI() {
   const max = document.documentElement.scrollHeight - innerHeight;
   const progress = max > 0 ? scrollY / max : 0;
-  qs('#scrollProgress').style.width = `${progress * 100}%`;
-  qs('#siteHeader').classList.toggle('is-scrolled', scrollY > 24);
+  scrollProgress.style.transform = `scaleX(${progress})`;
+  siteHeader.classList.toggle('is-scrolled', scrollY > 24);
 }
 addEventListener('scroll', updateScrollUI, { passive: true });
 updateScrollUI();
 
-if (!prefersReducedMotion && matchMedia('(pointer:fine)').matches) {
-  addEventListener('pointermove', (event) => {
-    document.documentElement.style.setProperty('--mx', event.clientX + 'px');
-    document.documentElement.style.setProperty('--my', event.clientY + 'px');
-  }, { passive: true });
-
-  qsa('.tilt-card').forEach(card => {
-    const strength = Number(card.dataset.tiltStrength || 3.2);
-    card.addEventListener('pointermove', event => {
-      const rect = card.getBoundingClientRect();
-      const x = (event.clientX - rect.left) / rect.width - .5;
-      const y = (event.clientY - rect.top) / rect.height - .5;
-      card.style.setProperty('--rx', `${-y * strength}deg`);
-      card.style.setProperty('--ry', `${x * strength}deg`);
-      if (!card.classList.contains('project-card')) {
-        card.style.transform = `perspective(1200px) rotateX(${-y * strength}deg) rotateY(${x * strength}deg)`;
-      }
-    });
-    card.addEventListener('pointerleave', () => {
-      card.style.setProperty('--rx', '0deg');
-      card.style.setProperty('--ry', '0deg');
-      if (!card.classList.contains('project-card')) card.style.transform = '';
-    });
-  });
-
-  qsa('.magnetic').forEach(button => {
-    button.addEventListener('pointermove', event => {
-      const rect = button.getBoundingClientRect();
-      const x = event.clientX - rect.left - rect.width / 2;
-      const y = event.clientY - rect.top - rect.height / 2;
-      button.style.setProperty('--mag-x', `${x * .08}px`);
-      button.style.setProperty('--mag-y', `${y * .12}px`);
-    });
-    button.addEventListener('pointerleave', () => {
-      button.style.setProperty('--mag-x', '0px');
-      button.style.setProperty('--mag-y', '0px');
-    });
-  });
-}
-
+// Cards that enter together cascade in reading order, so a grid ripples in instead of popping.
 const revealObserver = new IntersectionObserver(entries => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('is-visible');
-      revealObserver.unobserve(entry.target);
-    }
+  const entering = entries
+    .filter(entry => entry.isIntersecting)
+    .sort((a, b) => (a.boundingClientRect.top - b.boundingClientRect.top) || (a.boundingClientRect.left - b.boundingClientRect.left));
+  entering.forEach((entry, index) => {
+    entry.target.style.setProperty('--delay', `${Math.min(index * 90, 450)}ms`);
+    entry.target.classList.add('is-visible');
+    revealObserver.unobserve(entry.target);
   });
-}, { threshold: .12, rootMargin: '0px 0px -40px' });
-qsa('.reveal').forEach((el, i) => {
-  el.style.transitionDelay = `${Math.min((i % 4) * 55, 165)}ms`;
-  revealObserver.observe(el);
+}, { threshold: .08, rootMargin: '0px 0px -8% 0px' });
+qsa('.reveal').forEach(el => revealObserver.observe(el));
+// Whatever is on screen at load reveals right away instead of waiting for the observer.
+requestAnimationFrame(() => {
+  qsa('.reveal:not(.is-visible)')
+    .filter(el => { const r = el.getBoundingClientRect(); return r.top < innerHeight * .92 && r.bottom > 0; })
+    .forEach((el, index) => {
+      el.style.setProperty('--delay', `${Math.min(index * 90, 450)}ms`);
+      el.classList.add('is-visible');
+      revealObserver.unobserve(el);
+    });
+});
+// Drop the delay once revealed so hover and tilt respond instantly.
+document.addEventListener('transitionend', event => {
+  if (event.target.classList?.contains('reveal') && event.propertyName === 'opacity') event.target.style.removeProperty('--delay');
 });
 
 const sectionObserver = new IntersectionObserver(entries => {
   entries.forEach(entry => {
     if (!entry.isIntersecting) return;
-    qsa('[data-nav]').forEach(link => link.classList.toggle('is-active', link.dataset.nav === entry.target.id));
+    qsa('[data-nav]').forEach(link => {
+      const active = link.dataset.nav === entry.target.id;
+      link.classList.toggle('is-active', active);
+      if (active) link.setAttribute('aria-current', 'true');
+      else link.removeAttribute('aria-current');
+    });
     if (!navPointerInside) syncNavPill(true);
   });
 }, { rootMargin: '-35% 0px -55%', threshold: 0 });
@@ -252,25 +238,44 @@ let roleIndex = 0;
 const roleEl = qs('#roleRotator');
 if (!prefersReducedMotion) {
   setInterval(() => {
-    roleEl.animate([{ opacity: 1, transform: 'translateY(0)' }, { opacity: 0, transform: 'translateY(-5px)' }], { duration: 180, fill: 'forwards' }).finished.then(() => {
+    if (document.hidden) return;
+    roleEl.animate([{ opacity: 1, transform: 'translateY(0)' }, { opacity: 0, transform: 'translateY(-6px)' }], { duration: 180, easing: 'ease-in', fill: 'forwards' }).finished.then(() => {
       roleIndex = (roleIndex + 1) % roles.length;
       roleEl.textContent = roles[roleIndex];
-      roleEl.animate([{ opacity: 0, transform: 'translateY(5px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 220, fill: 'forwards' });
+      roleEl.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 240, easing: 'ease-out', fill: 'forwards' });
     });
   }, 2800);
 }
 
+const projectCount = qs('#projectCount');
 qsa('.filter-button').forEach(button => {
   button.addEventListener('click', () => {
-    qsa('.filter-button').forEach(btn => btn.classList.remove('is-active'));
-    button.classList.add('is-active');
+    qsa('.filter-button').forEach(btn => {
+      btn.classList.toggle('is-active', btn === button);
+      btn.setAttribute('aria-pressed', String(btn === button));
+    });
     const filter = button.dataset.filter;
+    let shown = 0;
     qsa('.project-card').forEach(card => {
       const matches = filter === 'all' || card.dataset.category.split(' ').includes(filter);
       card.classList.toggle('is-filtered-out', !matches);
+      if (matches) shown++;
     });
+    if (projectCount) projectCount.textContent = `Showing ${shown} project${shown === 1 ? '' : 's'}`;
   });
 });
+
+// Keep Tab focus inside an open dialog.
+function trapFocus(container, event) {
+  if (event.key !== 'Tab') return;
+  const focusable = qsa('button:not([disabled]), a[href], input, [tabindex]:not([tabindex="-1"])', container)
+    .filter(el => !el.hidden && el.offsetParent !== null);
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+  else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+}
 
 const modal = qs('#projectModal');
 let lastFocusedElement = null;
@@ -296,17 +301,11 @@ function closeProject() {
   document.body.classList.remove('is-locked');
   lastFocusedElement?.focus();
 }
+// The whole card is clickable; the title button is the keyboard / screen-reader target.
 qsa('.project-card').forEach(card => {
   card.addEventListener('click', event => {
     if (event.target.closest('[data-flow-preview]')) return;
     openProject(card.dataset.project);
-  });
-  card.addEventListener('keydown', event => {
-    if (event.target !== card) return;
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      openProject(card.dataset.project);
-    }
   });
 });
 
@@ -335,18 +334,20 @@ qsa('[data-flow-preview]').forEach(preview => {
 });
 qs('#modalClose').addEventListener('click', closeProject);
 modal.addEventListener('click', event => { if (event.target === modal) closeProject(); });
+modal.addEventListener('keydown', event => trapFocus(modal, event));
 
 qsa('.stack-button').forEach(button => {
   button.addEventListener('click', () => {
     const data = stackData[button.dataset.stack];
-    qsa('.stack-button').forEach(btn => btn.classList.remove('is-active'));
-    button.classList.add('is-active');
+    qsa('.stack-button').forEach(btn => {
+      btn.classList.toggle('is-active', btn === button);
+      btn.setAttribute('aria-pressed', String(btn === button));
+    });
     qs('#stackIndex').textContent = data.index;
     qs('#stackKicker').textContent = data.kicker;
     qs('#stackTitle').textContent = data.title;
     qs('#stackDescription').textContent = data.description;
-    qs('#skillCloud').innerHTML = data.skills.map((skill, index) => `<span style="animation-delay:${index * 45}ms">${skill}</span>`).join('');
-    qs('#stackMeter').style.width = data.meter;
+    qs('#skillCloud').innerHTML = data.skills.map((skill, index) => `<li style="animation-delay:${index * 45}ms">${skill}</li>`).join('');
   });
 });
 
@@ -354,6 +355,7 @@ const palette = qs('#commandPalette');
 const commandInput = qs('#commandInput');
 const commandItems = () => qsa('#commandList > button:not([hidden]), #commandList > a:not([hidden])');
 let commandIndex = 0;
+let paletteReturnFocus = null;
 
 function highlightCommand(index) {
   const items = commandItems();
@@ -363,6 +365,7 @@ function highlightCommand(index) {
 }
 
 function openPalette() {
+  paletteReturnFocus = document.activeElement;
   palette.classList.add('is-open');
   palette.setAttribute('aria-hidden', 'false');
   document.body.classList.add('is-locked');
@@ -377,15 +380,18 @@ function closePalette() {
   palette.classList.remove('is-open');
   palette.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('is-locked');
+  paletteReturnFocus?.focus?.({ preventScroll: true });
 }
 
 function runAction(action) {
-  if (['projects','stack','about','contact'].includes(action)) {
+  if (['flow-auto','videos','projects','stack','about','contact'].includes(action)) {
     closePalette();
-    qs('#' + action)?.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+    scrollToTarget(qs('#' + action));
   } else if (action === 'copy') {
     copyEmail();
     closePalette();
+  } else if (action === 'motion') {
+    toggleMotion();
   } else if (action === 'theme') {
     toggleTheme();
     closePalette();
@@ -394,6 +400,7 @@ function runAction(action) {
 
 qs('#commandTrigger').addEventListener('click', openPalette);
 palette.addEventListener('click', event => { if (event.target === palette) closePalette(); });
+palette.addEventListener('keydown', event => trapFocus(palette, event));
 qsa('#commandList button').forEach(button => button.addEventListener('click', () => runAction(button.dataset.action)));
 qsa('#commandList a').forEach(link => link.addEventListener('click', closePalette));
 
@@ -415,6 +422,7 @@ addEventListener('keydown', event => {
   if (event.key === 'Escape') {
     if (modal.classList.contains('is-open')) closeProject();
     if (palette.classList.contains('is-open')) closePalette();
+    if (navLinks.classList.contains('is-open')) { setMenu(false); menuToggle.focus(); }
   }
   if (!palette.classList.contains('is-open')) return;
   if (event.key === 'ArrowDown') { event.preventDefault(); highlightCommand(commandIndex + 1); }
@@ -426,14 +434,54 @@ addEventListener('keydown', event => {
 });
 
 const contactForm = qs('#contactForm');
+const fieldMessages = {
+  name: 'Please add your name.',
+  email: 'Please enter a valid email address.',
+  message: 'Please tell me a little about the project.'
+};
+
+function validateField(input) {
+  const field = input.closest('.field');
+  let error = qs('.field-error', field);
+  const valid = input.checkValidity() && input.value.trim() !== '';
+  input.setAttribute('aria-invalid', String(!valid));
+  field.classList.toggle('is-invalid', !valid);
+  if (!valid) {
+    if (!error) {
+      error = document.createElement('p');
+      error.className = 'field-error';
+      error.id = `${input.id}Error`;
+      field.appendChild(error);
+      input.setAttribute('aria-describedby', error.id);
+    }
+    error.textContent = fieldMessages[input.name];
+  } else if (error) {
+    error.textContent = '';
+  }
+  return valid;
+}
+
+qsa('input, textarea', contactForm).forEach(input => {
+  input.addEventListener('blur', () => { if (input.value) validateField(input); });
+  input.addEventListener('input', () => { if (input.getAttribute('aria-invalid') === 'true') validateField(input); });
+});
+
 contactForm.addEventListener('submit', async event => {
   event.preventDefault();
+  const inputs = qsa('input, textarea', contactForm);
+  const invalid = inputs.filter(input => !validateField(input));
+  if (invalid.length) {
+    invalid[0].focus();
+    return;
+  }
   const button = qs('.form-submit', contactForm);
+  const label = qs('span', button);
   const status = qs('#formStatus');
-  const original = button.innerHTML;
   button.disabled = true;
-  button.innerHTML = '<span>Sending...</span><i>···</i>';
+  button.classList.add('is-loading');
+  label.textContent = 'Sending...';
   status.textContent = '';
+  status.classList.remove('is-error', 'is-success');
   try {
     const response = await fetch('https://formspree.io/f/meedylgw', {
       method: 'POST',
@@ -443,14 +491,16 @@ contactForm.addEventListener('submit', async event => {
     if (!response.ok) throw new Error('Request failed');
     contactForm.reset();
     status.textContent = 'Message sent. I’ll get back to you soon.';
+    status.classList.add('is-success');
   } catch {
-    status.textContent = 'Could not send right now — email me directly instead.';
+    status.textContent = 'Could not send right now. Email me directly instead.';
+    status.classList.add('is-error');
   } finally {
     button.disabled = false;
-    button.innerHTML = original;
+    button.classList.remove('is-loading');
+    label.textContent = 'Send message';
   }
 });
-
 
 /* =====================
    INTERACTIVE PARTICLE FIELD
@@ -777,3 +827,157 @@ function initSlidingSelector(containerSelector, itemSelector) {
 initSlidingSelector('#coreViewGrid', '.core-view');
 initSlidingSelector('#projectFilterGroup', '.filter-button');
 initSlidingSelector('#stackSelector', '.stack-button');
+
+
+/* =====================
+   SMOOTH SCROLL + SCROLL-LINKED MOTION
+   ===================== */
+const header = () => (qs('#siteHeader')?.offsetHeight || 64) + 16;
+let lenis = null;
+
+if (!prefersReducedMotion && window.Lenis) {
+  lenis = new Lenis({ lerp: .09, wheelMultiplier: 1, smoothWheel: true });
+  const raf = time => { lenis.raf(time); requestAnimationFrame(raf); };
+  requestAnimationFrame(raf);
+  // Dialogs lock the page; pause smoothing so their own content can scroll.
+  new MutationObserver(() => {
+    document.body.classList.contains('is-locked') ? lenis.stop() : lenis.start();
+  }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+}
+
+function scrollToTarget(target) {
+  if (!target) return;
+  if (lenis) lenis.scrollTo(target, { offset: -header(), duration: 1.4 });
+  else target.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+}
+
+document.addEventListener('click', event => {
+  const link = event.target.closest('a[href^="#"]');
+  if (!link || link.classList.contains('skip-link') || !lenis) return;
+  const id = link.getAttribute('href').slice(1);
+  const target = id ? document.getElementById(id) : document.body;
+  if (!target) return;
+  event.preventDefault();
+  scrollToTarget(id === 'home' ? document.body : target);
+});
+
+const parallaxItems = qsa('[data-parallax]');
+const hero = qs('#home');
+const tickerTrack = qs('.ticker-track');
+let lastScrollY = scrollY;
+let scrollVelocity = 0;
+let tickerX = 0;
+
+function scrollEffects() {
+  const y = scrollY;
+  scrollVelocity += ((y - lastScrollY) - scrollVelocity) * .2;
+  lastScrollY = y;
+
+  if (!prefersReducedMotion) {
+    parallaxItems.forEach(el => el.style.setProperty('--py', `${(y * Number(el.dataset.parallax)).toFixed(1)}px`));
+    if (hero) {
+      const progress = Math.min(1, Math.max(0, y / (hero.offsetHeight * .9)));
+      hero.style.setProperty('--hero-p', progress.toFixed(3));
+    }
+  }
+}
+addEventListener('scroll', scrollEffects, { passive: true });
+scrollEffects();
+
+// The ticker drifts on its own and speeds up with the scroll, in either direction.
+if (tickerTrack && !prefersReducedMotion) {
+  tickerTrack.style.animation = 'none';
+  const loop = () => {
+    const half = tickerTrack.scrollWidth / 2;
+    tickerX -= .5 + Math.min(Math.abs(scrollVelocity) * .35, 18);
+    if (half && tickerX <= -half) tickerX += half;
+    tickerTrack.style.transform = `translate3d(${tickerX}px, 0, 0)`;
+    scrollVelocity *= .94;
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+}
+
+/* =====================
+   GLASS GLARE + PLAYFUL TILT
+   ===================== */
+if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+  qsa('.bento, .project-card').forEach(card => {
+    const tilts = card.classList.contains('tilt') && !prefersReducedMotion;
+    card.addEventListener('pointermove', event => {
+      const rect = card.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width;
+      const y = (event.clientY - rect.top) / rect.height;
+      card.style.setProperty('--gx', `${(x * 100).toFixed(1)}%`);
+      card.style.setProperty('--gy', `${(y * 100).toFixed(1)}%`);
+      if (tilts) {
+        card.style.setProperty('--rx', `${((.5 - y) * 6).toFixed(2)}deg`);
+        card.style.setProperty('--ry', `${((x - .5) * 7).toFixed(2)}deg`);
+      }
+    }, { passive: true });
+    card.addEventListener('pointerleave', () => {
+      card.style.setProperty('--rx', '0deg');
+      card.style.setProperty('--ry', '0deg');
+    });
+  });
+}
+
+/* =====================
+   SHOWREEL VIDEOS
+   Drop a file at the path in data-video (e.g. videos/intro.mp4) and its card
+   becomes playable. A data-youtube="VIDEO_ID" attribute works too.
+   ===================== */
+qsa('.video-card').forEach(async card => {
+  const frame = qs('.video-frame', card);
+  const button = qs('.video-play', card);
+  const badge = qs('.video-badge', card);
+  const youtube = card.dataset.youtube;
+  const src = card.dataset.video;
+  let available = Boolean(youtube);
+
+  if (!available && src && location.protocol !== 'file:') {
+    try {
+      const response = await fetch(src, { method: 'HEAD' });
+      available = response.ok && (response.headers.get('content-type') || '').startsWith('video');
+    } catch {}
+  }
+
+  card.classList.toggle('is-ready', available);
+  if (available) {
+    badge.hidden = true;
+    const poster = card.dataset.poster;
+    if (poster && !youtube) {
+      fetch(poster, { method: 'HEAD' }).then(r => {
+        if (r.ok) frame.style.setProperty('--poster', `url("${poster}")`);
+      }).catch(() => {});
+    }
+  }
+
+  button.addEventListener('click', event => {
+    event.stopPropagation();
+    if (!available) {
+      showToast('This video is coming soon.');
+      return;
+    }
+    let player = qs('video, iframe', frame);
+    if (!player) {
+      if (youtube) {
+        player = document.createElement('iframe');
+        player.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(youtube)}?autoplay=1&rel=0`;
+        player.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+        player.allowFullscreen = true;
+        player.title = button.getAttribute('aria-label').replace('Play video: ', '');
+      } else {
+        player = document.createElement('video');
+        player.src = src;
+        player.controls = true;
+        player.playsInline = true;
+        player.preload = 'auto';
+      }
+      frame.appendChild(player);
+    }
+    card.classList.add('is-playing');
+    player.play?.();
+    player.focus?.();
+  });
+});

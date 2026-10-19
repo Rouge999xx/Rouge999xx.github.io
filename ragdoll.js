@@ -131,8 +131,9 @@
     {selector:'.filter-button',kind:'tap',label:el=>`${el.textContent.replace(/\d/g,'').trim()} projects`},
     {selector:'.stack-button',kind:'tap',label:el=>`${el.textContent.replace(/\d/g,'').trim()}`},
     {selector:'[data-flow-view]',kind:'tap',label:el=>`Flow Auto ${el.textContent.trim()}`},
-    {selector:'.floating-card, .image-tag, .skill-cloud span, .about-facts > div, .principle, .hero-cta, .core-live',kind:'poke',label:el=>
-      el.matches('.core-live')?'my little status light':el.matches('.floating-card')?'this floating badge':el.matches('.hero-cta')?'this button':el.textContent.trim().slice(0,36)},
+    {selector:'.hero-stat, .image-tag, .skill-cloud li, .about-facts > div, .principle, .hero-cta, .core-live, .fa-cap, .fa-pipeline li',kind:'poke',label:el=>
+      el.matches('.core-live')?'my little status light':el.matches('.hero-stat')?`this ${el.querySelector('span')?.textContent.toLowerCase()||'little'} tile`:el.matches('.hero-cta')?'this button':
+      el.matches('.fa-cap, .fa-pipeline li')?(el.querySelector('h3')?.textContent||'this').toLowerCase():el.textContent.trim().slice(0,36)},
     {selector:'.ragdoll-platform',kind:'perch',label:()=> 'home base'}
   ];
   const descriptions={

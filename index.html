@@ -4,168 +4,651 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Portfolio of Carl Marvic Tampus — computer engineering student and developer building practical desktop software and digital tools." />
-  <meta name="theme-color" content="#08090c" />
+  <meta name="theme-color" content="#0a0718" />
   <title>Carl Tampus — Developer Portfolio</title>
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('portfolio-theme');
+        var theme = saved || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.dataset.theme = theme;
+      } catch (e) {}
+      document.documentElement.classList.add('js');
+      try {
+        var motion = localStorage.getItem('portfolio-motion');
+        document.documentElement.dataset.motion = motion || (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'reduced' : 'full');
+      } catch (e) {
+        document.documentElement.dataset.motion = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'reduced' : 'full';
+      }
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="preloader" id="preloader" aria-hidden="true">
-    <div class="preloader-mark">CT<span>/</span></div>
-    <div class="preloader-line"><i></i></div>
-  </div>
+  <a class="skip-link" href="#main">Skip to content</a>
 
   <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
-  <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
-  <div class="grid-overlay" aria-hidden="true"></div>
+  <div class="page-backdrop" aria-hidden="true"><i class="blob blob-1" data-parallax="-0.08"></i><i class="blob blob-2" data-parallax="0.12"></i><i class="blob blob-3" data-parallax="-0.05"></i></div>
   <canvas class="particle-field" id="particleField" aria-hidden="true"></canvas>
 
   <header class="site-header" id="siteHeader">
-    <nav class="nav-shell">
-      <a class="brand" href="#home" aria-label="Carl Tampus home">
-        <span class="brand-mark" aria-hidden="true">
-          <span class="brand-c">C</span>
-          <span class="brand-t">T</span>
-          <i class="brand-slash"></i>
-        </span>
+    <nav class="nav-shell" aria-label="Primary">
+      <a class="brand" href="#home" aria-label="Carl Tampus, back to top">
+        <span class="brand-mark" aria-hidden="true">CT</span>
         <span class="brand-wordmark">
-          <strong>CARL TAMPUS</strong>
-          <small>SOFTWARE + SYSTEMS</small>
+          <strong>Carl Tampus</strong>
+          <small>Software + Systems</small>
         </span>
       </a>
 
       <div class="nav-links" id="navLinks">
         <span class="nav-hover-pill" id="navHoverPill" aria-hidden="true"></span>
-        <a href="#lab3d" data-nav="lab3d">3D Lab</a>
-        <a href="#projects" data-nav="projects">Projects</a>
-        <a href="#stack" data-nav="stack">Stack</a>
+        <a href="#flow-auto" data-nav="flow-auto">Flow Auto</a>
+        <a href="#projects" data-nav="projects">Work</a>
+        <a href="#videos" data-nav="videos">Showreel</a>
+        <a href="#lab3d" data-nav="lab3d">Playground</a>
         <a href="#about" data-nav="about">About</a>
         <a href="#contact" data-nav="contact">Contact</a>
       </div>
 
       <div class="nav-actions">
-        <button class="icon-button command-trigger" id="commandTrigger" type="button" aria-label="Open command palette">
-          <span>⌘</span><kbd>K</kbd>
+        <button class="icon-button command-trigger" id="commandTrigger" type="button" aria-label="Open command palette (Ctrl+K)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <kbd>Ctrl K</kbd>
+        </button>
+        <button class="icon-button motion-toggle" id="motionToggle" type="button" aria-label="Turn page animations off" aria-pressed="true">
+          <svg class="motion-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8Z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8Z"/></svg>
+          <svg class="motion-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8Z"/><path d="M3 3l18 18"/></svg>
         </button>
         <button class="icon-button theme-toggle" id="themeToggle" type="button" aria-label="Switch color theme">
           <svg class="sun-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
           <svg class="moon-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
         </button>
-        <button class="menu-toggle" id="menuToggle" type="button" aria-label="Toggle navigation" aria-expanded="false">
+        <button class="icon-button menu-toggle" id="menuToggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="navLinks">
           <span></span><span></span>
         </button>
       </div>
     </nav>
   </header>
 
-  <main>
-    <section class="hero section-shell" id="home">
-      <div class="hero-copy">
-        <div class="eyebrow reveal">
-          <span class="status-dot"></span>
-          <span>Available for internships & freelance</span>
-        </div>
+  <main id="main">
+    <section class="hero section-shell" id="home" aria-labelledby="heroTitle">
+      <div class="hero-grid">
+        <div class="bento hero-main reveal">
+          <p class="eyebrow">
+            <span class="status-dot" aria-hidden="true"></span>
+            Available for internships &amp; freelance
+          </p>
 
-        <h1 class="hero-title reveal">
-          <span class="hero-line">I build software</span>
-          <span class="hero-line hero-line-accent">that feels <em>alive.</em></span>
-        </h1>
+          <h1 class="hero-title" id="heroTitle">
+            I build software<br />
+            that feels <em>alive.</em>
+          </h1>
 
-        <p class="hero-intro reveal">
-          I'm <strong>Carl Tampus</strong>, a Computer Engineering student creating
-          useful desktop systems, automation tools, and polished digital experiences.
-        </p>
+          <p class="hero-intro">
+            I'm <strong>Carl Tampus</strong>, a Computer Engineering student creating
+            useful desktop systems, automation tools, and polished digital experiences.
+          </p>
 
-        <div class="role-row reveal" aria-live="polite">
-          <span class="role-label">currently exploring</span>
-          <span class="role-value" id="roleRotator">software engineering</span>
-          <span class="typing-caret" aria-hidden="true"></span>
-        </div>
+          <p class="role-row">
+            <span class="role-label">Currently exploring</span>
+            <span class="role-value" id="roleRotator">software engineering</span>
+          </p>
 
-        <div class="hero-actions reveal">
-          <a class="primary-button hero-cta" href="#projects">
-            <span>Explore my work</span>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </a>
-          <button class="text-button hero-cta" id="copyEmailHero" type="button">
-            <span>Copy email</span>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          </button>
-        </div>
-
-        <div class="hero-meta reveal">
-          <div><span>01</span><p>Philippines<br><strong>GMT +8</strong></p></div>
-          <div><span>02</span><p>Focus<br><strong>Desktop + Web</strong></p></div>
-          <div><span>03</span><p>Status<br><strong>Open to work</strong></p></div>
-        </div>
-      </div>
-
-      <div class="hero-visual reveal" id="heroVisual">
-        <div class="orbit orbit-one" aria-hidden="true"></div>
-        <div class="orbit orbit-two" aria-hidden="true"></div>
-        <div class="profile-frame tilt-card" data-tilt-strength="5">
-          <div class="profile-topbar">
-            <span class="window-dots"><i></i><i></i><i></i></span>
-            <span>profile.exe</span>
-            <span>● live</span>
+          <div class="hero-actions">
+            <a class="button button-primary hero-cta" href="#flow-auto">
+              <span>Explore my work</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+            <a class="button button-ghost hero-cta" href="#videos">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4Z" fill="currentColor"/></svg>
+              <span>Watch my intro</span>
+            </a>
+            <div class="social-links">
+              <a class="icon-button" href="https://github.com/Rouge999xx" target="_blank" rel="noreferrer" aria-label="GitHub profile (opens in a new tab)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+              </a>
+              <a class="icon-button" href="https://linkedin.com/in/carl-marvic-tampus-478a932b8" target="_blank" rel="noreferrer" aria-label="LinkedIn profile (opens in a new tab)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+              </a>
+            </div>
           </div>
-          <div class="profile-image-wrap">
-            <img src="2x2_CarlMarvicTampus.png" alt="Portrait of Carl Tampus" />
-            <div class="scan-line" aria-hidden="true"></div>
-            <span class="image-tag tag-top">BSCpE</span>
-            <span class="image-tag tag-bottom">DEV / 2026</span>
-          </div>
-          <div class="profile-terminal" aria-hidden="true">
+        </div>
+
+        <figure class="bento hero-portrait reveal" data-reveal="right">
+          <picture>
+            <source srcset="portrait.webp" type="image/webp" />
+            <img src="2x2_CarlMarvicTampus.png" width="900" height="900" alt="Portrait of Carl Tampus" fetchpriority="high" />
+          </picture>
+          <span class="image-tag tag-top">BSCpE</span>
+          <span class="image-tag tag-bottom">Dev / 2026</span>
+          <figcaption class="profile-terminal">
             <span><b>carl@portfolio</b>:~$ whoami</span>
             <strong>builder · problem solver · student</strong>
+          </figcaption>
+        </figure>
+
+        <div class="hero-meta">
+          <div class="bento hero-stat reveal tilt">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>Based in</span>
+            <strong>Iloilo, PH</strong>
+            <small>GMT +8</small>
+          </div>
+          <div class="bento hero-stat reveal tilt">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            <span>Focus</span>
+            <strong>Desktop + Web</strong>
+            <small>WinUI · .NET · JS</small>
+          </div>
+          <div class="bento hero-stat reveal tilt">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
+            <span>Status</span>
+            <strong>Open to work</strong>
+            <small>Internships · freelance</small>
           </div>
         </div>
-        <div class="floating-card floating-card-a" aria-hidden="true">
-          <span class="mini-label">projects</span>
-          <strong>03</strong>
-          <i>featured builds</i>
-        </div>
-        <div class="floating-card floating-card-b" aria-hidden="true">
-          <span class="pulse-ring"></span>
-          <p>systems<br><strong>online</strong></p>
-        </div>
       </div>
-
-      <a class="scroll-cue" href="#projects" aria-label="Scroll to projects">
-        <span>scroll</span>
-        <i></i>
-      </a>
     </section>
 
-    <section class="ticker" aria-label="Technologies">
+    <section class="ticker" aria-label="Technologies I work with">
       <div class="ticker-track">
-        <span>C#</span><i>✦</i><span>WINUI 3</span><i>✦</i><span>JAVASCRIPT</span><i>✦</i><span>SQLITE</span><i>✦</i><span>.NET</span><i>✦</i><span>C</span><i>✦</i><span>HTML / CSS</span><i>✦</i><span>WINFORMS</span><i>✦</i>
-        <span>C#</span><i>✦</i><span>WINUI 3</span><i>✦</i><span>JAVASCRIPT</span><i>✦</i><span>SQLITE</span><i>✦</i><span>.NET</span><i>✦</i><span>C</span><i>✦</i><span>HTML / CSS</span><i>✦</i><span>WINFORMS</span><i>✦</i>
+        <ul>
+          <li>C#</li><li>WinUI 3</li><li>JavaScript</li><li>TypeScript</li><li>React</li><li>MCP</li><li>SQLite</li><li>.NET</li><li>C</li><li>HTML / CSS</li><li>WinForms</li>
+        </ul>
+        <ul aria-hidden="true">
+          <li>C#</li><li>WinUI 3</li><li>JavaScript</li><li>TypeScript</li><li>React</li><li>MCP</li><li>SQLite</li><li>.NET</li><li>C</li><li>HTML / CSS</li><li>WinForms</li>
+        </ul>
       </div>
     </section>
 
-    <section class="lab3d section-shell" id="lab3d">
+    <section class="flow-spotlight section-shell" id="flow-auto" aria-labelledby="flowTitle">
       <div class="section-heading reveal">
         <div>
-          <span class="section-index">00 / 3D PLAYGROUND</span>
-          <h2>A little character.<br><em>A mind of his own.</em></h2>
+          <span class="section-index">01 — Flagship project</span>
+          <h2 id="flowTitle">Flow Auto. <em>A production line for AI video.</em></h2>
         </div>
-        <p>Meet Pip, the resident ragdoll. Pick him up, or leave him for five seconds. He’ll head off to play with the page, inspect projects, and discover things to poke.</p>
+        <p>A Chrome / Edge extension that turns a scene-by-scene script into finished, numbered 1080p videos on Google Flow. With its own MCP server, Claude and Gemini can run it too.</p>
       </div>
-      <div class="core-lab reveal">
+
+      <div class="fa-top">
+        <div class="bento fa-intro reveal" data-reveal="left">
+          <div class="fa-brand">
+            <img src="flow-auto-icon.svg" alt="Flow Auto logo" width="56" height="56" />
+            <div>
+              <h3>Flow Auto</h3>
+              <span>v0.1.122 · Chrome &amp; Edge · Manifest V3</span>
+            </div>
+          </div>
+          <p>Multi-scene stories need the same setup, continuity checks and exports over and over. Flow Auto runs that loop for you: it imports the script, makes reference images, sends every scene, upscales the result and saves it under the right number.</p>
+          <ul class="fa-facts">
+            <li><strong>4</strong><span>reference image sources</span></li>
+            <li><strong>2</strong><span>video engines</span></li>
+            <li><strong>1080p</strong><span>exports, verified</span></li>
+            <li><strong>18</strong><span>MCP tools</span></li>
+          </ul>
+          <ul class="project-tags" aria-label="Built with"><li>React</li><li>TypeScript</li><li>Chrome MV3</li><li>Vite</li><li>MCP</li></ul>
+          <a class="button button-ghost fa-mcp-jump hero-cta" href="#flow-auto-mcp">
+            <span>See the MCP integration</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+
+        <div class="bento fa-preview-card reveal" data-reveal="zoom">
+          <div class="project-visual visual-flow-auto">
+                <div class="flow-preview" data-flow-preview>
+                  <div class="flow-preview-sidebar">
+                    <div class="flow-preview-brand">
+                      <img src="flow-auto-icon.svg" alt="" width="25" height="25" />
+                      <span><strong>flow</strong><b>auto</b><small>BETA</small></span>
+                    </div>
+                    <div class="flow-preview-nav" aria-hidden="true">
+                      <span class="is-active">Scenes &amp; batches</span>
+                      <span>Story &amp; continuity</span>
+                      <span>Generation settings</span>
+                      <span>Connect Flow</span>
+                      <span>Activity</span>
+                    </div>
+                    <div class="flow-preview-status"><i></i> Extension workspace</div>
+                  </div>
+
+                  <div class="flow-preview-main">
+                    <div class="flow-preview-topbar">
+                      <span>Workspace <i>›</i> ANG LIHIM</span>
+                      <b>SOURCE UI PREVIEW</b>
+                    </div>
+
+                    <div class="flow-snapshot-stage">
+                      <div class="flow-snapshot is-active" data-flow-snapshot="scenes">
+                        <div class="flow-snapshot-heading">
+                          <div>
+                            <small>THE DIRECTOR'S DESK</small>
+                            <strong>Your story. Scene by scene.</strong>
+                          </div>
+                          <span>+ Import prompts</span>
+                        </div>
+                        <div class="flow-mini-stats">
+                          <span><b>10</b><small>Scenes</small></span>
+                          <span><b>4</b><small>Batches</small></span>
+                          <span><b>4</b><small>References ready</small></span>
+                          <span class="done"><b>6</b><small>Videos downloaded</small></span>
+                        </div>
+                        <div class="flow-rules-strip"><i>✓</i><span>Global rules <b>Active · version 3</b></span><em>View &amp; edit ↗</em></div>
+                        <div class="flow-scene-grid">
+                          <div class="flow-scene-card">
+                            <div class="flow-scene-thumb"><span>01</span><i>8s</i></div>
+                            <small>BATCH 1 · READY</small><b>Ang Kulang na Pera</b><p>Rainy market bakery · continuity locked</p>
+                          </div>
+                          <div class="flow-scene-card">
+                            <div class="flow-scene-thumb alt"><span>02</span><i>8s</i></div>
+                            <small>BATCH 1 · COMPLETE</small><b>Ang Tinapay</b><p>Reference approved · video exported</p>
+                          </div>
+                          <div class="flow-scene-card">
+                            <div class="flow-scene-thumb violet"><span>03</span><i>8s</i></div>
+                            <small>BATCH 1 · REVIEW</small><b>Ang Pasya</b><p>Storyboard ready for approval</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="flow-snapshot" data-flow-snapshot="settings">
+                        <div class="flow-snapshot-heading">
+                          <div>
+                            <small>SET THE CREATIVE DIRECTION</small>
+                            <strong>Your production preferences.</strong>
+                          </div>
+                          <span>Save settings</span>
+                        </div>
+                        <div class="flow-settings-grid">
+                          <div><small>MODEL</small><b>Veo 3.1 - Fast</b></div>
+                          <div><small>ASPECT RATIO</small><b>9:16</b></div>
+                          <div><small>SCENE DURATION</small><b>8 seconds</b></div>
+                          <div><small>REFERENCE MODE</small><b>Start frame</b></div>
+                        </div>
+                        <div class="flow-settings-panel">
+                          <span><i></i><b>Automatically export finished videos</b><small>Upscale through Flow and save numbered files.</small></span>
+                          <span><i class="on"></i><b>Pause after each batch</b><small>Review continuity before the next batch.</small></span>
+                          <span><i class="on"></i><b>1080p final export</b><small>Verify exported video dimensions.</small></span>
+                        </div>
+                      </div>
+
+                      <div class="flow-snapshot" data-flow-snapshot="connect">
+                        <div class="flow-snapshot-heading">
+                          <div>
+                            <small>MAKE THE CONNECTION</small>
+                            <strong>A bridge to your Flow project.</strong>
+                          </div>
+                          <span>Check controls</span>
+                        </div>
+                        <div class="flow-connect-card">
+                          <div class="flow-connect-status"><i></i><span><b>Flow project detected</b><small>Signed-in project tab connected</small></span></div>
+                          <div class="flow-connect-url">flow.google.com/project/••••••••</div>
+                        </div>
+                        <div class="flow-selector-list">
+                          <span><small>PROMPT TEXTBOX</small><b>ProseMirror prompt box</b><i>FOUND</i></span>
+                          <span><small>GENERATE BUTTON</small><b>Generate control</b><i>FOUND</i></span>
+                          <span><small>RESULT CARD</small><b>Repeated gallery container</b><i>3 CARDS</i></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="flow-preview-switcher" role="group" aria-label="Flow Auto preview snapshots">
+                      <button class="is-active" type="button" data-flow-view="scenes">Scenes</button>
+                      <button type="button" data-flow-view="settings">Settings</button>
+                      <button type="button" data-flow-view="connect">Connect Flow</button>
+                    </div>
+                  </div>
+                </div>
+            <span class="visual-caption">Interactive preview · real Flow Auto UI</span>
+          </div>
+        </div>
+      </div>
+
+      <ol class="fa-pipeline reveal" aria-label="How a story moves through Flow Auto">
+        <li>
+          <span class="fa-step">01</span>
+          <h3>Import</h3>
+          <p>Paste a ChatGPT script or JSON. Scenes, batches and global rules are checked before you accept them.</p>
+        </li>
+        <li>
+          <span class="fa-step">02</span>
+          <h3>Reference</h3>
+          <p>Storyboards and character sheets from Flow, ChatGPT, Grok or Meta AI, saved as real PNGs.</p>
+        </li>
+        <li>
+          <span class="fa-step">03</span>
+          <h3>Generate</h3>
+          <p>Each scene goes to Flow (Standard or Agent) or Grok Imagine with its rules and references attached.</p>
+        </li>
+        <li>
+          <span class="fa-step">04</span>
+          <h3>Upscale</h3>
+          <p>Flow Auto picks Flow's own 1080p upscale. Nothing is re-encoded on your machine.</p>
+        </li>
+        <li>
+          <span class="fa-step">05</span>
+          <h3>Download</h3>
+          <p>Files land as <code>story/1.mp4</code>, <code>2.mp4</code> and so on, checked for the exact name and resolution.</p>
+        </li>
+      </ol>
+
+      <div class="fa-capabilities">
+        <article class="bento fa-cap reveal tilt">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 7l10 5 10-5Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg>
+          <h3>Continuity that sticks</h3>
+          <p>Global rules, character descriptions and a character sheet go into every image and video prompt, so batches stay consistent without relying on Flow's memory.</p>
+        </article>
+        <article class="bento fa-cap reveal tilt">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>
+          <h3>A queue that survives restarts</h3>
+          <p>Submission intent is saved before Generate is pressed. After a refresh or crash the queue picks up where it was, and an uncertain result never triggers a duplicate.</p>
+        </article>
+        <article class="bento fa-cap reveal tilt">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+          <h3>Pauses instead of guessing</h3>
+          <p>Ambiguous results stop for your choice. Retry an export, attach an existing result, or crop one storyboard panel for a single scene.</p>
+        </article>
+        <article class="bento fa-cap reveal tilt">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
+          <h3>Standard and Agent mode</h3>
+          <p>Drives Flow's regular prompt box or its Agent composer, applying the model, aspect ratio and reference settings before each run.</p>
+        </article>
+        <article class="bento fa-cap reveal tilt">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.2 4.2l2.8 2.8M17 17l2.8 2.8M1 12h4M19 12h4M4.2 19.8 7 17M17 7l2.8-2.8"/></svg>
+          <h3>Adapts when Flow changes</h3>
+          <p>If Google moves a button, record the clicks or paste a CSS selector in Connect Flow. No waiting for an update.</p>
+        </article>
+        <article class="bento fa-cap reveal tilt">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <h3>Private by design</h3>
+          <p>No hosted backend, API keys, analytics, cookie extraction or password storage. It all runs in your own signed-in browser.</p>
+        </article>
+      </div>
+
+      <article class="bento fa-mcp reveal" data-reveal="zoom" id="flow-auto-mcp" aria-labelledby="mcpTitle">
+        <div class="fa-mcp-copy">
+          <span class="fa-badge"><i aria-hidden="true"></i> MCP server</span>
+          <h3 id="mcpTitle">Run Flow Auto from Claude or Gemini.</h3>
+          <p>Flow Auto ships its own Model Context Protocol server. An AI assistant can read the queue, import a script, edit a single scene or the story's settings, and start, pause or cancel generation, all through the extension that is already signed in to Flow.</p>
+          <ul class="fa-checks">
+            <li>Works with Claude Desktop, Claude Code, claude.ai, Gemini CLI and the Gemini web app</li>
+            <li>Runs locally over stdio, or over HTTPS with OAuth sign-in and a one-time pairing code</li>
+            <li>Asks before anything that spends credits</li>
+            <li>One switch in Connect Flow turns it on or off</li>
+          </ul>
+        </div>
+
+        <div class="fa-chat" role="img" aria-label="Example conversation: the user asks Claude to import a script and check scene 4; Claude calls import_script and get_scene, then asks before starting generation because it spends credits.">
+          <div class="fa-chat-bar" aria-hidden="true"><span><i></i><i></i><i></i></span><b>Example session</b></div>
+          <div class="fa-chat-body" aria-hidden="true">
+            <p class="fa-msg fa-msg-user">Import tonight's script and check scene 4.</p>
+            <p class="fa-call"><code>import_script</code><span>10 scenes · 4 batches</span></p>
+            <p class="fa-call"><code>get_scene</code><span>scene 4 · ready</span></p>
+            <p class="fa-msg fa-msg-ai">Scene 4 has its storyboard and prompt. Starting generation spends Flow credits. Should I run batch 2?</p>
+          </div>
+        </div>
+
+        <ol class="fa-flow" aria-label="How the pieces connect">
+          <li><strong>Claude / Gemini</strong><span>Desktop, CLI, web or phone</span></li>
+          <li><strong>Flow Auto MCP</strong><span>Node server on your machine</span></li>
+          <li><strong>Flow Auto extension</strong><span>Chrome / Edge, local link</span></li>
+          <li><strong>Google Flow</strong><span>your signed-in project</span></li>
+        </ol>
+
+        <div class="fa-tools">
+          <div>
+            <h4>Read</h4>
+            <ul><li><code>flow_auto_status</code></li><li><code>list_stories</code></li><li><code>get_story</code></li><li><code>get_scene</code></li><li><code>get_settings</code></li><li><code>get_activity_log</code></li><li><code>get_script_guide</code></li></ul>
+          </div>
+          <div>
+            <h4>Edit</h4>
+            <ul><li><code>import_script</code></li><li><code>replace_scene</code></li><li><code>add_scene</code></li><li><code>update_settings</code></li><li><code>select_story</code></li></ul>
+          </div>
+          <div>
+            <h4>Run</h4>
+            <ul><li><code>start_generation</code></li><li><code>pause_queue</code></li><li><code>resume_queue</code></li><li><code>cancel_current_job</code></li><li><code>clear_queue</code></li><li><code>check_again</code></li></ul>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="showreel section-shell" id="videos" aria-labelledby="videosTitle">
+      <div class="section-heading reveal">
+        <div>
+          <span class="section-index">02 — Showreel</span>
+          <h2 id="videosTitle">See it in motion. <em>Products, demos and me.</em></h2>
+        </div>
+        <p>Short videos of what I build, plus a quick hello from me, so you can see how I work before we talk.</p>
+      </div>
+
+      <div class="showreel-grid">
+        <figure class="bento video-card video-card--feature tilt reveal" data-reveal="zoom" data-video="videos/intro.mp4" data-poster="videos/intro.jpg">
+          <div class="video-frame">
+            <span class="video-badge">Coming soon</span>
+            <div class="video-placeholder">
+              <button class="video-play" type="button" aria-label="Play video: Meet Carl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg></button>
+            </div>
+          </div>
+          <figcaption class="video-caption">
+            <span class="video-kicker">Intro</span>
+            <h3>Meet Carl</h3>
+            <p>Who I am, what I build, and how I can help your team or business.</p>
+          </figcaption>
+        </figure>
+
+        <div class="bento video-pitch reveal" data-reveal="right">
+          <span class="fa-badge"><i aria-hidden="true"></i> For clients</span>
+          <h3>Watch before you hire.</h3>
+          <p>Every product gets a short walkthrough recorded from the real app: the problem it solves and how it feels to use.</p>
+          <ul class="fa-checks">
+            <li>A short intro from me</li>
+            <li>Demos recorded from the real apps</li>
+            <li>New videos as projects ship</li>
+          </ul>
+          <a class="button button-primary hero-cta" href="#contact">
+            <span>Start a project</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+
+        <div class="video-samples">
+          <figure class="bento video-card video-card--small tilt reveal" data-video="videos/flow-auto.mp4" data-poster="videos/flow-auto.jpg">
+            <div class="video-frame">
+              <span class="video-badge">Coming soon</span>
+              <div class="video-placeholder">
+                <button class="video-play" type="button" aria-label="Play video: Flow Auto demo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg></button>
+              </div>
+            </div>
+            <figcaption class="video-caption">
+              <span class="video-kicker">Automation</span>
+              <h3>Flow Auto demo</h3>
+              <p>From an imported script to numbered 1080p videos.</p>
+            </figcaption>
+          </figure>
+          <figure class="bento video-card video-card--small tilt reveal" data-video="videos/healthnest.mp4" data-poster="videos/healthnest.jpg">
+            <div class="video-frame">
+              <span class="video-badge">Coming soon</span>
+              <div class="video-placeholder">
+                <button class="video-play" type="button" aria-label="Play video: HealthNest walkthrough"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg></button>
+              </div>
+            </div>
+            <figcaption class="video-caption">
+              <span class="video-kicker">Healthcare</span>
+              <h3>HealthNest walkthrough</h3>
+              <p>Patient cases, appointments and status tracking.</p>
+            </figcaption>
+          </figure>
+          <figure class="bento video-card video-card--small tilt reveal" data-video="videos/barangay.mp4" data-poster="videos/barangay.jpg">
+            <div class="video-frame">
+              <span class="video-badge">Coming soon</span>
+              <div class="video-placeholder">
+                <button class="video-play" type="button" aria-label="Play video: Barangay Case Management"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg></button>
+              </div>
+            </div>
+            <figcaption class="video-caption">
+              <span class="video-kicker">Civic tech</span>
+              <h3>Barangay Case Management</h3>
+              <p>Resident records, case tracking and SMS updates.</p>
+            </figcaption>
+          </figure>
+          <figure class="bento video-card video-card--small tilt reveal" data-video="videos/nursedesk.mp4" data-poster="videos/nursedesk.jpg">
+            <div class="video-frame">
+              <span class="video-badge">Coming soon</span>
+              <div class="video-placeholder">
+                <button class="video-play" type="button" aria-label="Play video: NurseDesk tour"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg></button>
+              </div>
+            </div>
+            <figcaption class="video-caption">
+              <span class="video-kicker">Health tech</span>
+              <h3>NurseDesk tour</h3>
+              <p>Student health records and medicine inventory.</p>
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="projects section-shell" id="projects" aria-labelledby="projectsTitle">
+      <div class="section-heading reveal">
+        <div>
+          <span class="section-index">03 — More work</span>
+          <h2 id="projectsTitle">Projects built around <em>real problems.</em></h2>
+        </div>
+        <p>Desktop systems and automation tools made for actual workflows. Filter by focus, then open a project to see the thinking behind it.</p>
+      </div>
+
+      <div class="project-toolbar reveal">
+        <div class="filter-group" id="projectFilterGroup" role="group" aria-label="Filter projects">
+          <span class="selector-hover-pill" aria-hidden="true"></span>
+          <button class="filter-button is-active" type="button" data-filter="all" aria-pressed="true">All <span>4</span></button>
+          <button class="filter-button" type="button" data-filter="desktop" aria-pressed="false">Desktop <span>3</span></button>
+          <button class="filter-button" type="button" data-filter="health" aria-pressed="false">Health <span>2</span></button>
+          <button class="filter-button" type="button" data-filter="civic" aria-pressed="false">Civic <span>1</span></button>
+          <button class="filter-button" type="button" data-filter="automation" aria-pressed="false">Automation <span>1</span></button>
+        </div>
+        <p class="toolbar-hint" id="projectCount" aria-live="polite">Showing 4 projects</p>
+      </div>
+
+      <div class="project-list">
+        <article class="project-card tilt reveal" data-category="automation" data-project="flowauto">
+          <div class="project-visual visual-flow-mini" aria-hidden="true">
+            <img src="flow-auto-icon.svg" alt="" width="72" height="72" />
+            <div class="flow-mini-steps"><span>Script</span><span>Refs</span><span>Video</span><span>1080p</span><span>MP4</span></div>
+            <span class="visual-caption">Browser extension · MCP</span>
+          </div>
+          <div class="project-copy">
+            <div class="project-topline">
+              <span class="project-kicker">Automation · Browser extension</span>
+              <span class="project-number">01</span>
+            </div>
+            <h3><button class="project-open" type="button" aria-haspopup="dialog">Flow Auto</button></h3>
+            <p>Scene-based Google Flow production from script to numbered 1080p MP4s, with an MCP server so Claude and Gemini can run the queue.</p>
+            <ul class="project-tags" aria-label="Built with"><li>React</li><li>TypeScript</li><li>Chrome MV3</li><li>MCP</li></ul>
+            <span class="project-link" aria-hidden="true">Read case study <svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg></span>
+          </div>
+        </article>
+
+        <article class="project-card tilt reveal" data-category="desktop health" data-project="healthnest">
+          <div class="project-visual visual-healthnest" aria-hidden="true">
+            <div class="mock-window">
+              <div class="mock-sidebar">
+                <span class="mock-logo"></span><i></i><i></i><i></i><i></i>
+              </div>
+              <div class="mock-content">
+                <div class="mock-head"><strong>HealthNest</strong><span>● Active</span></div>
+                <div class="mock-stats"><i></i><i></i><i></i></div>
+                <div class="mock-chart"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+                <div class="mock-row"><i></i><i></i><i></i></div>
+              </div>
+            </div>
+            <span class="visual-caption">Patient dashboard · WinUI</span>
+          </div>
+          <div class="project-copy">
+            <div class="project-topline">
+              <span class="project-kicker">Healthcare · Desktop</span>
+              <span class="project-number">02</span>
+            </div>
+            <h3><button class="project-open" type="button" aria-haspopup="dialog">HealthNest</button></h3>
+            <p>Maternal and child health monitoring with patient case management, appointment scheduling, and longitudinal status tracking.</p>
+            <ul class="project-tags" aria-label="Built with"><li>WinUI 3</li><li>C#</li><li>SQLite</li><li>.NET</li></ul>
+            <span class="project-link" aria-hidden="true">Read case study <svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg></span>
+          </div>
+        </article>
+
+        <article class="project-card tilt reveal" data-category="desktop civic" data-project="barangay">
+          <div class="project-visual visual-barangay" aria-hidden="true">
+            <div class="civic-ui">
+              <div class="civic-nav"><b>BCMS</b><i></i><i></i><i></i></div>
+              <div class="civic-main">
+                <div class="civic-title"><span></span><i></i></div>
+                <div class="civic-table">
+                  <span></span><span></span><span></span><span></span>
+                </div>
+                <div class="sms-toast"><i></i><div><b>SMS sent</b><small>Resident notified</small></div></div>
+              </div>
+            </div>
+            <span class="visual-caption">Case tracking · SMS workflow</span>
+          </div>
+          <div class="project-copy">
+            <div class="project-topline">
+              <span class="project-kicker">Civic tech · Desktop</span>
+              <span class="project-number">03</span>
+            </div>
+            <h3><button class="project-open" type="button" aria-haspopup="dialog">Barangay Case Management</button></h3>
+            <p>A local government social-services workflow for resident records, case tracking, and SMS notifications through the PhilSMS API.</p>
+            <ul class="project-tags" aria-label="Built with"><li>WinForms</li><li>C#</li><li>SQLite</li><li>PhilSMS</li></ul>
+            <span class="project-link" aria-hidden="true">Read case study <svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg></span>
+          </div>
+        </article>
+
+        <article class="project-card tilt reveal" data-category="desktop health" data-project="nursedesk">
+          <div class="project-visual visual-nursedesk" aria-hidden="true">
+            <div class="nurse-ui">
+              <div class="nurse-header"><span>+</span><b>NurseDesk</b><i></i></div>
+              <div class="nurse-grid">
+                <div class="nurse-panel"><small>STUDENTS</small><strong>1,248</strong><span></span></div>
+                <div class="nurse-panel"><small>MEDICINE</small><strong>86%</strong><span></span></div>
+                <div class="nurse-log"><i></i><i></i><i></i><i></i></div>
+              </div>
+            </div>
+            <span class="visual-caption">Clinic records · inventory</span>
+          </div>
+          <div class="project-copy">
+            <div class="project-topline">
+              <span class="project-kicker">Health tech · Desktop</span>
+              <span class="project-number">04</span>
+            </div>
+            <h3><button class="project-open" type="button" aria-haspopup="dialog">NurseDesk</button></h3>
+            <p>A school clinic management system for student health records, medicine inventory, and day-to-day health log tracking.</p>
+            <ul class="project-tags" aria-label="Built with"><li>WinForms</li><li>C#</li><li>SQLite</li></ul>
+            <span class="project-link" aria-hidden="true">Read case study <svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg></span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="lab3d section-shell" id="lab3d" aria-labelledby="labTitle">
+      <div class="section-heading reveal">
+        <div>
+          <span class="section-index">04 — Playground</span>
+          <h2 id="labTitle">A little character. <em>A mind of his own.</em></h2>
+        </div>
+        <p>Meet Pip, the resident ragdoll. Pick him up, or leave him for five seconds. He'll head off to play with the page, inspect projects, and discover things to poke.</p>
+      </div>
+      <div class="core-lab bento reveal">
         <div class="core-copy">
           <div class="core-copy-top">
-            <span class="core-live"><i></i> PIP / ONLINE</span>
+            <span class="core-live"><i></i> Pip / online</span>
             <span class="core-coordinates" id="ragdollLocation">AT HOME</span>
           </div>
           <div class="core-readout">
-            <span>YOUR LITTLE COMPANION</span>
+            <span>Your little companion</span>
             <h3 id="ragdollTitle">Hello, human.</h3>
             <p id="ragdollDescription">After five seconds without your attention, he finds his own adventures: hopping onto cards, poking buttons, and exploring the page.</p>
           </div>
-          <div class="core-view-grid" id="coreViewGrid" aria-label="Things to do with Pip">
+          <div class="core-view-grid" id="coreViewGrid" role="group" aria-label="Things to do with Pip">
             <span class="selector-hover-pill" aria-hidden="true"></span>
             <button class="core-view" type="button" data-pip-action="wave"><span>01</span>Say hello</button>
             <button class="core-view" type="button" data-pip-action="dance"><span>02</span>Dance</button>
@@ -175,13 +658,13 @@
             <button class="core-view" type="button" data-pip-action="explore"><span>06</span>Let him out</button>
           </div>
           <div class="core-hint" id="ragdollHelp">
-            <span>grab a limb / toss</span><span>double tap to wave</span>
-            <span>arrows move · space jumps · H goes home</span>
+            <span>Grab a limb to toss</span><span>Double tap to wave</span>
+            <span>Arrows move · Space jumps · H goes home</span>
           </div>
         </div>
         <div class="core-stage-wrap">
           <div class="core-stage ragdoll-home" id="ragdollHome" aria-label="Pip's home">
-            <div class="ragdoll-home-label"><span>01 / HOME BASE</span><small>SMALL BODY. BIG CURIOSITY.</small></div>
+            <div class="ragdoll-home-label"><span>Home base</span><small>Small body. Big curiosity.</small></div>
             <div class="ragdoll-platform" aria-hidden="true"><i></i><span>PIP</span></div>
             <p class="ragdoll-home-hint" id="ragdollHomeHint">Go on. Pick him up.</p>
             <p class="ragdoll-fallback" id="ragdollFallback" hidden>3D rendering is unavailable in this browser. Try a browser with WebGL enabled to meet Pip.</p>
@@ -195,351 +678,119 @@
       </div>
     </section>
 
-    <section class="projects section-shell" id="projects">
+    <section class="stack section-shell" id="stack" aria-labelledby="stackSectionTitle">
       <div class="section-heading reveal">
         <div>
-          <span class="section-index">01 / SELECTED WORK</span>
-          <h2>Projects built around<br><em>real problems.</em></h2>
+          <span class="section-index">05 — Toolbox</span>
+          <h2 id="stackSectionTitle">Tools I use to turn <em>ideas into systems.</em></h2>
         </div>
-        <p>Interactive case previews. Filter by focus, then open a project to see the thinking behind it.</p>
-      </div>
-
-      <div class="project-toolbar reveal">
-        <div class="filter-group" id="projectFilterGroup" role="group" aria-label="Filter projects">
-          <span class="selector-hover-pill" aria-hidden="true"></span>
-          <button class="filter-button is-active" type="button" data-filter="all">All <span>04</span></button>
-          <button class="filter-button" type="button" data-filter="desktop">Desktop <span>03</span></button>
-          <button class="filter-button" type="button" data-filter="health">Health <span>02</span></button>
-          <button class="filter-button" type="button" data-filter="civic">Civic <span>01</span></button>
-          <button class="filter-button" type="button" data-filter="automation">Automation <span>01</span></button>
-        </div>
-        <span class="toolbar-hint">Hover to interact · click to inspect</span>
-      </div>
-
-      <div class="project-list">
-        <article class="project-card tilt-card reveal" data-category="desktop health" data-project="healthnest" tabindex="0">
-          <div class="project-number">01</div>
-          <div class="project-visual visual-healthnest" aria-hidden="true">
-            <div class="mock-window">
-              <div class="mock-sidebar">
-                <span class="mock-logo"></span><i></i><i></i><i></i><i></i>
-              </div>
-              <div class="mock-content">
-                <div class="mock-head"><strong>HealthNest</strong><span>● Active</span></div>
-                <div class="mock-stats"><i></i><i></i><i></i></div>
-                <div class="mock-chart"><span></span><span></span><span></span><span></span><span></span><span></span></div>
-                <div class="mock-row"><i></i><i></i><i></i></div>
-              </div>
-            </div>
-            <span class="visual-caption">PATIENT DASHBOARD / WINUI</span>
-          </div>
-          <div class="project-copy">
-            <div class="project-topline">
-              <span>Healthcare · Desktop</span>
-              <button class="round-arrow" type="button" aria-label="Open HealthNest project details">
-                <svg viewBox="0 0 24 24"><path d="M5 19 19 5M9 5h10v10"/></svg>
-              </button>
-            </div>
-            <h3>HealthNest</h3>
-            <p>Maternal and child health monitoring with patient case management, appointment scheduling, and longitudinal status tracking.</p>
-            <div class="project-tags"><span>WinUI 3</span><span>C#</span><span>SQLite</span><span>.NET</span></div>
-          </div>
-        </article>
-
-        <article class="project-card tilt-card reveal" data-category="desktop civic" data-project="barangay" tabindex="0">
-          <div class="project-number">02</div>
-          <div class="project-visual visual-barangay" aria-hidden="true">
-            <div class="civic-ui">
-              <div class="civic-nav"><b>BCMS</b><i></i><i></i><i></i></div>
-              <div class="civic-main">
-                <div class="civic-title"><span></span><i></i></div>
-                <div class="civic-table">
-                  <span></span><span></span><span></span><span></span>
-                </div>
-                <div class="sms-toast"><i></i><div><b>SMS sent</b><small>Resident notified</small></div></div>
-              </div>
-            </div>
-            <span class="visual-caption">CASE TRACKING / SMS WORKFLOW</span>
-          </div>
-          <div class="project-copy">
-            <div class="project-topline">
-              <span>Civic Tech · Desktop</span>
-              <button class="round-arrow" type="button" aria-label="Open Barangay Case Management project details">
-                <svg viewBox="0 0 24 24"><path d="M5 19 19 5M9 5h10v10"/></svg>
-              </button>
-            </div>
-            <h3>Barangay Case Management</h3>
-            <p>A local government social-services workflow for resident records, case tracking, and SMS notifications through the PhilSMS API.</p>
-            <div class="project-tags"><span>WinForms</span><span>C#</span><span>SQLite</span><span>PhilSMS</span></div>
-          </div>
-        </article>
-
-        <article class="project-card tilt-card reveal" data-category="desktop health" data-project="nursedesk" tabindex="0">
-          <div class="project-number">03</div>
-          <div class="project-visual visual-nursedesk" aria-hidden="true">
-            <div class="nurse-ui">
-              <div class="nurse-header"><span>+</span><b>NurseDesk</b><i></i></div>
-              <div class="nurse-grid">
-                <div class="nurse-panel"><small>STUDENTS</small><strong>1,248</strong><span></span></div>
-                <div class="nurse-panel"><small>MEDICINE</small><strong>86%</strong><span></span></div>
-                <div class="nurse-log"><i></i><i></i><i></i><i></i></div>
-              </div>
-            </div>
-            <span class="visual-caption">CLINIC RECORDS / INVENTORY</span>
-          </div>
-          <div class="project-copy">
-            <div class="project-topline">
-              <span>Health Tech · Desktop</span>
-              <button class="round-arrow" type="button" aria-label="Open NurseDesk project details">
-                <svg viewBox="0 0 24 24"><path d="M5 19 19 5M9 5h10v10"/></svg>
-              </button>
-            </div>
-            <h3>NurseDesk</h3>
-            <p>A school clinic management system for student health records, medicine inventory, and day-to-day health log tracking.</p>
-            <div class="project-tags"><span>WinForms</span><span>C#</span><span>SQLite</span></div>
-          </div>
-        </article>
-        <article class="project-card tilt-card reveal" data-category="automation" data-project="flowauto" tabindex="0">
-          <div class="project-number">04</div>
-          <div class="project-visual visual-flow-auto">
-            <div class="flow-preview" data-flow-preview>
-              <div class="flow-preview-sidebar">
-                <div class="flow-preview-brand">
-                  <img src="flow-auto-icon.svg" alt="" />
-                  <span><strong>flow</strong><b>auto</b><small>BETA</small></span>
-                </div>
-                <div class="flow-preview-nav" aria-hidden="true">
-                  <span class="is-active">Scenes &amp; batches</span>
-                  <span>Story &amp; continuity</span>
-                  <span>Generation settings</span>
-                  <span>Connect Flow</span>
-                  <span>Activity</span>
-                </div>
-                <div class="flow-preview-status"><i></i> Extension workspace</div>
-              </div>
-
-              <div class="flow-preview-main">
-                <div class="flow-preview-topbar">
-                  <span>Workspace <i>›</i> ANG LIHIM</span>
-                  <b>SOURCE UI PREVIEW</b>
-                </div>
-
-                <div class="flow-snapshot-stage">
-                  <div class="flow-snapshot is-active" data-flow-snapshot="scenes">
-                    <div class="flow-snapshot-heading">
-                      <div>
-                        <small>THE DIRECTOR'S DESK</small>
-                        <strong>Your story. Scene by scene.</strong>
-                      </div>
-                      <span>+ Import prompts</span>
-                    </div>
-                    <div class="flow-mini-stats">
-                      <span><b>10</b><small>Scenes</small></span>
-                      <span><b>4</b><small>Batches</small></span>
-                      <span><b>4</b><small>References ready</small></span>
-                      <span class="done"><b>6</b><small>Videos downloaded</small></span>
-                    </div>
-                    <div class="flow-rules-strip"><i>✓</i><span>Global rules <b>Active · version 3</b></span><em>View &amp; edit ↗</em></div>
-                    <div class="flow-scene-grid">
-                      <div class="flow-scene-card">
-                        <div class="flow-scene-thumb"><span>01</span><i>8s</i></div>
-                        <small>BATCH 1 · READY</small><b>Ang Kulang na Pera</b><p>Rainy market bakery · continuity locked</p>
-                      </div>
-                      <div class="flow-scene-card">
-                        <div class="flow-scene-thumb alt"><span>02</span><i>8s</i></div>
-                        <small>BATCH 1 · COMPLETE</small><b>Ang Tinapay</b><p>Reference approved · video exported</p>
-                      </div>
-                      <div class="flow-scene-card">
-                        <div class="flow-scene-thumb violet"><span>03</span><i>8s</i></div>
-                        <small>BATCH 1 · REVIEW</small><b>Ang Pasya</b><p>Storyboard ready for approval</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="flow-snapshot" data-flow-snapshot="settings">
-                    <div class="flow-snapshot-heading">
-                      <div>
-                        <small>SET THE CREATIVE DIRECTION</small>
-                        <strong>Your production preferences.</strong>
-                      </div>
-                      <span>Save settings</span>
-                    </div>
-                    <div class="flow-settings-grid">
-                      <div><small>MODEL</small><b>Veo 3.1 - Fast</b></div>
-                      <div><small>ASPECT RATIO</small><b>9:16</b></div>
-                      <div><small>SCENE DURATION</small><b>8 seconds</b></div>
-                      <div><small>REFERENCE MODE</small><b>Start frame</b></div>
-                    </div>
-                    <div class="flow-settings-panel">
-                      <span><i></i><b>Automatically export finished videos</b><small>Upscale through Flow and save numbered files.</small></span>
-                      <span><i class="on"></i><b>Pause after each batch</b><small>Review continuity before the next batch.</small></span>
-                      <span><i class="on"></i><b>1080p final export</b><small>Verify exported video dimensions.</small></span>
-                    </div>
-                  </div>
-
-                  <div class="flow-snapshot" data-flow-snapshot="connect">
-                    <div class="flow-snapshot-heading">
-                      <div>
-                        <small>MAKE THE CONNECTION</small>
-                        <strong>A bridge to your Flow project.</strong>
-                      </div>
-                      <span>Check controls</span>
-                    </div>
-                    <div class="flow-connect-card">
-                      <div class="flow-connect-status"><i></i><span><b>Flow project detected</b><small>Signed-in project tab connected</small></span></div>
-                      <div class="flow-connect-url">flow.google.com/project/••••••••</div>
-                    </div>
-                    <div class="flow-selector-list">
-                      <span><small>PROMPT TEXTBOX</small><b>ProseMirror prompt box</b><i>FOUND</i></span>
-                      <span><small>GENERATE BUTTON</small><b>Generate control</b><i>FOUND</i></span>
-                      <span><small>RESULT CARD</small><b>Repeated gallery container</b><i>3 CARDS</i></span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="flow-preview-switcher" role="group" aria-label="Flow Auto preview snapshots">
-                  <button class="is-active" type="button" data-flow-view="scenes">Scenes</button>
-                  <button type="button" data-flow-view="settings">Settings</button>
-                  <button type="button" data-flow-view="connect">Connect Flow</button>
-                </div>
-              </div>
-            </div>
-            <span class="visual-caption">REAL FLOW AUTO UI / INTERACTIVE SOURCE PREVIEW</span>
-          </div>
-          <div class="project-copy">
-            <div class="project-topline">
-              <span>Automation · Browser Extension</span>
-              <button class="round-arrow" type="button" aria-label="Open Flow Auto project details">
-                <svg viewBox="0 0 24 24"><path d="M5 19 19 5M9 5h10v10"/></svg>
-              </button>
-            </div>
-            <div class="flow-project-title">
-              <img src="flow-auto-icon.svg" alt="Flow Auto logo" />
-              <h3>Flow Auto</h3>
-            </div>
-            <p>A Chrome / Edge automation workspace for scene-based Google Flow production: prompt import, continuity, batch storyboards, queue recovery, 1080p export, and scene-numbered downloads.</p>
-            <div class="project-tags"><span>React</span><span>TypeScript</span><span>Chrome MV3</span><span>Vite</span></div>
-          </div>
-        </article>
-
-      </div>
-    </section>
-
-    <section class="stack section-shell" id="stack">
-      <div class="section-heading reveal">
-        <div>
-          <span class="section-index">02 / TOOLBOX</span>
-          <h2>Tools I use to turn<br><em>ideas into systems.</em></h2>
-        </div>
-        <p>Move across the stack to see how each layer fits into the way I build.</p>
+        <p>Pick a layer to see how each part of the stack fits into the way I build.</p>
       </div>
 
       <div class="stack-layout">
-        <div class="stack-console reveal">
+        <div class="stack-console bento reveal" data-reveal="left">
           <div class="console-bar">
-            <span><i></i><i></i><i></i></span>
+            <span aria-hidden="true"><i></i><i></i><i></i></span>
             <b>~/carl/skills</b>
-            <small>interactive</small>
           </div>
           <div class="console-body">
-            <p><span class="prompt">→</span> select a layer</p>
-            <div class="stack-selector" id="stackSelector">
+            <p><span class="prompt" aria-hidden="true">→</span> select a layer</p>
+            <div class="stack-selector" id="stackSelector" role="group" aria-label="Stack layers">
               <span class="selector-hover-pill" aria-hidden="true"></span>
-              <button class="stack-button is-active" data-stack="languages" type="button"><span>01</span>Languages</button>
-              <button class="stack-button" data-stack="desktop" type="button"><span>02</span>Desktop & UI</button>
-              <button class="stack-button" data-stack="data" type="button"><span>03</span>Data</button>
-              <button class="stack-button" data-stack="concepts" type="button"><span>04</span>Foundations</button>
+              <button class="stack-button is-active" data-stack="languages" type="button" aria-pressed="true"><span>01</span>Languages</button>
+              <button class="stack-button" data-stack="desktop" type="button" aria-pressed="false"><span>02</span>Desktop &amp; UI</button>
+              <button class="stack-button" data-stack="data" type="button" aria-pressed="false"><span>03</span>Data</button>
+              <button class="stack-button" data-stack="concepts" type="button" aria-pressed="false"><span>04</span>Foundations</button>
             </div>
           </div>
         </div>
 
-        <div class="stack-display tilt-card reveal" id="stackDisplay">
+        <div class="stack-display bento reveal" data-reveal="right" id="stackDisplay" aria-live="polite">
           <div class="stack-display-head">
             <span id="stackIndex">01</span>
             <p id="stackKicker">Core languages</p>
           </div>
           <h3 id="stackTitle">Languages</h3>
           <p id="stackDescription">The languages I reach for when building application logic, systems exercises, and interactive interfaces.</p>
-          <div class="skill-cloud" id="skillCloud">
-            <span>C#</span><span>C</span><span>JavaScript</span><span>HTML</span><span>CSS</span>
-          </div>
-          <div class="stack-meter">
-            <span>build mode</span>
-            <div><i id="stackMeter"></i></div>
-            <b id="stackMeterLabel">ACTIVE</b>
-          </div>
+          <ul class="skill-cloud" id="skillCloud">
+            <li>C#</li><li>C</li><li>JavaScript</li><li>HTML</li><li>CSS</li>
+          </ul>
         </div>
       </div>
     </section>
 
-    <section class="about section-shell" id="about">
+    <section class="about section-shell" id="about" aria-labelledby="aboutTitle">
       <div class="about-grid">
-        <div class="about-sticky reveal">
-          <span class="section-index">03 / ABOUT</span>
-          <h2>Engineering mindset.<br><em>Human-centered output.</em></h2>
-        </div>
-
-        <div class="about-content">
-          <p class="about-lead reveal">
+        <div class="about-sticky reveal" data-reveal="left">
+          <span class="section-index">06 — About</span>
+          <h2 id="aboutTitle">Engineering mindset. <em>Human-centered output.</em></h2>
+          <p class="about-lead">
             I like projects where software has a clear job: organize messy information,
             reduce repetitive work, and make a process easier for the person using it.
           </p>
+        </div>
 
+        <div class="about-content">
           <div class="principle-list">
-            <article class="principle reveal">
+            <article class="principle bento reveal">
               <span>01</span>
               <div><h3>Build for the workflow</h3><p>I start with what the user actually needs to accomplish, then shape the interface around that sequence.</p></div>
             </article>
-            <article class="principle reveal">
+            <article class="principle bento reveal">
               <span>02</span>
               <div><h3>Make complexity legible</h3><p>Good software can be technically deep without feeling complicated. Structure, hierarchy, and feedback matter.</p></div>
             </article>
-            <article class="principle reveal">
+            <article class="principle bento reveal">
               <span>03</span>
-              <div><h3>Iterate in public</h3><p>I learn by building, testing, breaking, and refining—turning classroom concepts into working systems.</p></div>
+              <div><h3>Iterate in public</h3><p>I learn by building, testing, breaking, and refining, turning classroom concepts into working systems.</p></div>
             </article>
           </div>
 
-          <div class="about-facts reveal">
-            <div><span>Degree</span><strong>B.S. Computer Engineering</strong></div>
-            <div><span>Current lane</span><strong>Desktop apps & automation</strong></div>
-            <div><span>Based in</span><strong>Iloilo, Philippines</strong></div>
-          </div>
+          <dl class="about-facts reveal">
+            <div><dt>Degree</dt><dd>B.S. Computer Engineering</dd></div>
+            <div><dt>Current lane</dt><dd>Desktop apps &amp; automation</dd></div>
+            <div><dt>Based in</dt><dd>Iloilo, Philippines</dd></div>
+          </dl>
         </div>
       </div>
     </section>
 
-    <section class="contact section-shell" id="contact">
-      <div class="contact-card reveal">
-        <div class="contact-noise" aria-hidden="true"></div>
+    <section class="contact section-shell" id="contact" aria-labelledby="contactTitle">
+      <div class="contact-card bento reveal" data-reveal="zoom">
         <div class="contact-copy">
-          <span class="section-index">04 / CONTACT</span>
-          <h2>Have something<br>worth <em>building?</em></h2>
+          <span class="section-index">07 — Contact</span>
+          <h2 id="contactTitle">Have something worth <em>building?</em></h2>
           <p>I'm open to internships, freelance work, and interesting collaborations.</p>
           <div class="contact-actions">
-            <a class="primary-button light magnetic" href="mailto:carltampus5@gmail.com">
+            <a class="button button-primary" href="mailto:carltampus5@gmail.com">
               <span>Start a conversation</span>
-              <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </a>
-            <button class="copy-address" id="copyEmailContact" type="button">carltampus5@gmail.com <span>copy</span></button>
+            <button class="copy-address" id="copyEmailContact" type="button" aria-label="Copy email address carltampus5@gmail.com">
+              <span>carltampus5@gmail.com</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
           </div>
         </div>
 
-        <form class="contact-form" id="contactForm">
-          <label>
-            <span>Your name</span>
-            <input type="text" name="name" placeholder="Jane Doe" required />
-          </label>
-          <label>
-            <span>Email address</span>
-            <input type="email" name="email" placeholder="jane@example.com" required />
-          </label>
-          <label>
-            <span>Tell me about the project</span>
-            <textarea name="message" rows="5" placeholder="A quick overview..." required></textarea>
-          </label>
-          <button class="form-submit" type="submit"><span>Send message</span><i>↗</i></button>
-          <p class="form-status" id="formStatus" aria-live="polite"></p>
+        <form class="contact-form" id="contactForm" novalidate>
+          <div class="field">
+            <label for="contactName">Your name</label>
+            <input id="contactName" type="text" name="name" autocomplete="name" placeholder="Jane Doe" required />
+          </div>
+          <div class="field">
+            <label for="contactEmail">Email address</label>
+            <input id="contactEmail" type="email" name="email" autocomplete="email" placeholder="jane@example.com" required />
+          </div>
+          <div class="field">
+            <label for="contactMessage">Tell me about the project</label>
+            <textarea id="contactMessage" name="message" rows="5" placeholder="A quick overview..." required></textarea>
+          </div>
+          <button class="button button-primary form-submit" type="submit">
+            <span>Send message</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+          </button>
+          <p class="form-status" id="formStatus" role="status" aria-live="polite"></p>
         </form>
       </div>
     </section>
@@ -547,20 +798,22 @@
 
   <footer class="footer section-shell">
     <div class="footer-brand">
-      <span>CT/</span>
-      <p>Designed & built by Carl Tampus<br><small>HTML · CSS · JavaScript</small></p>
+      <span class="brand-mark" aria-hidden="true">CT</span>
+      <p>Designed &amp; built by Carl Tampus<br /><small>HTML · CSS · JavaScript</small></p>
     </div>
-    <div class="footer-links">
-      <a href="https://github.com/Rouge999xx" target="_blank" rel="noreferrer">GitHub ↗</a>
-      <a href="https://linkedin.com/in/carl-marvic-tampus-478a932b8" target="_blank" rel="noreferrer">LinkedIn ↗</a>
-      <a href="mailto:carltampus5@gmail.com">Email ↗</a>
-    </div>
-    <div class="footer-end"><span>© <b id="year"></b></span><a href="#home">Back to top ↑</a></div>
+    <nav class="footer-links" aria-label="Elsewhere">
+      <a href="https://github.com/Rouge999xx" target="_blank" rel="noreferrer">GitHub</a>
+      <a href="https://linkedin.com/in/carl-marvic-tampus-478a932b8" target="_blank" rel="noreferrer">LinkedIn</a>
+      <a href="mailto:carltampus5@gmail.com">Email</a>
+    </nav>
+    <div class="footer-end"><span>© <b id="year"></b></span><a href="#home">Back to top</a></div>
   </footer>
 
   <div class="modal-backdrop" id="projectModal" aria-hidden="true">
-    <div class="project-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <button class="modal-close" id="modalClose" type="button" aria-label="Close project details">×</button>
+    <div class="project-modal" data-lenis-prevent role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="icon-button modal-close" id="modalClose" type="button" aria-label="Close project details">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
       <div class="modal-index" id="modalIndex">01</div>
       <span class="modal-kicker" id="modalKicker">Healthcare · Desktop</span>
       <h2 id="modalTitle">HealthNest</h2>
@@ -570,31 +823,37 @@
         <div><span>Approach</span><p id="modalApproach"></p></div>
       </div>
       <div class="modal-tags" id="modalTags"></div>
-      <p class="modal-note">Project preview · repository links can be added when you want to publish the source.</p>
+      <p class="modal-note">Project preview · repository links can be added when the source is published.</p>
     </div>
   </div>
 
   <div class="command-backdrop" id="commandPalette" aria-hidden="true">
-    <div class="command-panel" role="dialog" aria-modal="true" aria-label="Command palette">
+    <div class="command-panel" data-lenis-prevent role="dialog" aria-modal="true" aria-label="Command palette">
       <div class="command-search">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="commandInput" type="text" placeholder="Type a command or search..." autocomplete="off" />
+        <input id="commandInput" type="text" placeholder="Type a command or search..." autocomplete="off" aria-label="Search commands" />
         <kbd>ESC</kbd>
       </div>
       <div class="command-list" id="commandList">
-        <button data-action="projects" type="button"><span><i>↳</i> Go to projects</span><kbd>P</kbd></button>
-        <button data-action="stack" type="button"><span><i>⌘</i> View tech stack</span><kbd>S</kbd></button>
-        <button data-action="about" type="button"><span><i>◎</i> Read about me</span><kbd>A</kbd></button>
-        <button data-action="contact" type="button"><span><i>✉</i> Contact me</span><kbd>C</kbd></button>
-        <button data-action="copy" type="button"><span><i>⎘</i> Copy email address</span><kbd>E</kbd></button>
-        <button data-action="theme" type="button"><span><i>◐</i> Toggle theme</span><kbd>T</kbd></button>
-        <a href="https://github.com/Rouge999xx" target="_blank" rel="noreferrer"><span><i>↗</i> Open GitHub</span><kbd>G</kbd></a>
+        <button data-action="flow-auto" type="button"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2-10 12h9l-1 8 10-12h-9Z"/></svg> Explore Flow Auto</span><kbd>F</kbd></button>
+        <button data-action="videos" type="button"><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="m17 10 5-3v10l-5-3"/></svg> Watch the showreel</span><kbd>V</kbd></button>
+        <button data-action="projects" type="button"><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> Go to projects</span><kbd>P</kbd></button>
+        <button data-action="stack" type="button"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg> View tech stack</span><kbd>S</kbd></button>
+        <button data-action="about" type="button"><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg> Read about me</span><kbd>A</kbd></button>
+        <button data-action="contact" type="button"><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg> Contact me</span><kbd>C</kbd></button>
+        <button data-action="copy" type="button"><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy email address</span><kbd>E</kbd></button>
+        <button data-action="motion" type="button"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8Z"/></svg> Toggle animations</span><kbd>M</kbd></button>
+        <button data-action="theme" type="button"><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor"/></svg> Toggle theme</span><kbd>T</kbd></button>
+        <a href="https://github.com/Rouge999xx" target="_blank" rel="noreferrer"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg> Open GitHub</span><kbd>G</kbd></a>
       </div>
       <div class="command-footer"><span>↑↓ navigate</span><span>↵ select</span><span>esc close</span></div>
     </div>
   </div>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><p>Email copied to clipboard</p></div>
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+    <p>Email copied to clipboard</p>
+  </div>
 
   <div class="ragdoll-overlay" id="ragdollOverlay" hidden>
     <canvas id="ragdollCanvas" aria-hidden="true"></canvas>
@@ -609,9 +868,10 @@
     </div>
   </div>
   <span class="sr-only" id="ragdollStatus" role="status" aria-live="polite"></span>
-  <script src="main.js"></script>
-  <script src="ragdoll-physics.js"></script>
-  <script src="ragdoll-brain.js"></script>
-  <script src="ragdoll.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>
+  <script src="main.js" defer></script>
+  <script src="ragdoll-physics.js" defer></script>
+  <script src="ragdoll-brain.js" defer></script>
+  <script src="ragdoll.js" defer></script>
 </body>
 </html>
