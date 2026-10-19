@@ -1,0 +1,106 @@
+{
+  "flowauto": [
+    {
+      "id": "hook",
+      "say": "Making a multi-scene AI video means the same setup, the same continuity checks, and the same exports. Over, and over again.",
+      "text": "Making a multi-scene AI video means the same setup, the same continuity checks, and the same exports. Over, and over again."
+    },
+    {
+      "id": "intro",
+      "say": "Flow Auto is a Chrome and Edge extension that turns a scene-by-scene script into finished, numbered, ten-eighty p videos on Google Flow.",
+      "text": "Flow Auto is a Chrome and Edge extension that turns a scene-by-scene script into finished, numbered, 1080p videos on Google Flow."
+    },
+    {
+      "id": "import",
+      "say": "Paste a ChatGPT script, or Jason. Scenes, batches and global rules are checked before you accept them.",
+      "text": "Paste a ChatGPT script, or JSON. Scenes, batches and global rules are checked before you accept them."
+    },
+    {
+      "id": "reference",
+      "say": "It makes storyboards and character sheets with Flow, ChatGPT, Grok or Meta AI, and saves them as real P N G files.",
+      "text": "It makes storyboards and character sheets with Flow, ChatGPT, Grok or Meta AI, and saves them as real PNG files."
+    },
+    {
+      "id": "generate",
+      "say": "Each scene goes to Flow, in Standard or Agent mode, or to Grok Imagine, with its rules and references attached.",
+      "text": "Each scene goes to Flow, in Standard or Agent mode, or to Grok Imagine, with its rules and references attached."
+    },
+    {
+      "id": "export",
+      "say": "Flow Auto uses Google Flow's own ten-eighty p upscale, then saves every file as one, two, three, and so on, checked for the exact name and resolution.",
+      "text": "Flow Auto uses Google Flow's own 1080p upscale, then saves every file as 1, 2, 3, and so on, checked for the exact name and resolution."
+    },
+    {
+      "id": "continuity",
+      "say": "Global rules and character descriptions go into every image and video prompt, so batches stay consistent.",
+      "text": "Global rules and character descriptions go into every image and video prompt, so batches stay consistent."
+    },
+    {
+      "id": "resilience",
+      "say": "The queue survives a refresh or a crash without making duplicates. And when a result is unclear, it pauses for your choice instead of guessing.",
+      "text": "The queue survives a refresh or a crash without making duplicates. And when a result is unclear, it pauses for your choice instead of guessing."
+    },
+    {
+      "id": "mcp",
+      "say": "With its own M C P server, Claude and Gemini can run it too. Import a script, edit a scene, start or pause generation. And it asks before anything that spends credits.",
+      "text": "With its own MCP server, Claude and Gemini can run it too. Import a script, edit a scene, start or pause generation. And it asks before anything that spends credits."
+    },
+    {
+      "id": "private",
+      "say": "No hosted backend. No API keys. No analytics. It all runs in your own signed-in browser.",
+      "text": "No hosted backend. No API keys. No analytics. It all runs in your own signed-in browser."
+    },
+    {
+      "id": "outro",
+      "say": "Flow Auto. A production line for AI video. Built by Carl Tampus.",
+      "text": "Flow Auto. A production line for AI video. Built by Carl Tampus."
+    }
+  ],
+  "services": [
+    {
+      "id": "hook",
+      "say": "Is a slow, messy workflow eating your team's time?",
+      "text": "Is a slow, messy workflow eating your team's time?"
+    },
+    {
+      "id": "intro",
+      "say": "I'm Carl Tampus, a Computer Engineering student from Iloilo, Philippines. I build software that feels alive.",
+      "text": "I'm Carl Tampus, a Computer Engineering student from Iloilo, Philippines. I build software that feels alive."
+    },
+    {
+      "id": "desktop",
+      "say": "Desktop systems, built with C sharp, WinUI and WinForms, backed by SQLite.",
+      "text": "Desktop systems, built with C#, WinUI and WinForms, backed by SQLite."
+    },
+    {
+      "id": "automation",
+      "say": "Automation tools and browser extensions that take the repetitive work off your plate.",
+      "text": "Automation tools and browser extensions that take the repetitive work off your plate."
+    },
+    {
+      "id": "ai",
+      "say": "And AI integrations with M C P, so assistants like Claude and Gemini can do real work inside your tools.",
+      "text": "And AI integrations with MCP, so assistants like Claude and Gemini can do real work inside your tools."
+    },
+    {
+      "id": "proof",
+      "say": "HealthNest tracks maternal and child health. Barangay Case Management keeps residents updated by S M S. NurseDesk runs a school clinic's records and medicine inventory. And Flow Auto turns scripts into finished AI videos.",
+      "text": "HealthNest tracks maternal and child health. Barangay Case Management keeps residents updated by SMS. NurseDesk runs a school clinic's records and medicine inventory. And Flow Auto turns scripts into finished AI videos."
+    },
+    {
+      "id": "approach",
+      "say": "I start with what you actually need to get done, then shape the software around it. Technically deep, never complicated.",
+      "text": "I start with what you actually need to get done, then shape the software around it. Technically deep, never complicated."
+    },
+    {
+      "id": "cta",
+      "say": "I'm open to internships, freelance work, and interesting collaborations. Let's build something worth using.",
+      "text": "I'm open to internships, freelance work, and interesting collaborations. Let's build something worth using."
+    },
+    {
+      "id": "contact",
+      "say": "Email me at carl tampus five, at gmail dot com.",
+      "text": "Email me at carltampus5@gmail.com."
+    }
+  ]
+}
