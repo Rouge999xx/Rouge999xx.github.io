@@ -199,109 +199,22 @@
 
         <div class="bento fa-preview-card reveal" data-reveal="zoom">
           <div class="project-visual visual-flow-auto">
-                <div class="flow-preview" data-flow-preview>
-                  <div class="flow-preview-sidebar">
-                    <div class="flow-preview-brand">
-                      <img src="flow-auto-icon.svg" alt="" width="25" height="25" />
-                      <span><strong>flow</strong><b>auto</b><small>BETA</small></span>
-                    </div>
-                    <div class="flow-preview-nav" aria-hidden="true">
-                      <span class="is-active">Scenes &amp; batches</span>
-                      <span>Story &amp; continuity</span>
-                      <span>Generation settings</span>
-                      <span>Connect Flow</span>
-                      <span>Activity</span>
-                    </div>
-                    <div class="flow-preview-status"><i></i> Extension workspace</div>
-                  </div>
-
-                  <div class="flow-preview-main">
-                    <div class="flow-preview-topbar">
-                      <span>Workspace <i>›</i> ANG LIHIM</span>
-                      <b>SOURCE UI PREVIEW</b>
-                    </div>
-
-                    <div class="flow-snapshot-stage">
-                      <div class="flow-snapshot is-active" data-flow-snapshot="scenes">
-                        <div class="flow-snapshot-heading">
-                          <div>
-                            <small>THE DIRECTOR'S DESK</small>
-                            <strong>Your story. Scene by scene.</strong>
-                          </div>
-                          <span>+ Import prompts</span>
-                        </div>
-                        <div class="flow-mini-stats">
-                          <span><b>10</b><small>Scenes</small></span>
-                          <span><b>4</b><small>Batches</small></span>
-                          <span><b>4</b><small>References ready</small></span>
-                          <span class="done"><b>6</b><small>Videos downloaded</small></span>
-                        </div>
-                        <div class="flow-rules-strip"><i>✓</i><span>Global rules <b>Active · version 3</b></span><em>View &amp; edit ↗</em></div>
-                        <div class="flow-scene-grid">
-                          <div class="flow-scene-card">
-                            <div class="flow-scene-thumb"><span>01</span><i>8s</i></div>
-                            <small>BATCH 1 · READY</small><b>Ang Kulang na Pera</b><p>Rainy market bakery · continuity locked</p>
-                          </div>
-                          <div class="flow-scene-card">
-                            <div class="flow-scene-thumb alt"><span>02</span><i>8s</i></div>
-                            <small>BATCH 1 · COMPLETE</small><b>Ang Tinapay</b><p>Reference approved · video exported</p>
-                          </div>
-                          <div class="flow-scene-card">
-                            <div class="flow-scene-thumb violet"><span>03</span><i>8s</i></div>
-                            <small>BATCH 1 · REVIEW</small><b>Ang Pasya</b><p>Storyboard ready for approval</p>
-                          </div>
-                        </div>
+                    <div class="flow-shots" data-flow-preview>
+                      <div class="flow-shots-bar" aria-hidden="true"><span><i></i><i></i><i></i></span><b>Flow Auto · Story workspace</b></div>
+                      <div class="flow-shots-stage">
+                        <img class="flow-snapshot is-active" data-flow-snapshot="scenes" src="img/flow-auto/scenes.webp" width="800" height="500" alt="Flow Auto Scenes and batches page: story stats, global rules and scene cards with a run queue." />
+                        <img class="flow-snapshot" data-flow-snapshot="story" src="img/flow-auto/story.webp" width="800" height="500" alt="Flow Auto Story and continuity page with story name, rules version, story structure and master prompt." loading="lazy" />
+                        <img class="flow-snapshot" data-flow-snapshot="settings" src="img/flow-auto/settings.webp" width="800" height="500" alt="Flow Auto Generation settings page with Standard or Agent interface, video provider, model, aspect ratio and duration." loading="lazy" />
+                        <img class="flow-snapshot" data-flow-snapshot="connect" src="img/flow-auto/connect.webp" width="800" height="500" alt="Flow Auto Connect Flow page for linking a Flow project, checking controls and locating page controls." loading="lazy" />
                       </div>
-
-                      <div class="flow-snapshot" data-flow-snapshot="settings">
-                        <div class="flow-snapshot-heading">
-                          <div>
-                            <small>SET THE CREATIVE DIRECTION</small>
-                            <strong>Your production preferences.</strong>
-                          </div>
-                          <span>Save settings</span>
-                        </div>
-                        <div class="flow-settings-grid">
-                          <div><small>MODEL</small><b>Veo 3.1 - Fast</b></div>
-                          <div><small>ASPECT RATIO</small><b>9:16</b></div>
-                          <div><small>SCENE DURATION</small><b>8 seconds</b></div>
-                          <div><small>REFERENCE MODE</small><b>Start frame</b></div>
-                        </div>
-                        <div class="flow-settings-panel">
-                          <span><i></i><b>Automatically export finished videos</b><small>Upscale through Flow and save numbered files.</small></span>
-                          <span><i class="on"></i><b>Pause after each batch</b><small>Review continuity before the next batch.</small></span>
-                          <span><i class="on"></i><b>1080p final export</b><small>Verify exported video dimensions.</small></span>
-                        </div>
-                      </div>
-
-                      <div class="flow-snapshot" data-flow-snapshot="connect">
-                        <div class="flow-snapshot-heading">
-                          <div>
-                            <small>MAKE THE CONNECTION</small>
-                            <strong>A bridge to your Flow project.</strong>
-                          </div>
-                          <span>Check controls</span>
-                        </div>
-                        <div class="flow-connect-card">
-                          <div class="flow-connect-status"><i></i><span><b>Flow project detected</b><small>Signed-in project tab connected</small></span></div>
-                          <div class="flow-connect-url">flow.google.com/project/••••••••</div>
-                        </div>
-                        <div class="flow-selector-list">
-                          <span><small>PROMPT TEXTBOX</small><b>ProseMirror prompt box</b><i>FOUND</i></span>
-                          <span><small>GENERATE BUTTON</small><b>Generate control</b><i>FOUND</i></span>
-                          <span><small>RESULT CARD</small><b>Repeated gallery container</b><i>3 CARDS</i></span>
-                        </div>
+                      <div class="flow-preview-switcher" role="group" aria-label="Flow Auto screens">
+                        <button class="is-active" type="button" data-flow-view="scenes">Scenes</button>
+                        <button type="button" data-flow-view="story">Story</button>
+                        <button type="button" data-flow-view="settings">Settings</button>
+                        <button type="button" data-flow-view="connect">Connect Flow</button>
                       </div>
                     </div>
-
-                    <div class="flow-preview-switcher" role="group" aria-label="Flow Auto preview snapshots">
-                      <button class="is-active" type="button" data-flow-view="scenes">Scenes</button>
-                      <button type="button" data-flow-view="settings">Settings</button>
-                      <button type="button" data-flow-view="connect">Connect Flow</button>
-                    </div>
-                  </div>
-                </div>
-            <span class="visual-caption">Interactive preview · real Flow Auto UI</span>
+            <span class="visual-caption">Current Flow Auto UI · story workspace</span>
           </div>
         </div>
       </div>
