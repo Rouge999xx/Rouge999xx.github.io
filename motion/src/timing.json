@@ -202,12 +202,12 @@
     },
     {
       "id": "desktop",
-      "seconds": 6.101,
+      "seconds": 6.037,
       "sentences": [
         {
-          "text": "Desktop systems, built with C#, WinUI and WinForms, backed by SQLite.",
+          "text": "Desktop systems, built with C#, WinUI and .NET, backed by SQLite.",
           "start": 0.0,
-          "end": 6.101
+          "end": 6.037
         }
       ]
     },
@@ -235,27 +235,17 @@
     },
     {
       "id": "proof",
-      "seconds": 15.807,
+      "seconds": 9.756,
       "sentences": [
         {
-          "text": "HealthNest tracks maternal and child health.",
+          "text": "HealthNest monitors maternal and child health, with case management and appointment scheduling.",
           "start": 0.0,
-          "end": 2.624
-        },
-        {
-          "text": "Barangay Case Management keeps residents updated by SMS.",
-          "start": 2.844,
-          "end": 7.58
-        },
-        {
-          "text": "NurseDesk runs a school clinic's records and medicine inventory.",
-          "start": 7.8,
-          "end": 12.088
+          "end": 6.037
         },
         {
           "text": "And Flow Auto turns scripts into finished AI videos.",
-          "start": 12.308,
-          "end": 15.807
+          "start": 6.257,
+          "end": 9.756
         }
       ]
     },
