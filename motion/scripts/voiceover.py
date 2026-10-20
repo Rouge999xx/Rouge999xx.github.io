@@ -1,6 +1,6 @@
 """Render narration lines with Kokoro TTS, then transcribe them back with Whisper to verify accuracy.
 
-Usage: python3 scripts/voiceover.py <models_dir>
+Usage: python3 scripts/voiceover.py <models_dir> [video]   (e.g. "services" to re-record only the intro)
 Writes public/vo/<video>/<id>.wav and src/timing.json (durations and per-sentence caption times in seconds).
 """
 import json, re, sys, pathlib
@@ -23,8 +23,13 @@ asr = sherpa_onnx.OfflineRecognizer.from_whisper(
     tokens=str(w / "small.en-tokens.txt"), num_threads=4)
 
 script = json.loads((root / "scripts/narration.json").read_text())
-timing, report = {}, []
+only = sys.argv[2] if len(sys.argv) > 2 else None
+timing_path = root / "src/timing.json"
+timing = json.loads(timing_path.read_text()) if only and timing_path.exists() else {}
+report = []
 for video, lines in script.items():
+    if only and video != only:
+        continue
     out = root / "public/vo" / video
     out.mkdir(parents=True, exist_ok=True)
     timing[video] = []
@@ -45,5 +50,5 @@ for video, lines in script.items():
         e = wer(norm(line["say"]), norm(heard))
         timing[video].append({"id": line["id"], "seconds": round(len(audio) / sr, 3), "sentences": sentences})
         report.append(f"{video}/{line['id']}\t{e:.2f}\t{line['say']}\n\t\tHEARD: {heard}")
-(root / "src/timing.json").write_text(json.dumps(timing, indent=2))
+timing_path.write_text(json.dumps(timing, indent=2))
 print("\n".join(report))

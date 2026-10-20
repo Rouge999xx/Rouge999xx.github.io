@@ -1,0 +1,98 @@
+{
+  "whoosh": {
+    "file": "sfx/whoosh.wav",
+    "duration_s": 0.9,
+    "hit_s": 0.45,
+    "peak_dbfs": -3.0,
+    "rms_dbfs": -20.18,
+    "description": "airy filtered-noise swoosh, L->R pan sweep; hit = loudest/brightest point"
+  },
+  "whoosh_short": {
+    "file": "sfx/whoosh_short.wav",
+    "duration_s": 0.4,
+    "hit_s": 0.17,
+    "peak_dbfs": -4.0,
+    "rms_dbfs": -20.49,
+    "description": "quick swish for small elements"
+  },
+  "impact": {
+    "file": "sfx/impact.wav",
+    "duration_s": 2.0,
+    "hit_s": 0.0,
+    "peak_dbfs": -1.0,
+    "rms_dbfs": -11.65,
+    "description": "sub drop 55->35 Hz + punch + crack + noise tail + room"
+  },
+  "riser": {
+    "file": "sfx/riser.wav",
+    "duration_s": 2.0,
+    "hit_s": 2.0,
+    "peak_dbfs": -2.0,
+    "rms_dbfs": -22.08,
+    "description": "noise + pitch-up build; hit = file end (cut)"
+  },
+  "reverse": {
+    "file": "sfx/reverse.wav",
+    "duration_s": 1.2,
+    "hit_s": 1.2,
+    "peak_dbfs": -3.0,
+    "rms_dbfs": -21.24,
+    "description": "reversed cymbal swell; hit = file end"
+  },
+  "pop": {
+    "file": "sfx/pop.wav",
+    "duration_s": 0.15,
+    "hit_s": 0.004,
+    "peak_dbfs": -6.0,
+    "rms_dbfs": -15.41,
+    "description": "soft rounded bubble pop"
+  },
+  "click": {
+    "file": "sfx/click.wav",
+    "duration_s": 0.05,
+    "hit_s": 0.0,
+    "peak_dbfs": -8.0,
+    "rms_dbfs": -28.71,
+    "description": "crisp short tick"
+  },
+  "tick_soft": {
+    "file": "sfx/tick_soft.wav",
+    "duration_s": 0.045,
+    "hit_s": 0.0,
+    "peak_dbfs": -15.0,
+    "rms_dbfs": -32.5,
+    "description": "very soft key tick for text reveals"
+  },
+  "shimmer": {
+    "file": "sfx/shimmer.wav",
+    "duration_s": 1.5,
+    "hit_s": 0.08,
+    "peak_dbfs": -4.0,
+    "rms_dbfs": -20.14,
+    "description": "F-pentatonic bell glitter; hit = main chime"
+  },
+  "glitch": {
+    "file": "sfx/glitch.wav",
+    "duration_s": 0.4,
+    "hit_s": 0.0,
+    "peak_dbfs": -6.0,
+    "rms_dbfs": -21.08,
+    "description": "digital stutter / bitcrush burst"
+  },
+  "success": {
+    "file": "sfx/success.wav",
+    "duration_s": 0.6,
+    "hit_s": 0.0,
+    "peak_dbfs": -5.0,
+    "rms_dbfs": -18.04,
+    "description": "two-note F5->C6 (fifth up) chime; 2nd note at 0.11 s"
+  },
+  "logo_sting": {
+    "file": "sfx/logo_sting.wav",
+    "duration_s": 2.5,
+    "hit_s": 0.3,
+    "peak_dbfs": -1.0,
+    "rms_dbfs": -14.2,
+    "description": "reverse swell -> soft impact + bright Fmaj9 shimmer chord"
+  }
+}

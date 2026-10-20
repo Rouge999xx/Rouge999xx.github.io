@@ -3,3 +3,4 @@ out/
 public/vo/
 public/music/
 __pycache__/
+public/sfx/*.wav
