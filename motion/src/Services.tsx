@@ -1,57 +1,124 @@
 import React from 'react';
-import {AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame} from 'remotion';
-import {Body, Check, Chip, clamp, Enter, Glass, Kicker, Line, sentenceFrame, Stage, Timeline, useSpring, Words} from './kit';
-import {c, fonts, FPS, LEAD} from './theme';
+import {AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame} from 'remotion';
+import {Body, Check, Chip, clamp, Enter, Glass, Kicker, Line, sentenceFrame, Stage, useSpring, Words} from './kit';
+import {Burst, CountUp, PRE, Sfx, Sheen, ShowTimeline, Tilt, typeFrames, Typewriter, useEase, useShake} from './fx';
+import {c, fonts, FPS, LEAD, TAIL} from './theme';
 
 const L0 = Math.round(LEAD * FPS);
+type SceneProps = {line: Line; dur: number};
 
 const Row: React.FC<{children: React.ReactNode; gap?: number; style?: React.CSSProperties}> = ({children, gap = 24, style}) => (
   <div style={{display: 'flex', gap, alignItems: 'center', ...style}}>{children}</div>
 );
 
-/* 1. Hook: a messy pile of manual work */
-const Hook: React.FC<{line: Line}> = () => {
+/** Headline whose words slam in from large and blurred, for the big statement beats. */
+const Slam: React.FC<{text: string; delay: number; size: number; grad?: string[]; stagger?: number; style?: React.CSSProperties}> = ({
+  text,
+  delay,
+  size,
+  grad = [],
+  stagger = 4,
+  style,
+}) => {
+  const frame = useCurrentFrame();
+  return (
+    <div style={{display: 'flex', flexWrap: 'wrap', justifyContent: 'center', columnGap: size * 0.26, fontFamily: fonts.display, fontWeight: 700, fontSize: size, lineHeight: 1.04, letterSpacing: -size * 0.03, color: c.text, ...style}}>
+      {text.split(' ').map((w, i) => {
+        const p = interpolate(frame, [delay + i * stagger, delay + i * stagger + 9], [0, 1], {...clamp, easing: Easing.bezier(0.2, 0.9, 0.3, 1.25)});
+        const g = grad.includes(w.replace(/[.,!?]/g, ''));
+        return (
+          <span
+            key={i}
+            style={{
+              display: 'inline-block',
+              opacity: interpolate(p, [0, 0.5], [0, 1], clamp),
+              transform: `scale(${interpolate(p, [0, 1], [1.9, 1])})`,
+              filter: `blur(${(1 - Math.min(p, 1)) * 16}px)`,
+              paddingBottom: size * 0.08,
+              ...(g ? {background: c.grad, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent'} : {}),
+            }}
+          >
+            {w}
+          </span>
+        );
+      })}
+    </div>
+  );
+};
+
+/* 1. Hook: chaotic manual tasks glitch in, then get pulled away */
+const Hook: React.FC<SceneProps> = ({dur}) => {
   const frame = useCurrentFrame();
   const notes = ['Copy to sheet', 'Re-type records', 'Chase updates', 'Export again', 'Rename files', 'Manual SMS', 'Double-check', 'Paste into form'];
+  const pull = interpolate(frame, [dur - 30, dur - 6], [0, 1], {...clamp, easing: Easing.in(Easing.cubic)});
+  const shake = useShake(L0 - 2, 10, 12);
   return (
     <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center'}}>
       {notes.map((n, i) => {
         const a = (i / notes.length) * Math.PI * 2;
         const rx = 760 + (i % 2) * 40;
         const ry = 380 + (i % 2) * 40;
-        const wob = Math.sin(frame / 14 + i) * 8;
+        const wob = Math.sin(frame / 9 + i) * 10;
+        const born = 2 + i * 3;
+        const glitch = frame - born >= 0 && frame - born < 8;
+        const jx = glitch ? Math.sin(frame * 13 + i) * 14 : 0;
+        const x = 960 + Math.cos(a + 0.4 + frame / 260) * rx * (1 - pull) - 130;
+        const y = 520 + Math.sin(a + 0.4 + frame / 260) * ry * (1 - pull) - 30;
         return (
           <div
             key={n}
             style={{
               position: 'absolute',
-              left: 960 + Math.cos(a + 0.4) * rx - 130,
-              top: 520 + Math.sin(a + 0.4) * ry - 30,
-              transform: `rotate(${((i * 37) % 24) - 12 + wob * 0.3}deg)`,
+              left: x + jx,
+              top: y,
+              opacity: frame < born ? 0 : 1 - pull,
+              transform: `rotate(${((i * 37) % 24) - 12 + wob * 0.3 + pull * 180}deg) scale(${1 - pull * 0.7})`,
             }}
           >
-            <Enter delay={i * 3} scale={0.6}>
-              <Glass style={{padding: '16px 26px', borderRadius: 14, fontFamily: fonts.mono, fontSize: 26, color: c.dim}}>{n}</Glass>
-            </Enter>
+            <Glass
+              style={{
+                padding: '16px 26px',
+                borderRadius: 14,
+                fontFamily: fonts.mono,
+                fontSize: 26,
+                color: i % 3 === 0 ? c.danger : c.dim,
+                textShadow: glitch ? `3px 0 ${c.pink}, -3px 0 ${c.teal}` : undefined,
+                borderColor: i % 3 === 0 ? 'rgba(252,165,165,.35)' : c.border,
+              }}
+            >
+              {i % 3 === 0 ? '⚠ ' : ''}
+              {n}
+            </Glass>
           </div>
         );
       })}
-      <div style={{textAlign: 'center', maxWidth: 1200}}>
-        <Words text="Slow, messy workflow eating your team's time?" size={104} grad={['time?']} delay={L0 - 4} style={{justifyContent: 'center'}} />
+      <div style={{textAlign: 'center', maxWidth: 1300, transform: `${shake} scale(${1 + pull * 0.06})`, opacity: 1 - pull * 0.6}}>
+        <Slam text="Slow, messy workflow eating your team's time?" size={108} grad={['time?']} delay={L0 - 4} stagger={3} />
       </div>
+      <Sfx name="glitch" at={2} volume={0.18} />
+      <Sfx name="glitch" at={11} volume={0.14} />
+      <Sfx name="glitch" at={20} volume={0.14} />
+      <Sfx name="impact" at={L0 - 3} volume={0.3} />
+      <Sfx name="whoosh_short" at={dur - 10} volume={0.22} />
     </AbsoluteFill>
   );
 };
 
-/* 2. Intro */
-const Intro: React.FC<{line: Line}> = ({line}) => {
-  const p = useSpring(L0 - 8, {damping: 15});
+/* 2. Intro: ring draws on, portrait irises open, name lands */
+const Intro: React.FC<SceneProps> = ({line}) => {
   const frame = useCurrentFrame();
   const s2 = sentenceFrame(line, 1);
+  const ring = useEase(2, 34);
+  const iris = useEase(8, 26);
+  const pop = useSpring(6, {damping: 13});
+  const R = 300;
+  const circ = 2 * Math.PI * R;
+  const underline = useEase(s2 + 14, 22);
   return (
     <Stage style={{justifyContent: 'center'}}>
+      <Burst at={30} x={140 + 280} y={540} seed="intro" radius={460} />
       <Row gap={110}>
-        <div style={{position: 'relative', width: 560, height: 560, transform: `scale(${p})`}}>
+        <div style={{position: 'relative', width: 560, height: 560, transform: `scale(${0.85 + 0.15 * pop})`}}>
           <div
             style={{
               position: 'absolute',
@@ -59,9 +126,35 @@ const Intro: React.FC<{line: Line}> = ({line}) => {
               borderRadius: '50%',
               background: `conic-gradient(from ${frame * 2}deg, ${c.accent}, ${c.pink}, ${c.amber}, ${c.accent})`,
               filter: 'blur(2px)',
+              opacity: iris,
             }}
           />
-          <Img src={staticFile('portrait.webp')} style={{position: 'absolute', inset: 0, width: 560, height: 560, borderRadius: '50%', objectFit: 'cover', border: `8px solid ${c.bg}`}} />
+          <div style={{position: 'absolute', inset: -60, borderRadius: '50%', boxShadow: `0 0 120px 10px rgba(167,139,250,${0.35 * iris})`}} />
+          <Img
+            src={staticFile('portrait.webp')}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: 560,
+              height: 560,
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: `8px solid ${c.bg}`,
+              clipPath: `circle(${iris * 52}% at 50% 50%)`,
+              transform: `scale(${1.15 - 0.15 * iris})`,
+            }}
+          />
+          <svg width={680} height={680} style={{position: 'absolute', left: -60, top: -60, transform: `rotate(${-90 + frame * 0.4}deg)`}}>
+            <defs>
+              <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stopColor={c.accent} />
+                <stop offset=".5" stopColor={c.pink} />
+                <stop offset="1" stopColor={c.amber} />
+              </linearGradient>
+            </defs>
+            <circle cx={340} cy={340} r={R} fill="none" stroke="url(#ring)" strokeWidth={3} strokeLinecap="round" strokeDasharray={`${circ * ring * 0.82} ${circ}`} opacity={0.9} />
+            <circle cx={340} cy={340} r={R + 22} fill="none" stroke={c.accent} strokeWidth={1.5} strokeDasharray="2 14" opacity={0.35 * ring} />
+          </svg>
           <div style={{position: 'absolute', right: -10, bottom: 40}}>
             <Enter delay={L0 + 40} scale={0.6}>
               <Chip color={c.lime} style={{background: 'rgba(20,30,10,.85)'}}>
@@ -71,72 +164,114 @@ const Intro: React.FC<{line: Line}> = ({line}) => {
           </div>
         </div>
         <div style={{flex: 1}}>
-          <Kicker>Hi, I'm</Kicker>
+          <Kicker delay={4}>Hi, I'm</Kicker>
           <div style={{height: 16}} />
           <Words text="Carl Tampus" size={140} grad={['Tampus']} delay={L0} stagger={5} />
-          <div style={{height: 10}} />
-          <Body delay={L0 + 24} size={38}>
-            Computer Engineering student · Cebu, Philippines
-          </Body>
+          <div style={{height: 14}} />
+          <Enter delay={L0 + 24} y={20}>
+            <Row gap={14}>
+              <svg width={34} height={34} viewBox="0 0 24 24" fill="none" stroke={c.pink} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" />
+                <circle cx="12" cy="9.5" r="2.5" />
+              </svg>
+              <span style={{fontFamily: fonts.body, fontSize: 38, color: c.muted}}>Computer Engineering student · Cebu, Philippines</span>
+            </Row>
+          </Enter>
           <div style={{height: 50}} />
-          <Words text="I build software that feels alive." size={66} grad={['alive.']} delay={s2} style={{fontWeight: 600}} />
+          <div style={{display: 'inline-block', position: 'relative'}}>
+            <Words text="I build software that feels alive." size={66} grad={['alive.']} delay={s2} style={{fontWeight: 600}} />
+            <div style={{height: 4, width: `${underline * 100}%`, background: c.grad, borderRadius: 2, boxShadow: '0 0 20px rgba(249,168,212,.6)'}} />
+          </div>
         </div>
       </Row>
+      <Sfx name="whoosh_short" at={8} volume={0.25} />
+      <Sfx name="impact" at={L0} volume={0.26} />
+      <Sfx name="tick_soft" at={L0 + 24} />
+      <Sfx name="pop" at={L0 + 42} />
+      <Sfx name="shimmer" at={s2 + 14} volume={0.22} />
     </Stage>
   );
 };
 
 /* 3–5. Services */
 const Service: React.FC<{
-  line: Line;
   n: string;
   title: string;
   grad: string[];
   copy: string;
   chips: string[];
   visual: React.ReactNode;
-}> = ({n, title, grad, copy, chips, visual}) => (
-  <Stage style={{justifyContent: 'center'}}>
-    <Row gap={90}>
-      <div style={{flex: 1}}>
-        <Kicker>What I build · {n}</Kicker>
-        <div style={{height: 24}} />
-        <Words text={title} size={96} grad={grad} delay={L0} />
-        <div style={{height: 26}} />
-        <Body delay={L0 + 20} size={38}>
-          {copy}
-        </Body>
-        <div style={{height: 40}} />
-        <Row gap={16} style={{flexWrap: 'wrap'}}>
-          {chips.map((t, i) => (
-            <Enter key={t} delay={L0 + 36 + i * 7} y={16}>
-              <Chip>{t}</Chip>
-            </Enter>
-          ))}
-        </Row>
+}> = ({n, title, grad, copy, chips, visual}) => {
+  const frame = useCurrentFrame();
+  return (
+    <Stage style={{justifyContent: 'center'}}>
+      <div
+        style={{
+          position: 'absolute',
+          right: 60 - frame * 0.6,
+          top: 40,
+          fontFamily: fonts.display,
+          fontWeight: 700,
+          fontSize: 520,
+          lineHeight: 1,
+          color: 'transparent',
+          WebkitTextStroke: '2px rgba(196,181,253,.10)',
+          letterSpacing: -20,
+        }}
+      >
+        {n}
       </div>
-      <Enter delay={L0 + 10} x={80} y={0} style={{width: 720}}>
-        {visual}
-      </Enter>
-    </Row>
-  </Stage>
+      <Row gap={90}>
+        <div style={{flex: 1}}>
+          <Kicker delay={4}>What I build · {n}</Kicker>
+          <div style={{height: 24}} />
+          <Words text={title} size={96} grad={grad} delay={PRE + 4} />
+          <div style={{height: 26}} />
+          <Body delay={L0 + 10} size={38}>
+            {copy}
+          </Body>
+          <div style={{height: 40}} />
+          <Row gap={16} style={{flexWrap: 'wrap'}}>
+            {chips.map((t, i) => (
+              <Enter key={t} delay={L0 + 36 + i * 7} y={16} scale={0.7}>
+                <Chip>{t}</Chip>
+              </Enter>
+            ))}
+          </Row>
+        </div>
+        <Tilt delay={L0 + 6} from="right" style={{width: 720}}>
+          {visual}
+        </Tilt>
+      </Row>
+      <Sfx name="whoosh_short" at={L0 + 8} volume={0.22} />
+      {chips.map((t, i) => (
+        <Sfx key={t} name="pop" at={L0 + 38 + i * 7} volume={0.2} />
+      ))}
+    </Stage>
+  );
+};
+
+const WindowBar: React.FC<{title: string}> = ({title}) => (
+  <Row gap={10} style={{padding: '16px 22px', borderBottom: `1px solid ${c.border}`}}>
+    {[c.danger, c.amber, c.lime].map((x) => (
+      <span key={x} style={{width: 13, height: 13, borderRadius: 7, background: x, opacity: 0.8}} />
+    ))}
+    <span style={{fontFamily: fonts.mono, fontSize: 20, color: c.dim, marginLeft: 12}}>{title}</span>
+  </Row>
 );
 
 const AppWindow: React.FC = () => {
   const frame = useCurrentFrame();
   const bars = [62, 80, 45, 92, 70, 85];
+  const nav = Math.min(3, Math.max(0, Math.floor((frame - L0 - 70) / 26)));
   return (
-    <Glass style={{padding: 0, overflow: 'hidden'}}>
-      <Row gap={10} style={{padding: '16px 22px', borderBottom: `1px solid ${c.border}`}}>
-        {[c.danger, c.amber, c.lime].map((x) => (
-          <span key={x} style={{width: 13, height: 13, borderRadius: 7, background: x, opacity: 0.8}} />
-        ))}
-        <span style={{fontFamily: fonts.mono, fontSize: 20, color: c.dim, marginLeft: 12}}>Patient dashboard · WinUI 3</span>
-      </Row>
+    <Glass style={{padding: 0, overflow: 'hidden', position: 'relative'}}>
+      <WindowBar title="Records dashboard · WinUI 3" />
       <Row gap={0} style={{alignItems: 'stretch', height: 400}}>
-        <div style={{width: 170, borderRight: `1px solid ${c.border}`, padding: 20, display: 'flex', flexDirection: 'column', gap: 14}}>
-          {['Patients', 'Schedule', 'Cases', 'Reports'].map((t, i) => (
-            <div key={t} style={{fontFamily: fonts.body, fontSize: 20, color: i === 0 ? c.text : c.dim, padding: '8px 12px', borderRadius: 10, background: i === 0 ? c.accentStrong + '33' : 'none'}}>
+        <div style={{width: 170, borderRight: `1px solid ${c.border}`, padding: 20, display: 'flex', flexDirection: 'column', gap: 14, position: 'relative'}}>
+          <div style={{position: 'absolute', left: 20, right: 20, top: 20 + nav * 57, height: 43, borderRadius: 10, background: c.accentStrong + '33', transition: 'none'}} />
+          {['Records', 'Schedule', 'Cases', 'Reports'].map((t, i) => (
+            <div key={t} style={{position: 'relative', fontFamily: fonts.body, fontSize: 20, color: i === nav ? c.text : c.dim, padding: '8px 12px'}}>
               {t}
             </div>
           ))}
@@ -144,72 +279,111 @@ const AppWindow: React.FC = () => {
         <div style={{flex: 1, padding: 26}}>
           <Row gap={16}>
             {[
-              ['Active', '128'],
-              ['Today', '14'],
-              ['Follow-ups', '6'],
-            ].map(([k, v]) => (
+              ['Active', 128],
+              ['Today', 14],
+              ['Follow-ups', 6],
+            ].map(([k, v], i) => (
               <div key={k} style={{flex: 1, padding: 16, borderRadius: 14, background: 'rgba(255,255,255,.05)'}}>
                 <div style={{fontFamily: fonts.mono, fontSize: 16, color: c.dim}}>{k}</div>
-                <div style={{fontFamily: fonts.display, fontSize: 40, fontWeight: 700, color: c.text}}>{v}</div>
+                <CountUp to={v as number} from={L0 + 16 + i * 4} dur={34} style={{fontFamily: fonts.display, fontSize: 40, fontWeight: 700, color: c.text}} />
               </div>
             ))}
           </Row>
           <Row gap={18} style={{alignItems: 'flex-end', height: 200, marginTop: 30}}>
             {bars.map((b, i) => {
-              const h = interpolate(frame, [L0 + 20 + i * 5, L0 + 50 + i * 5], [0, b], clamp);
-              return <div key={i} style={{flex: 1, height: `${h}%`, borderRadius: 8, background: c.grad}} />;
+              const h = interpolate(frame, [L0 + 20 + i * 5, L0 + 46 + i * 5], [0, b], {...clamp, easing: Easing.out(Easing.back(1.6))});
+              return <div key={i} style={{flex: 1, height: `${h}%`, borderRadius: 8, background: c.grad, boxShadow: '0 0 24px rgba(249,168,212,.25)'}} />;
             })}
           </Row>
         </div>
       </Row>
+      <Sheen at={L0 + 60} width={720} />
     </Glass>
   );
 };
 
+const PIPE_STEP = 16;
 const Pipeline: React.FC = () => {
   const frame = useCurrentFrame();
   const steps = ['Trigger', 'Collect', 'Transform', 'Deliver'];
+  const start = L0 + 26;
   return (
-    <Glass style={{padding: 44}}>
+    <Glass style={{padding: 44, position: 'relative', overflow: 'hidden'}}>
       {steps.map((s, i) => {
-        const active = Math.floor((frame - L0) / 14) % 4 === i;
+        const at = start + i * PIPE_STEP;
+        const done = frame >= at;
+        const glow = interpolate(frame, [at, at + 6, at + 18], [0, 1, 0.35], clamp);
+        const fill = interpolate(frame, [at, at + PIPE_STEP], [0, 1], clamp);
         return (
           <React.Fragment key={s}>
             <Row gap={22}>
-              <div style={{width: 64, height: 64, borderRadius: 18, display: 'grid', placeItems: 'center', background: active ? c.amber : 'rgba(255,255,255,.08)', color: active ? '#1b0b3a' : c.muted, fontFamily: fonts.mono, fontSize: 24, fontWeight: 600}}>
+              <div
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 18,
+                  display: 'grid',
+                  placeItems: 'center',
+                  background: done ? c.amber : 'rgba(255,255,255,.08)',
+                  color: done ? '#1b0b3a' : c.muted,
+                  fontFamily: fonts.mono,
+                  fontSize: 24,
+                  fontWeight: 600,
+                  boxShadow: `0 0 ${40 * glow}px rgba(252,211,77,${0.8 * glow})`,
+                  transform: `scale(${1 + glow * 0.12})`,
+                }}
+              >
                 {String(i + 1).padStart(2, '0')}
               </div>
-              <span style={{fontFamily: fonts.display, fontSize: 36, color: active ? c.text : c.muted, flex: 1}}>{s}</span>
-              {active && <Check size={34} color={c.amber} />}
+              <span style={{fontFamily: fonts.display, fontSize: 36, color: done ? c.text : c.muted, flex: 1}}>{s}</span>
+              <div style={{opacity: interpolate(frame, [at + 2, at + 8], [0, 1], clamp), transform: `scale(${interpolate(frame, [at + 2, at + 10], [0.4, 1], {...clamp, easing: Easing.out(Easing.back(2))})})`}}>
+                <Check size={34} color={c.amber} />
+              </div>
             </Row>
-            {i < 3 && <div style={{width: 3, height: 34, marginLeft: 31, background: `repeating-linear-gradient(${c.muted} 0 4px, transparent 4px 8px)`, opacity: 0.5}} />}
+            {i < 3 && (
+              <div style={{position: 'relative', width: 3, height: 34, marginLeft: 31}}>
+                <div style={{position: 'absolute', inset: 0, background: `repeating-linear-gradient(${c.muted} 0 4px, transparent 4px 8px)`, opacity: 0.35}} />
+                <div style={{position: 'absolute', left: 0, right: 0, top: 0, height: `${fill * 100}%`, background: c.amber, boxShadow: `0 0 12px ${c.amber}`}} />
+              </div>
+            )}
           </React.Fragment>
         );
       })}
+      <Sheen at={start + 4 * PIPE_STEP} width={720} />
     </Glass>
   );
 };
 
+const PROMPT = '"Update today\'s cases and send the report."';
 const AiBridge: React.FC = () => {
   const frame = useCurrentFrame();
   const tools = ['read_records', 'update_case', 'send_report'];
+  const typeAt = L0 + 18;
   return (
     <div style={{display: 'flex', flexDirection: 'column', gap: 26}}>
       <Glass glow="rgba(196,181,253,.35)" style={{padding: '26px 32px'}}>
         <div style={{fontFamily: fonts.display, fontSize: 36, fontWeight: 600, color: c.accent}}>Claude · Gemini</div>
-        <div style={{fontFamily: fonts.body, fontSize: 24, color: c.muted}}>"Update today's cases and send the report."</div>
+        <Typewriter text={PROMPT} from={typeAt} cps={30} style={{fontFamily: fonts.body, fontSize: 24, color: c.muted}} />
       </Glass>
       <Row gap={14} style={{justifyContent: 'center'}}>
         <span style={{fontFamily: fonts.mono, fontSize: 24, color: c.pink}}>MCP</span>
-        <div style={{width: 240, height: 3, background: `repeating-linear-gradient(90deg, ${c.pink} 0 8px, transparent 8px 16px)`, backgroundPositionX: frame * 2}} />
+        <div style={{position: 'relative', width: 280, height: 3, background: `repeating-linear-gradient(90deg, ${c.pink}55 0 8px, transparent 8px 16px)`}}>
+          {[0, 1, 2].map((k) => {
+            const p = ((frame - L0 - 50 + k * 12) % 36) / 36;
+            return frame > L0 + 50 ? (
+              <div key={k} style={{position: 'absolute', top: -5, left: p * 270, width: 12, height: 12, borderRadius: 6, background: c.pink, boxShadow: `0 0 16px ${c.pink}`}} />
+            ) : null;
+          })}
+        </div>
       </Row>
       <Glass style={{padding: '26px 32px'}}>
         <div style={{fontFamily: fonts.display, fontSize: 36, fontWeight: 600, color: c.text, marginBottom: 14}}>Your tools</div>
         {tools.map((t, i) => (
-          <Enter key={t} delay={L0 + 40 + i * 12} x={-20} y={0}>
+          <Enter key={t} delay={L0 + 60 + i * 14} x={-20} y={0}>
             <Row gap={14} style={{padding: '6px 0'}}>
               <Check size={26} color={c.pink} />
               <span style={{fontFamily: fonts.mono, fontSize: 26, color: c.muted}}>{t}</span>
+              <span style={{fontFamily: fonts.mono, fontSize: 18, color: c.lime, marginLeft: 'auto'}}>200 OK</span>
             </Row>
           </Enter>
         ))}
@@ -218,14 +392,33 @@ const AiBridge: React.FC = () => {
   );
 };
 
-const Desktop: React.FC<{line: Line}> = ({line}) => (
-  <Service line={line} n="01" title="Desktop systems" grad={['systems']} copy="Records, scheduling and case management that run fast on the machines your team already uses." chips={['C#', 'WinUI 3', '.NET', 'SQLite']} visual={<AppWindow />} />
+const Desktop: React.FC<SceneProps> = () => (
+  <>
+    <Service n="01" title="Desktop systems" grad={['systems']} copy="Records, scheduling and case management that run fast on the machines your team already uses." chips={['C#', 'WinUI 3', '.NET', 'SQLite']} visual={<AppWindow />} />
+    <Sfx name="tick_soft" at={L0 + 22} />
+    <Sfx name="tick_soft" at={L0 + 32} />
+    <Sfx name="tick_soft" at={L0 + 42} />
+  </>
 );
-const Automation: React.FC<{line: Line}> = ({line}) => (
-  <Service line={line} n="02" title="Automation & extensions" grad={['Automation']} copy="Browser extensions and tools that take the repetitive steps off your plate." chips={['TypeScript', 'React', 'Chrome MV3', 'JavaScript']} visual={<Pipeline />} />
+const Automation: React.FC<SceneProps> = () => (
+  <>
+    <Service n="02" title="Automation & extensions" grad={['Automation']} copy="Browser extensions and tools that take the repetitive steps off your plate." chips={['TypeScript', 'React', 'Chrome MV3', 'JavaScript']} visual={<Pipeline />} />
+    {[0, 1, 2].map((i) => (
+      <Sfx key={i} name="click" at={L0 + 26 + i * PIPE_STEP} volume={0.22} />
+    ))}
+    <Sfx name="success" at={L0 + 26 + 3 * PIPE_STEP} volume={0.26} />
+  </>
 );
-const Ai: React.FC<{line: Line}> = ({line}) => (
-  <Service line={line} n="03" title="AI integrations with MCP" grad={['MCP']} copy="Let assistants like Claude and Gemini do real work inside your tools, with you in control." chips={['MCP', 'Claude', 'Gemini', 'Node']} visual={<AiBridge />} />
+const Ai: React.FC<SceneProps> = () => (
+  <>
+    <Service n="03" title="AI integrations with MCP" grad={['MCP']} copy="Let assistants like Claude and Gemini do real work inside your tools, with you in control." chips={['MCP', 'Claude', 'Gemini', 'Node']} visual={<AiBridge />} />
+    {typeFrames(PROMPT, L0 + 18, 30, 3).map((f) => (
+      <Sfx key={f} name="tick_soft" at={f} volume={0.1} />
+    ))}
+    {[0, 1, 2].map((i) => (
+      <Sfx key={i} name="click" at={L0 + 62 + i * 14} volume={0.2} />
+    ))}
+  </>
 );
 
 /* 6. Proof: projects, one per narrated sentence */
@@ -233,7 +426,7 @@ const PROJECTS = [
   {name: 'HealthNest', tag: 'Healthcare · Desktop', copy: 'Maternal & child health, cases and appointments', col: c.pink, stack: 'WinUI 3 · C# · SQLite'},
   {name: 'Flow Auto', tag: 'Automation · Extension', copy: 'Scripts to finished 1080p AI videos', col: c.lime, stack: 'React · TypeScript · MCP'},
 ];
-/** Small product previews that fill the lower half of each proof card. */
+
 const HealthPreview: React.FC<{from: number}> = ({from}) => {
   const frame = useCurrentFrame();
   const bars = [48, 64, 58, 76, 70, 88, 82];
@@ -241,13 +434,13 @@ const HealthPreview: React.FC<{from: number}> = ({from}) => {
     <Row gap={30} style={{alignItems: 'stretch', height: '100%'}}>
       <div style={{display: 'flex', flexDirection: 'column', gap: 14, width: 260}}>
         {[
-          ['Mothers tracked', '128'],
-          ['Visits today', '14'],
-          ['Follow-ups', '6'],
-        ].map(([k, v]) => (
+          ['Mothers tracked', 128],
+          ['Visits today', 14],
+          ['Follow-ups', 6],
+        ].map(([k, v], i) => (
           <div key={k} style={{padding: '12px 18px', borderRadius: 14, background: 'rgba(255,255,255,.05)'}}>
             <div style={{fontFamily: fonts.mono, fontSize: 16, color: c.dim}}>{k}</div>
-            <div style={{fontFamily: fonts.display, fontSize: 34, fontWeight: 700, color: c.text}}>{v}</div>
+            <CountUp to={v as number} from={from + i * 4} dur={30} style={{fontFamily: fonts.display, fontSize: 34, fontWeight: 700, color: c.text}} />
           </div>
         ))}
       </div>
@@ -255,7 +448,12 @@ const HealthPreview: React.FC<{from: number}> = ({from}) => {
         {bars.map((b, i) => (
           <div
             key={i}
-            style={{flex: 1, height: `${interpolate(frame, [from + i * 4, from + 26 + i * 4], [0, b], clamp)}%`, borderRadius: 8, background: c.grad}}
+            style={{
+              flex: 1,
+              height: `${interpolate(frame, [from + i * 4, from + 24 + i * 4], [0, b], {...clamp, easing: Easing.out(Easing.back(1.5))})}%`,
+              borderRadius: 8,
+              background: c.grad,
+            }}
           />
         ))}
       </Row>
@@ -265,41 +463,33 @@ const HealthPreview: React.FC<{from: number}> = ({from}) => {
 
 const FlowPreview: React.FC<{from: number}> = ({from}) => {
   const frame = useCurrentFrame();
+  const scroll = interpolate(frame, [from + 20, from + 140], [0, -60], {...clamp, easing: Easing.inOut(Easing.cubic)});
   return (
-    <Row gap={30} style={{alignItems: 'center', height: '100%'}}>
-      <Img src={staticFile('flow-auto-icon.svg')} style={{width: 150, height: 150, filter: 'drop-shadow(0 0 30px rgba(185,243,107,.4))'}} />
-      <div style={{flex: 1, display: 'flex', flexDirection: 'column', gap: 10}}>
-        {[1, 2, 3, 4].map((n, i) => (
-          <Row
-            key={n}
-            gap={14}
-            style={{padding: '10px 18px', borderRadius: 12, background: 'rgba(255,255,255,.05)', opacity: interpolate(frame, [from + i * 6, from + 10 + i * 6], [0, 1], clamp)}}
-          >
-            <span style={{fontFamily: fonts.mono, fontSize: 22, color: c.text, flex: 1}}>story/{n}.mp4</span>
-            <span style={{fontFamily: fonts.mono, fontSize: 18, color: c.lime}}>1080p</span>
-            <Check size={22} />
-          </Row>
-        ))}
-      </div>
-    </Row>
+    <div style={{position: 'relative', height: '100%', borderRadius: 16, overflow: 'hidden', border: `1px solid ${c.border}`, boxShadow: '0 30px 60px -20px rgba(0,0,0,.7)'}}>
+      <Img src={staticFile('shots/scenes.webp')} style={{width: '100%', display: 'block', transform: `translateY(${scroll}px)`}} />
+      <div style={{position: 'absolute', inset: 0, background: 'linear-gradient(transparent 60%, rgba(10,7,24,.65))'}} />
+      <Sheen at={from + 16} width={800} />
+    </div>
   );
 };
 
-const Proof: React.FC<{line: Line}> = ({line}) => {
+const Proof: React.FC<SceneProps> = ({line}) => {
   const frame = useCurrentFrame();
   const current = PROJECTS.reduce((k, _, i) => (frame >= sentenceFrame(line, i) - 6 ? i : k), 0);
   return (
     <Stage>
-      <Kicker>Built and shipped</Kicker>
+      <Kicker delay={2}>Built and shipped</Kicker>
       <div style={{height: 20}} />
       <Words text="Real software for real workflows." size={80} grad={['real']} delay={4} />
-      <div style={{height: 50}} />
-      <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, flex: 1}}>
+      <div style={{height: 46}} />
+      <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, flex: 1, minHeight: 0}}>
         {PROJECTS.map((p, i) => {
           const d = sentenceFrame(line, i) - 8;
           const on = current === i;
+          const focus = interpolate(frame, [sentenceFrame(line, 1) - 10, sentenceFrame(line, 1) + 4], i === 0 ? [1, 0] : [0, 1], clamp);
+          const lit = i === 0 ? Math.max(focus, frame < sentenceFrame(line, 1) - 10 ? 1 : 0) : focus;
           return (
-            <Enter key={p.name} delay={d} scale={0.9}>
+            <Tilt key={p.name} delay={d} from="bottom" style={{minHeight: 0}}>
               <Glass
                 glow={on ? `${p.col}66` : undefined}
                 style={{
@@ -308,7 +498,8 @@ const Proof: React.FC<{line: Line}> = ({line}) => {
                   boxSizing: 'border-box',
                   borderColor: on ? `${p.col}88` : c.border,
                   background: on ? c.glassStrong : c.glass,
-                  transform: `scale(${on ? 1.02 : 1})`,
+                  transform: `scale(${0.97 + 0.04 * lit})`,
+                  opacity: 0.6 + 0.4 * lit,
                   display: 'flex',
                   flexDirection: 'column',
                 }}
@@ -319,98 +510,196 @@ const Proof: React.FC<{line: Line}> = ({line}) => {
                 </Row>
                 <div style={{fontFamily: fonts.display, fontSize: 46, fontWeight: 700, color: c.text, margin: '10px 0 6px'}}>{p.name}</div>
                 <div style={{fontFamily: fonts.body, fontSize: 28, color: c.muted}}>{p.copy}</div>
-                <div style={{fontFamily: fonts.mono, fontSize: 20, color: c.dim, marginTop: 14}}>{p.stack}</div>
-                <div style={{flex: 1, marginTop: 30, minHeight: 0}}>
-                  {i === 0 ? <HealthPreview from={d + 10} /> : <FlowPreview from={d + 10} />}
-                </div>
+                <div style={{fontFamily: fonts.mono, fontSize: 20, color: c.dim, marginTop: 12}}>{p.stack}</div>
+                <div style={{flex: 1, marginTop: 24, minHeight: 0}}>{i === 0 ? <HealthPreview from={d + 10} /> : <FlowPreview from={d + 10} />}</div>
               </Glass>
-            </Enter>
+            </Tilt>
           );
         })}
       </div>
+      {PROJECTS.map((p, i) => (
+        <React.Fragment key={p.name}>
+          <Sfx name="whoosh_short" at={sentenceFrame(line, i) - 4} volume={0.22} />
+          <Sfx name="pop" at={sentenceFrame(line, i) + 4} volume={0.2} />
+        </React.Fragment>
+      ))}
     </Stage>
   );
 };
 
 /* 7. Approach */
-const Approach: React.FC<{line: Line}> = ({line}) => {
+const Approach: React.FC<SceneProps> = ({line, dur}) => {
+  const frame = useCurrentFrame();
   const s2 = sentenceFrame(line, 1);
   const steps = [
     ['01', 'Build for the workflow', 'Start with what you need to get done.'],
     ['02', 'Make complexity legible', 'Technically deep, never complicated.'],
     ['03', 'Iterate in public', 'Build, test, refine, ship.'],
   ];
+  const at = [L0 + 20, s2, s2 + 30];
+  const link = interpolate(frame, [L0 + 30, s2 + 34], [0, 1], {...clamp, easing: Easing.inOut(Easing.cubic)});
   return (
     <Stage style={{justifyContent: 'center'}}>
-      <Kicker>How I work</Kicker>
+      <Kicker delay={4}>How I work</Kicker>
       <div style={{height: 24}} />
       <Words text="Engineering mindset. Human-centered output." size={88} grad={['Human-centered']} delay={L0} />
       <div style={{height: 60}} />
-      <Row gap={30} style={{alignItems: 'stretch'}}>
-        {steps.map(([n, t, d], i) => (
-          <Enter key={n} delay={(i === 1 ? s2 : L0 + 20) + (i === 2 ? 30 : 0)} style={{flex: 1}}>
-            <Glass style={{padding: 36, height: '100%', boxSizing: 'border-box'}}>
-              <div style={{fontFamily: fonts.mono, fontSize: 24, color: c.accent}}>{n}</div>
-              <div style={{fontFamily: fonts.display, fontSize: 40, fontWeight: 700, color: c.text, margin: '14px 0 10px'}}>{t}</div>
-              <div style={{fontFamily: fonts.body, fontSize: 28, color: c.muted}}>{d}</div>
+      <div style={{position: 'relative'}}>
+        <div style={{position: 'absolute', left: '8%', right: '8%', top: 58, height: 2, background: 'rgba(255,255,255,.08)'}}>
+          <div style={{height: '100%', width: `${link * 100}%`, background: c.grad, boxShadow: '0 0 16px rgba(249,168,212,.6)'}} />
+        </div>
+        <Row gap={30} style={{alignItems: 'stretch', position: 'relative'}}>
+          {steps.map(([n, t, d], i) => {
+            const glow = interpolate(frame, [at[i], at[i] + 8, at[i] + 30], [0, 1, 0.3], clamp);
+            return (
+              <Tilt key={n} delay={at[i]} from="bottom" style={{flex: 1}}>
+                <Glass glow={glow > 0.05 ? `rgba(196,181,253,${0.5 * glow})` : undefined} style={{padding: 36, height: '100%', boxSizing: 'border-box'}}>
+                  <div
+                    style={{
+                      width: 46,
+                      height: 46,
+                      borderRadius: 23,
+                      display: 'grid',
+                      placeItems: 'center',
+                      fontFamily: fonts.mono,
+                      fontSize: 20,
+                      color: '#1b0b3a',
+                      background: c.grad,
+                      boxShadow: `0 0 ${30 * glow}px rgba(249,168,212,.8)`,
+                    }}
+                  >
+                    {n}
+                  </div>
+                  <div style={{fontFamily: fonts.display, fontSize: 40, fontWeight: 700, color: c.text, margin: '18px 0 10px'}}>{t}</div>
+                  <div style={{fontFamily: fonts.body, fontSize: 28, color: c.muted}}>{d}</div>
+                </Glass>
+              </Tilt>
+            );
+          })}
+        </Row>
+      </div>
+      {at.map((f) => (
+        <Sfx key={f} name="pop" at={f + 6} volume={0.2} />
+      ))}
+      <Sfx name="reverse" at={dur} volume={0.34} />
+    </Stage>
+  );
+};
+
+/* 8. Call to action: the drop */
+const Cta: React.FC<SceneProps> = ({line}) => {
+  const s2 = sentenceFrame(line, 1);
+  const shake = useShake(s2 + 2, 12, 14);
+  const frame = useCurrentFrame();
+  const shake0 = useShake(PRE, 16, 16);
+  // Chips play big on the drop, then settle above the headline when it lands.
+  const shrink = useEase(s2 - 10, 16, Easing.inOut(Easing.cubic));
+  return (
+    <Stage style={{alignItems: 'center', justifyContent: 'center', textAlign: 'center'}}>
+      <div style={{transform: `${shake0 === 'none' ? '' : shake0} translateY(${(1 - shrink) * 190}px) scale(${1.7 - 0.7 * shrink})`}}>
+        <Row gap={20} style={{justifyContent: 'center'}}>
+          {['Internships', 'Freelance', 'Collaborations'].map((t, i) => (
+            <Enter key={t} delay={PRE + 2 + i * 5} scale={0.5} y={40}>
+              <Chip color={[c.accent, c.pink, c.amber][i]} style={{fontSize: 34, padding: '16px 34px'}}>
+                {t}
+              </Chip>
+            </Enter>
+          ))}
+        </Row>
+      </div>
+      <div style={{height: 70}} />
+      <div style={{transform: shake}}>
+        <Slam text="Let's build something worth using." size={124} grad={['worth', 'using.']} delay={s2} stagger={4} style={{maxWidth: 1500}} />
+      </div>
+      <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 45%, rgba(255,240,250,.55), rgba(196,181,253,.15) 45%, transparent 75%)', opacity: interpolate(frame, [PRE, PRE + 2, PRE + 16], [0, 1, 0], clamp), pointerEvents: 'none'}} />
+      <Burst at={PRE + 1} x={960} y={440} count={40} radius={900} seed="drop" />
+      <Burst at={s2 + 18} x={960} y={640} count={30} radius={700} seed="cta" />
+      <Sfx name="impact" at={PRE} volume={0.5} />
+      {[0, 1, 2].map((i) => (
+        <Sfx key={i} name="pop" at={PRE + 4 + i * 5} volume={0.22} />
+      ))}
+      <Sfx name="impact" at={s2 + 2} volume={0.24} />
+    </Stage>
+  );
+};
+
+/* 9. Contact, then the logo lockup */
+const EMAIL = 'carltampus5@gmail.com';
+const Contact: React.FC<SceneProps> = ({line}) => {
+  const frame = useCurrentFrame();
+  const typeAt = L0 + 4;
+  const typed = typeAt + Math.round((EMAIL.length / 28) * FPS);
+  // The scene starts PRE frames early, so the outro (and its music resolve) is PRE frames later in scene time.
+  const outroAt = Math.ceil((LEAD + line.seconds + TAIL) * FPS) + PRE;
+  const out = useEase(outroAt - 8, 16, Easing.inOut(Easing.cubic));
+  const logo = useSpring(outroAt + 4, {damping: 14, stiffness: 110});
+  const glow = interpolate(frame, [typed, typed + 10, typed + 40], [0, 1, 0.4], clamp);
+  return (
+    <AbsoluteFill>
+      <AbsoluteFill style={{opacity: 1 - out, transform: `scale(${1 - out * 0.08})`, filter: out > 0 ? `blur(${out * 12}px)` : undefined}}>
+        <Stage style={{alignItems: 'center', justifyContent: 'center', textAlign: 'center'}}>
+          <Kicker delay={2}>Start a conversation</Kicker>
+          <div style={{height: 40}} />
+          <Enter delay={2} scale={0.9}>
+            <Glass glow={`rgba(249,168,212,${0.25 + 0.35 * glow})`} style={{padding: '44px 70px', position: 'relative', overflow: 'hidden', minWidth: 1160}}>
+              <div style={{fontFamily: fonts.display, fontSize: 92, fontWeight: 700, background: c.grad, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent'}}>
+                <Typewriter text={EMAIL} from={typeAt} cps={28} />
+              </div>
+              <Sheen at={typed + 2} dur={26} width={1200} />
             </Glass>
           </Enter>
-        ))}
-      </Row>
-    </Stage>
-  );
-};
-
-/* 8. Call to action */
-const Cta: React.FC<{line: Line}> = ({line}) => {
-  const s2 = sentenceFrame(line, 1);
-  return (
-    <Stage style={{alignItems: 'center', justifyContent: 'center', textAlign: 'center'}}>
-      <Row gap={20} style={{justifyContent: 'center'}}>
-        {['Internships', 'Freelance', 'Collaborations'].map((t, i) => (
-          <Enter key={t} delay={L0 + 20 + i * 14} scale={0.8}>
-            <Chip color={[c.accent, c.pink, c.amber][i]} style={{fontSize: 34, padding: '16px 34px'}}>
-              {t}
-            </Chip>
+          <div style={{height: 46}} />
+          <Enter delay={typed + 6}>
+            <div style={{fontFamily: fonts.mono, fontSize: 36, color: c.muted}}>rouge999xx.github.io</div>
           </Enter>
-        ))}
-      </Row>
-      <div style={{height: 70}} />
-      <Words text="Let's build something worth using." size={120} grad={['worth', 'using.']} delay={s2} stagger={4} style={{justifyContent: 'center', maxWidth: 1500}} />
-    </Stage>
-  );
-};
-
-/* 9. Contact */
-const Contact: React.FC<{line: Line}> = () => {
-  const frame = useCurrentFrame();
-  const shine = ((frame - L0) * 14) % 2400;
-  return (
-    <Stage style={{alignItems: 'center', justifyContent: 'center', textAlign: 'center'}}>
-      <Kicker>Start a conversation</Kicker>
-      <div style={{height: 40}} />
-      <Enter delay={L0} scale={0.9}>
-        <Glass glow="rgba(249,168,212,.4)" style={{padding: '44px 70px', position: 'relative', overflow: 'hidden'}}>
-          <div style={{fontFamily: fonts.display, fontSize: 92, fontWeight: 700, background: c.grad, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent'}}>
-            carltampus5@gmail.com
+          <div style={{height: 30}} />
+          <Enter delay={typed + 22}>
+            <Chip color={c.lime}>● Available for internships & freelance</Chip>
+          </Enter>
+        </Stage>
+      </AbsoluteFill>
+      <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center', opacity: interpolate(logo, [0, 0.3], [0, 1], clamp)}}>
+        <div style={{transform: `scale(${0.8 + 0.2 * logo})`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28}}>
+          <div
+            style={{
+              width: 150,
+              height: 150,
+              borderRadius: 40,
+              display: 'grid',
+              placeItems: 'center',
+              background: c.grad,
+              boxShadow: `0 0 ${90 * logo}px rgba(249,168,212,.55)`,
+              fontFamily: fonts.display,
+              fontWeight: 700,
+              fontSize: 72,
+              color: '#1b0b3a',
+              letterSpacing: -3,
+            }}
+          >
+            CT
           </div>
-          <div style={{position: 'absolute', top: 0, bottom: 0, left: shine - 400, width: 160, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent)', transform: 'skewX(-20deg)'}} />
-        </Glass>
-      </Enter>
-      <div style={{height: 46}} />
-      <Enter delay={L0 + 30}>
-        <div style={{fontFamily: fonts.mono, fontSize: 36, color: c.muted}}>rouge999xx.github.io</div>
-      </Enter>
-      <div style={{height: 30}} />
-      <Enter delay={L0 + 50}>
-        <Chip color={c.lime}>● Available for internships & freelance</Chip>
-      </Enter>
-    </Stage>
+          <div style={{fontFamily: fonts.display, fontWeight: 700, fontSize: 84, color: c.text, letterSpacing: -2}}>
+            Carl{' '}
+            <span style={{background: c.grad, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent'}}>Tampus</span>
+          </div>
+          <div style={{fontFamily: fonts.mono, fontSize: 28, color: c.muted, letterSpacing: 4, opacity: interpolate(frame, [outroAt + 14, outroAt + 26], [0, 1], clamp)}}>
+            ROUGE999XX.GITHUB.IO
+          </div>
+        </div>
+      </AbsoluteFill>
+      <Burst at={outroAt + 10} x={960} y={470} count={34} radius={520} seed="logo" />
+      {typeFrames(EMAIL, typeAt, 28, 2).map((f) => (
+        <Sfx key={f} name="tick_soft" at={f} volume={0.12} />
+      ))}
+      <Sfx name="shimmer" at={typed + 2} volume={0.26} />
+      <Sfx name="pop" at={typed + 24} volume={0.18} />
+      <Sfx name="logo_sting" at={outroAt + 12} />
+    </AbsoluteFill>
   );
 };
 
 export const ServicesVideo: React.FC = () => (
-  <Timeline
+  <ShowTimeline
     video="services"
     scenes={{
       hook: Hook,

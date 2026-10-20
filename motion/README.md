@@ -7,7 +7,7 @@ Source for the two showreel videos on the site:
 | `FlowAuto` | `videos/flow-auto.mp4` | Flow Auto demo |
 | `Services` | `videos/intro.mp4` | Meet Carl |
 
-Both are 1920×1080 at 30 fps, with narrated voiceover, burned-in captions timed per sentence, and a synthesized music bed.
+Both are 1920×1080 at 30 fps, with narrated voiceover and burned-in captions timed per sentence. `FlowAuto` uses the ambient bed from `scripts/music.py`. `Services` (the intro) has its own motion and sound layer in `src/fx.tsx`: whip transitions, camera drift, particles and grain, a scene-synced score (`scripts/score.py`) and a hit-aligned SFX kit (`scripts/sfx.py`), mastered to -16 LUFS on render.
 
 ## Narration
 
@@ -26,10 +26,13 @@ npm install
 #    Needs kokoro-v1.0.onnx, voices-v1.0.bin and sherpa-onnx-whisper-small.en in <models_dir>.
 python3 -m pip install kokoro-onnx soundfile sherpa-onnx
 python3 scripts/voiceover.py <models_dir>
-# 2. Music bed (pure numpy, nothing downloaded)
-python3 scripts/music.py
+#    Add a video name to re-record only that one, e.g. `python3 scripts/voiceover.py <models_dir> services`.
+# 2. Music and sound effects (pure numpy, nothing downloaded)
+python3 scripts/music.py   # ambient bed for FlowAuto
+python3 scripts/score.py   # intro score, follows the scene timing in src/timing.json
+python3 scripts/sfx.py     # SFX kit + public/sfx/cues.json (hit offsets mirrored in SFX_HIT in src/fx.tsx)
 # 3. Render
-node render.mjs            # out/flow-auto.mp4, out/intro.mp4
+node render.mjs            # out/flow-auto.mp4, out/intro.mp4 (the intro is loudness-mastered with ffmpeg)
 node render.mjs posters    # out/flow-auto.jpg, out/intro.jpg
 node render.mjs stills     # two review frames per scene in out/stills/
 npm run studio             # live preview

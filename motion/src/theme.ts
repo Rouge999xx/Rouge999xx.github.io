@@ -38,3 +38,5 @@ export const c = {
 export const FPS = 30;
 export const LEAD = 0.6; // seconds of motion before the narrator starts
 export const TAIL = 0.7; // seconds held after the line ends
+/** Extra hold on a video's last scene (the intro ends on a logo lockup). */
+export const OUTRO: Record<string, number> = {flowauto: 0, services: 2.5};

@@ -12,15 +12,20 @@ import {
   useVideoConfig,
 } from 'remotion';
 import timing from './timing.json';
-import {c, FPS, fonts, LEAD, TAIL} from './theme';
+import {c, FPS, fonts, LEAD, OUTRO, TAIL} from './theme';
 
 export type Sentence = {text: string; start: number; end: number};
 export type Line = {id: string; seconds: number; sentences: Sentence[]};
 export type VideoId = keyof typeof timing;
 
 export const lines = (video: VideoId) => timing[video] as Line[];
-export const sceneFrames = (l: Line) => Math.ceil((LEAD + l.seconds + TAIL) * FPS);
-export const totalFrames = (video: VideoId) => lines(video).reduce((n, l) => n + sceneFrames(l), 0);
+export const sceneFrames = (l: Line, outro = 0) => Math.ceil((LEAD + l.seconds + TAIL + outro) * FPS);
+/** Scene lengths for a video; the last scene carries the video's outro hold. */
+export const sceneLengths = (video: VideoId) => {
+  const ls = lines(video);
+  return ls.map((l, i) => sceneFrames(l, i === ls.length - 1 ? OUTRO[video] ?? 0 : 0));
+};
+export const totalFrames = (video: VideoId) => sceneLengths(video).reduce((n, d) => n + d, 0);
 
 /** Frame (inside a scene) at which the narrator starts sentence i. */
 export const sentenceFrame = (l: Line, i: number) => Math.round((LEAD + l.sentences[i].start) * FPS);
