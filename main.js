@@ -81,8 +81,13 @@ async function copyEmail() {
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
   try { localStorage.setItem('portfolio-theme', theme); } catch {}
-  const meta = qs('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', theme === 'dark' ? '#070b14' : '#f8fafc');
+  syncThemeUI(theme);
+}
+
+// Browser chrome matches the page, and the toggle names the theme it switches to.
+function syncThemeUI(theme = document.documentElement.dataset.theme) {
+  qs('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#0a0718' : '#f4f1ff');
+  qs('#themeToggle').setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`);
 }
 
 function toggleTheme() {
@@ -90,6 +95,7 @@ function toggleTheme() {
 }
 
 qs('#year').textContent = new Date().getFullYear();
+syncThemeUI();
 qs('#themeToggle').addEventListener('click', toggleTheme);
 const motionToggle = qs('#motionToggle');
 if (motionToggle) {
@@ -180,7 +186,7 @@ const revealObserver = new IntersectionObserver(entries => {
     .filter(entry => entry.isIntersecting)
     .sort((a, b) => (a.boundingClientRect.top - b.boundingClientRect.top) || (a.boundingClientRect.left - b.boundingClientRect.left));
   entering.forEach((entry, index) => {
-    entry.target.style.setProperty('--delay', `${Math.min(index * 90, 450)}ms`);
+    entry.target.style.setProperty('--delay', `${Math.min(index * 60, 360)}ms`);
     entry.target.classList.add('is-visible');
     revealObserver.unobserve(entry.target);
   });
@@ -191,7 +197,7 @@ requestAnimationFrame(() => {
   qsa('.reveal:not(.is-visible)')
     .filter(el => { const r = el.getBoundingClientRect(); return r.top < innerHeight * .92 && r.bottom > 0; })
     .forEach((el, index) => {
-      el.style.setProperty('--delay', `${Math.min(index * 90, 450)}ms`);
+      el.style.setProperty('--delay', `${Math.min(index * 60, 360)}ms`);
       el.classList.add('is-visible');
       revealObserver.unobserve(el);
     });
@@ -250,8 +256,8 @@ qsa('.filter-button').forEach(button => {
 // Keep Tab focus inside an open dialog.
 function trapFocus(container, event) {
   if (event.key !== 'Tab') return;
-  const focusable = qsa('button:not([disabled]), a[href], input, [tabindex]:not([tabindex="-1"])', container)
-    .filter(el => !el.hidden && el.offsetParent !== null);
+  const focusable = qsa('button:not([disabled]), a[href], input, textarea, [tabindex]', container)
+    .filter(el => el.tabIndex >= 0 && !el.hidden && el.offsetParent !== null);
   if (!focusable.length) return;
   const first = focusable[0];
   const last = focusable[focusable.length - 1];
@@ -339,11 +345,36 @@ const commandItems = () => qsa('#commandList > button:not([hidden]), #commandLis
 let commandIndex = 0;
 let paletteReturnFocus = null;
 
+// The search box is a combobox: arrows move the highlighted option and screen readers hear it.
+qsa('#commandList > *').forEach((item, index) => {
+  item.id ||= `command-${index}`;
+  item.setAttribute('role', 'option');
+  item.tabIndex = -1;
+  qs('kbd', item)?.setAttribute('aria-hidden', 'true');
+});
+
 function highlightCommand(index) {
   const items = commandItems();
-  if (!items.length) return;
+  qsa('#commandList > *').forEach(item => {
+    item.classList.remove('is-selected');
+    item.setAttribute('aria-selected', 'false');
+  });
+  if (!items.length) {
+    commandInput.removeAttribute('aria-activedescendant');
+    return;
+  }
   commandIndex = (index + items.length) % items.length;
-  items.forEach((item, i) => item.classList.toggle('is-selected', i === commandIndex));
+  const current = items[commandIndex];
+  current.classList.add('is-selected');
+  current.setAttribute('aria-selected', 'true');
+  current.scrollIntoView({ block: 'nearest' });
+  commandInput.setAttribute('aria-activedescendant', current.id);
+}
+
+if (/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) {
+  const trigger = qs('#commandTrigger');
+  qs('kbd', trigger).textContent = '⌘ K';
+  trigger.setAttribute('aria-label', 'Open command palette (⌘K)');
 }
 
 function openPalette() {
@@ -391,7 +422,9 @@ commandInput.addEventListener('input', () => {
   qsa('#commandList > *').forEach(item => {
     item.hidden = query && !item.textContent.toLowerCase().includes(query);
   });
-  highlightCommand(0);
+  // A single letter picks the command with that key hint, so "E" then Enter copies the email.
+  const hinted = query.length === 1 ? commandItems().findIndex(item => qs('kbd', item)?.textContent.toLowerCase() === query) : -1;
+  highlightCommand(Math.max(0, hinted));
 });
 
 addEventListener('keydown', event => {
@@ -952,6 +985,7 @@ qsa('.video-card').forEach(async card => {
       } else {
         player = document.createElement('video');
         player.src = src;
+        player.setAttribute('aria-label', button.getAttribute('aria-label').replace('Play video: ', ''));
         player.controls = true;
         player.playsInline = true;
         player.preload = 'auto';
@@ -960,9 +994,15 @@ qsa('.video-card').forEach(async card => {
     }
     card.classList.add('is-playing');
     player.play?.();
-    player.focus?.();
+    player.focus?.({ preventScroll: true });
   });
 });
+
+// "Watch my intro" starts the intro inside the same click (so sound is allowed) while the page scrolls to it.
+qsa('[data-play-video]').forEach(link => link.addEventListener('click', () => {
+  const card = qsa('.video-card').find(item => item.dataset.video === link.dataset.playVideo);
+  if (card?.classList.contains('is-ready') && !card.classList.contains('is-playing')) qs('.video-play', card).click();
+}));
 
 /* =====================
    SWIPEABLE ROWS ON PHONES

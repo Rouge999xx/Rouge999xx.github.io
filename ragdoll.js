@@ -505,5 +505,5 @@
   }).observe(document.body,{attributes:true,attributeFilter:['class']});
   canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();cancelAnimationFrame(frame);frame=0;overlay.hidden=true;});
   canvas.addEventListener('webglcontextrestored',()=>{try{renderer=createRenderer();resize();wake();}catch{unavailable();}});
-  syncAuto();resize();readout('idle');say('Five seconds. Then I explore.',4);scheduleIdle();wake();
+  syncAuto();resize();readout('idle');say('Drag me out to explore.',4);scheduleIdle();wake();
 })();

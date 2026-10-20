@@ -5,13 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="description" content="Portfolio of Carl Marvic Tampus — computer engineering student and developer building practical desktop software and digital tools." />
   <meta name="theme-color" content="#0a0718" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Carl Tampus — Developer Portfolio" />
+  <meta property="og:description" content="Portfolio of Carl Marvic Tampus — computer engineering student and developer building practical desktop software and digital tools." />
+  <meta property="og:image" content="https://rouge999xx.github.io/videos/intro.jpg" />
+  <meta property="og:image:width" content="1920" />
+  <meta property="og:image:height" content="1080" />
+  <meta name="twitter:card" content="summary_large_image" />
   <title>Carl Tampus — Developer Portfolio</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script>
     (function () {
       try {
         var saved = localStorage.getItem('portfolio-theme');
         var theme = saved || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
         document.documentElement.dataset.theme = theme;
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', theme === 'light' ? '#f4f1ff' : '#0a0718');
       } catch (e) {}
       document.documentElement.classList.add('js');
       try {
@@ -47,23 +58,23 @@
       <div class="nav-links" id="navLinks">
         <span class="nav-hover-pill" id="navHoverPill" aria-hidden="true"></span>
         <a href="#flow-auto" data-nav="flow-auto">Flow Auto</a>
-        <a href="#projects" data-nav="projects">Work</a>
         <a href="#videos" data-nav="videos">Showreel</a>
+        <a href="#projects" data-nav="projects">Work</a>
         <a href="#lab3d" data-nav="lab3d">Playground</a>
         <a href="#about" data-nav="about">About</a>
         <a href="#contact" data-nav="contact">Contact</a>
       </div>
 
       <div class="nav-actions">
-        <button class="icon-button command-trigger" id="commandTrigger" type="button" aria-label="Open command palette (Ctrl+K)">
+        <button class="icon-button command-trigger" id="commandTrigger" type="button" aria-label="Open command palette (Ctrl+K)" data-tooltip>
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
           <kbd>Ctrl K</kbd>
         </button>
-        <button class="icon-button motion-toggle" id="motionToggle" type="button" aria-label="Turn page animations off" aria-pressed="true">
+        <button class="icon-button motion-toggle" id="motionToggle" type="button" aria-label="Turn page animations off" aria-pressed="true" data-tooltip>
           <svg class="motion-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8Z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8Z"/></svg>
           <svg class="motion-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8Z"/><path d="M3 3l18 18"/></svg>
         </button>
-        <button class="icon-button theme-toggle" id="themeToggle" type="button" aria-label="Switch color theme">
+        <button class="icon-button theme-toggle" id="themeToggle" type="button" aria-label="Switch color theme" data-tooltip>
           <svg class="sun-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
           <svg class="moon-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
         </button>
@@ -103,16 +114,18 @@
               <span>Explore my work</span>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </a>
-            <a class="button button-ghost hero-cta" href="#videos">
+            <a class="button button-ghost hero-cta" href="#intro-video" data-play-video="videos/intro.mp4">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4Z" fill="currentColor"/></svg>
               <span>Watch my intro</span>
             </a>
             <div class="social-links">
               <a class="icon-button" href="https://github.com/Rouge999xx" target="_blank" rel="noreferrer" aria-label="GitHub profile (opens in a new tab)">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                <span class="social-label">GitHub</span>
               </a>
               <a class="icon-button" href="https://linkedin.com/in/carl-marvic-tampus-478a932b8" target="_blank" rel="noreferrer" aria-label="LinkedIn profile (opens in a new tab)">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+                <span class="social-label">LinkedIn</span>
               </a>
             </div>
           </div>
@@ -247,7 +260,7 @@
         </li>
       </ol>
 
-      <div class="fa-capabilities" data-carousel aria-label="Flow Auto capabilities">
+      <div class="fa-capabilities" data-carousel role="group" aria-label="Flow Auto capabilities">
         <article class="bento fa-cap reveal tilt">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 7l10 5 10-5Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg>
           <h3>Continuity that sticks</h3>
@@ -337,11 +350,11 @@
       </div>
 
       <div class="showreel-grid">
-        <figure class="bento video-card video-card--feature tilt reveal" data-reveal="zoom" data-video="videos/intro.mp4" data-poster="videos/intro.jpg">
+        <figure class="bento video-card video-card--feature tilt reveal" id="intro-video" data-reveal="zoom" data-video="videos/intro.mp4" data-poster="videos/intro.jpg">
           <div class="video-frame">
             <span class="video-badge">Coming soon</span>
             <div class="video-placeholder">
-              <button class="video-play" type="button" aria-label="Play video: Meet Carl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg></button>
+              <button class="video-play" type="button" aria-label="Play video: Meet Carl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg><span class="video-play-text">Play</span></button>
             </div>
           </div>
           <figcaption class="video-caption">
@@ -366,12 +379,12 @@
           </a>
         </div>
 
-        <div class="video-samples" data-carousel aria-label="Product demo videos">
+        <div class="video-samples" data-carousel role="group" aria-label="Product demo videos">
           <figure class="bento video-card video-card--small tilt reveal" data-video="videos/flow-auto.mp4" data-poster="videos/flow-auto.jpg">
             <div class="video-frame">
               <span class="video-badge">Coming soon</span>
               <div class="video-placeholder">
-                <button class="video-play" type="button" aria-label="Play video: Flow Auto demo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg></button>
+                <button class="video-play" type="button" aria-label="Play video: Flow Auto demo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg><span class="video-play-text">Play</span></button>
               </div>
             </div>
             <figcaption class="video-caption">
@@ -384,7 +397,7 @@
             <div class="video-frame">
               <span class="video-badge">Coming soon</span>
               <div class="video-placeholder">
-                <button class="video-play" type="button" aria-label="Play video: HealthNest walkthrough"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg></button>
+                <button class="video-play" type="button" aria-label="Play video: HealthNest walkthrough"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg><span class="video-play-text">Play</span></button>
               </div>
             </div>
             <figcaption class="video-caption">
@@ -406,11 +419,14 @@
         <p>Desktop systems and automation tools made for actual workflows. Open a project to see the thinking behind it.</p>
       </div>
 
-      <div class="project-list" data-carousel aria-label="Projects">
+      <div class="project-list" data-carousel role="group" aria-label="Projects">
         <article class="project-card tilt reveal" data-category="automation" data-project="flowauto">
           <div class="project-visual visual-flow-mini" aria-hidden="true">
-            <img src="flow-auto-icon.svg" alt="" width="72" height="72" />
-            <div class="flow-mini-steps"><span>Script</span><span>Refs</span><span>Video</span><span>1080p</span><span>MP4</span></div>
+            <div class="shot-window">
+              <div class="shot-bar"><i></i><i></i><i></i></div>
+              <img src="img/flow-auto/scenes.webp" alt="" width="800" height="500" loading="lazy" />
+            </div>
+            <img class="shot-badge" src="flow-auto-icon.svg" alt="" width="56" height="56" />
             <span class="visual-caption">Browser extension · MCP</span>
           </div>
           <div class="project-copy">
@@ -460,7 +476,7 @@
           <span class="section-index">04 — Playground</span>
           <h2 id="labTitle">A little character. <em>A mind of his own.</em></h2>
         </div>
-        <p>Meet Pip, the resident ragdoll. Pick him up, or leave him for five seconds. He'll head off to play with the page, inspect projects, and discover things to poke.</p>
+        <p>Meet Pip, the resident ragdoll. He waits in his home spot until you drag him out. Then he heads off on his own to play with the page, inspect projects, and poke at things.</p>
       </div>
       <div class="core-lab bento reveal">
         <div class="core-copy">
@@ -471,7 +487,7 @@
           <div class="core-readout">
             <span>Your little companion</span>
             <h3 id="ragdollTitle">Hello, human.</h3>
-            <p id="ragdollDescription">After five seconds without your attention, he finds his own adventures: hopping onto cards, poking buttons, and exploring the page.</p>
+            <p id="ragdollDescription">He stays put in his home spot. Drag him out onto the page and he’ll find his own adventures from there.</p>
           </div>
           <div class="core-view-grid" id="coreViewGrid" role="group" aria-label="Things to do with Pip">
             <span class="selector-hover-pill" aria-hidden="true"></span>
@@ -488,13 +504,13 @@
           </div>
         </div>
         <div class="core-stage-wrap">
-          <div class="core-stage ragdoll-home" id="ragdollHome" aria-label="Pip's home">
+          <div class="core-stage ragdoll-home" id="ragdollHome" role="group" aria-label="Pip's home">
             <div class="ragdoll-home-label"><span>Home base</span><small>Small body. Big curiosity.</small></div>
             <div class="ragdoll-platform" aria-hidden="true"><i></i><span>PIP</span></div>
             <p class="ragdoll-home-hint" id="ragdollHomeHint">Go on. Pick him up.</p>
             <p class="ragdoll-fallback" id="ragdollFallback" hidden>3D rendering is unavailable in this browser. Try a browser with WebGL enabled to meet Pip.</p>
           </div>
-          <div class="core-controls" aria-label="Companion controls">
+          <div class="core-controls" role="group" aria-label="Companion controls">
             <button class="core-auto" id="ragdollAuto" type="button" aria-pressed="true"><i></i><span>AUTONOMY ON</span></button>
             <button id="ragdollReset" type="button">BACK HOME</button>
             <button id="ragdollHide" type="button" aria-pressed="false">HIDE PIP</button>
@@ -538,7 +554,7 @@
           <h3 id="stackTitle">Languages</h3>
           <p id="stackDescription">The languages I reach for when building application logic, systems exercises, and interactive interfaces.</p>
           <ul class="skill-cloud" id="skillCloud">
-            <li>C#</li><li>C</li><li>JavaScript</li><li>HTML</li><li>CSS</li>
+            <li>C#</li><li>C</li><li>JavaScript</li><li>TypeScript</li><li>HTML</li><li>CSS</li>
           </ul>
         </div>
       </div>
@@ -556,7 +572,7 @@
         </div>
 
         <div class="about-content">
-          <div class="principle-list" data-carousel aria-label="How I work">
+          <div class="principle-list" data-carousel role="group" aria-label="How I work">
             <article class="principle bento reveal">
               <span>01</span>
               <div><h3>Build for the workflow</h3><p>I start with what the user actually needs to accomplish, then shape the interface around that sequence.</p></div>
@@ -656,10 +672,10 @@
     <div class="command-panel" data-lenis-prevent role="dialog" aria-modal="true" aria-label="Command palette">
       <div class="command-search">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="commandInput" type="text" placeholder="Type a command or search..." autocomplete="off" aria-label="Search commands" />
+        <input id="commandInput" type="text" placeholder="Type a command or search..." autocomplete="off" aria-label="Search commands" role="combobox" aria-expanded="true" aria-controls="commandList" aria-autocomplete="list" />
         <kbd>ESC</kbd>
       </div>
-      <div class="command-list" id="commandList">
+      <div class="command-list" id="commandList" role="listbox" aria-label="Commands">
         <button data-action="flow-auto" type="button"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2-10 12h9l-1 8 10-12h-9Z"/></svg> Explore Flow Auto</span><kbd>F</kbd></button>
         <button data-action="videos" type="button"><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="m17 10 5-3v10l-5-3"/></svg> Watch the showreel</span><kbd>V</kbd></button>
         <button data-action="projects" type="button"><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> Go to projects</span><kbd>P</kbd></button>
@@ -685,7 +701,7 @@
     <div class="ragdoll-ground-shadow" id="ragdollShadow" aria-hidden="true"></div>
     <button class="ragdoll-handle" id="ragdollHandle" type="button" aria-label="Pip the 3D ragdoll. Drag a limb to pick him up. Use arrow keys to move, Space to jump, W to wave, H to return home." aria-describedby="ragdollHelp"></button>
     <span class="ragdoll-bubble" id="ragdollBubble" aria-hidden="true">Hello, human.</span>
-    <div class="ragdoll-pocket" id="ragdollPocket" hidden aria-label="Pip quick controls">
+    <div class="ragdoll-pocket" id="ragdollPocket" hidden role="group" aria-label="Pip quick controls">
       <button type="button" data-pip-action="wave" aria-label="Ask Pip to wave">Wave</button>
       <button type="button" data-pip-action="autonomy" id="ragdollPocketAuto" aria-pressed="true">Pause</button>
       <button type="button" data-pip-action="home">Home</button>
