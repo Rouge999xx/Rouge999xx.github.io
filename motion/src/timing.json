@@ -186,17 +186,17 @@
     },
     {
       "id": "intro",
-      "seconds": 7.623,
+      "seconds": 7.217,
       "sentences": [
         {
-          "text": "I'm Carl Tampus, a Computer Engineering student from Iloilo, Philippines.",
+          "text": "I'm Carl Tampus, a Computer Engineering student from Cebu, Philippines.",
           "start": 0.0,
-          "end": 5.248
+          "end": 4.843
         },
         {
           "text": "I build software that feels alive.",
-          "start": 5.468,
-          "end": 7.623
+          "start": 5.063,
+          "end": 7.217
         }
       ]
     },

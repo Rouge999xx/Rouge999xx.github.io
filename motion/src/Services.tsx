@@ -76,7 +76,7 @@ const Intro: React.FC<{line: Line}> = ({line}) => {
           <Words text="Carl Tampus" size={140} grad={['Tampus']} delay={L0} stagger={5} />
           <div style={{height: 10}} />
           <Body delay={L0 + 24} size={38}>
-            Computer Engineering student · Iloilo, Philippines
+            Computer Engineering student · Cebu, Philippines
           </Body>
           <div style={{height: 50}} />
           <Words text="I build software that feels alive." size={66} grad={['alive.']} delay={s2} style={{fontWeight: 600}} />
