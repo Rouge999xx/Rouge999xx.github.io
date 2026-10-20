@@ -13,8 +13,9 @@
       this.lastInteraction = now;
       this.nextDecision = now + 5000;
     }
-    ready(now, {enabled = true, held = false, hidden = false, locked = false, busy = false} = {}) {
-      return enabled && !held && !hidden && !locked && !busy &&
+    // Pip never leaves home on his own; autonomy only runs once a visitor has dragged him out.
+    ready(now, {enabled = true, held = false, hidden = false, locked = false, busy = false, home = false} = {}) {
+      return enabled && !held && !hidden && !locked && !busy && !home &&
         now - this.lastInteraction >= 5000 && now >= this.nextDecision;
     }
     choose(targets, now) {

@@ -137,7 +137,7 @@
     {selector:'.ragdoll-platform',kind:'perch',label:()=> 'home base'}
   ];
   const descriptions={
-    idle:['Hello, human.','Leave him for five seconds and he’ll find his own adventure. Grab him or give him a command whenever you want to join in.'],
+    idle:['Hello, human.','He stays put in his home spot. Drag him out onto the page and he’ll find his own adventures from there.'],
     adventure:['Ooh, what’s this?','Pip is playing with the page. He can perch on cards, poke badges, and try the project filters and stack tabs.'],
     walk:['Off I go.','Pip is exploring on his own. Pick him up at any time.'],
     wave:['Hello there!','A little wave, just for you. Double tap Pip whenever you want to say hello.'],
@@ -195,7 +195,7 @@
   function setAutonomy() {
     interact();auto=!auto;syncAuto();
     if(!auto && ['walk','follow'].includes(action))setAction('idle');
-    say(auto?'Five seconds, then adventure.':'I’ll wait for you.',2,true);scheduleIdle();wake();
+    say(auto?(free?'Five seconds, then adventure.':'Drag me out and I’ll explore.'):'I’ll wait for you.',2,true);scheduleIdle();wake();
   }
   function availableTarget(el,rect,allowActive=false) {
     if(!el.isConnected || el.closest('[hidden], .is-filtered-out, .modal-backdrop, .command-backdrop'))return false;
@@ -424,7 +424,7 @@
     if(recoveryUntil>time) {
       body.step({floor,width});x=clamp(body.points[8].pos[0],55*scale,width-55*scale);return;
     }
-    if(brain.ready(now,{enabled:auto,held:!!grab,hidden,locked:document.body.classList.contains('is-locked'),busy:!!adventure})) {
+    if(brain.ready(now,{enabled:auto,home:!free,held:!!grab,hidden,locked:document.body.classList.contains('is-locked'),busy:!!adventure})) {
       startAdventure(now);
     }
     if(advanceAdventure(now))return;
@@ -466,7 +466,7 @@
     frame=0;if(hidden||document.hidden)return;
     if(dockDirty){dock=home.getBoundingClientRect();dockDirty=false;}
     // Sleep while docked offscreen. Scroll/resize observers wake the playground.
-    if(!free && (dock.bottom<0||dock.top>height) && !brain.ready(now,{enabled:auto,hidden,locked:document.body.classList.contains('is-locked')})) {
+    if(!free && (dock.bottom<0||dock.top>height) && !brain.ready(now,{enabled:auto,home:!free,hidden,locked:document.body.classList.contains('is-locked')})) {
       overlay.hidden=true;lastFrame=0;scheduleIdle();return;
     }
     const dt=lastFrame?Math.min(.05,(now-lastFrame)/1000):1/60;lastFrame=now;accumulator+=dt;

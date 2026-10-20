@@ -44,3 +44,8 @@ test('Pip alternates types of play instead of repeatedly changing controls', () 
   assert.equal(brain.choose(targets, 10000).id, 'card');
   assert.equal(brain.choose(targets, 15000).id, 'filter2');
 });
+test('Pip never wanders out of his home on his own, only once dragged out', () => {
+  const brain = new Brain();
+  assert.equal(brain.ready(60000, {home: true}), false);
+  assert.equal(brain.ready(60000, {home: false}), true);
+});
