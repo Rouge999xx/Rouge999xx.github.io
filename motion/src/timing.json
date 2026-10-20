@@ -1,0 +1,306 @@
+{
+  "flowauto": [
+    {
+      "id": "hook",
+      "seconds": 9.095,
+      "sentences": [
+        {
+          "text": "Making a multi-scene AI video means the same setup, the same continuity checks, and the same exports.",
+          "start": 0.0,
+          "end": 7.339
+        },
+        {
+          "text": "Over, and over again.",
+          "start": 7.559,
+          "end": 9.095
+        }
+      ]
+    },
+    {
+      "id": "intro",
+      "seconds": 9.259,
+      "sentences": [
+        {
+          "text": "Flow Auto is a Chrome and Edge extension that turns a scene-by-scene script into finished, numbered, 1080p videos on Google Flow.",
+          "start": 0.0,
+          "end": 9.259
+        }
+      ]
+    },
+    {
+      "id": "import",
+      "seconds": 7.26,
+      "sentences": [
+        {
+          "text": "Paste a ChatGPT script, or JSON.",
+          "start": 0.0,
+          "end": 2.816
+        },
+        {
+          "text": "Scenes, batches and global rules are checked before you accept them.",
+          "start": 3.036,
+          "end": 7.26
+        }
+      ]
+    },
+    {
+      "id": "reference",
+      "seconds": 9.664,
+      "sentences": [
+        {
+          "text": "It makes storyboards and character sheets with Flow, ChatGPT, Grok or Meta AI, and saves them as real PNG files.",
+          "start": 0.0,
+          "end": 9.664
+        }
+      ]
+    },
+    {
+      "id": "generate",
+      "seconds": 7.936,
+      "sentences": [
+        {
+          "text": "Each scene goes to Flow, in Standard or Agent mode, or to Grok Imagine, with its rules and references attached.",
+          "start": 0.0,
+          "end": 7.936
+        }
+      ]
+    },
+    {
+      "id": "export",
+      "seconds": 10.987,
+      "sentences": [
+        {
+          "text": "Flow Auto uses Google Flow's own 1080p upscale, then saves every file as 1, 2, 3, and so on, checked for the exact name and resolution.",
+          "start": 0.0,
+          "end": 10.987
+        }
+      ]
+    },
+    {
+      "id": "continuity",
+      "seconds": 6.827,
+      "sentences": [
+        {
+          "text": "Global rules and character descriptions go into every image and video prompt, so batches stay consistent.",
+          "start": 0.0,
+          "end": 6.827
+        }
+      ]
+    },
+    {
+      "id": "resilience",
+      "seconds": 9.372,
+      "sentences": [
+        {
+          "text": "The queue survives a refresh or a crash without making duplicates.",
+          "start": 0.0,
+          "end": 4.544
+        },
+        {
+          "text": "And when a result is unclear, it pauses for your choice instead of guessing.",
+          "start": 4.764,
+          "end": 9.372
+        }
+      ]
+    },
+    {
+      "id": "mcp",
+      "seconds": 11.661,
+      "sentences": [
+        {
+          "text": "With its own MCP server, Claude and Gemini can run it too.",
+          "start": 0.0,
+          "end": 4.416
+        },
+        {
+          "text": "Import a script, edit a scene, start or pause generation.",
+          "start": 4.636,
+          "end": 8.625
+        },
+        {
+          "text": "And it asks before anything that spends credits.",
+          "start": 8.845,
+          "end": 11.661
+        }
+      ]
+    },
+    {
+      "id": "private",
+      "seconds": 7.337,
+      "sentences": [
+        {
+          "text": "No hosted backend.",
+          "start": 0.0,
+          "end": 1.515
+        },
+        {
+          "text": "No API keys.",
+          "start": 1.735,
+          "end": 3.185
+        },
+        {
+          "text": "No analytics.",
+          "start": 3.405,
+          "end": 4.621
+        },
+        {
+          "text": "It all runs in your own signed-in browser.",
+          "start": 4.841,
+          "end": 7.337
+        }
+      ]
+    },
+    {
+      "id": "outro",
+      "seconds": 5.368,
+      "sentences": [
+        {
+          "text": "Flow Auto.",
+          "start": 0.0,
+          "end": 1.173
+        },
+        {
+          "text": "A production line for AI video.",
+          "start": 1.393,
+          "end": 3.591
+        },
+        {
+          "text": "Built by Carl Tampus.",
+          "start": 3.811,
+          "end": 5.368
+        }
+      ]
+    }
+  ],
+  "services": [
+    {
+      "id": "hook",
+      "seconds": 2.965,
+      "sentences": [
+        {
+          "text": "Is a slow, messy workflow eating your team's time?",
+          "start": 0.0,
+          "end": 2.965
+        }
+      ]
+    },
+    {
+      "id": "intro",
+      "seconds": 7.623,
+      "sentences": [
+        {
+          "text": "I'm Carl Tampus, a Computer Engineering student from Iloilo, Philippines.",
+          "start": 0.0,
+          "end": 5.248
+        },
+        {
+          "text": "I build software that feels alive.",
+          "start": 5.468,
+          "end": 7.623
+        }
+      ]
+    },
+    {
+      "id": "desktop",
+      "seconds": 6.101,
+      "sentences": [
+        {
+          "text": "Desktop systems, built with C#, WinUI and WinForms, backed by SQLite.",
+          "start": 0.0,
+          "end": 6.101
+        }
+      ]
+    },
+    {
+      "id": "automation",
+      "seconds": 5.611,
+      "sentences": [
+        {
+          "text": "Automation tools and browser extensions that take the repetitive work off your plate.",
+          "start": 0.0,
+          "end": 5.611
+        }
+      ]
+    },
+    {
+      "id": "ai",
+      "seconds": 8.149,
+      "sentences": [
+        {
+          "text": "And AI integrations with MCP, so assistants like Claude and Gemini can do real work inside your tools.",
+          "start": 0.0,
+          "end": 8.149
+        }
+      ]
+    },
+    {
+      "id": "proof",
+      "seconds": 15.807,
+      "sentences": [
+        {
+          "text": "HealthNest tracks maternal and child health.",
+          "start": 0.0,
+          "end": 2.624
+        },
+        {
+          "text": "Barangay Case Management keeps residents updated by SMS.",
+          "start": 2.844,
+          "end": 7.58
+        },
+        {
+          "text": "NurseDesk runs a school clinic's records and medicine inventory.",
+          "start": 7.8,
+          "end": 12.088
+        },
+        {
+          "text": "And Flow Auto turns scripts into finished AI videos.",
+          "start": 12.308,
+          "end": 15.807
+        }
+      ]
+    },
+    {
+      "id": "approach",
+      "seconds": 7.58,
+      "sentences": [
+        {
+          "text": "I start with what you actually need to get done, then shape the software around it.",
+          "start": 0.0,
+          "end": 4.928
+        },
+        {
+          "text": "Technically deep, never complicated.",
+          "start": 5.148,
+          "end": 7.58
+        }
+      ]
+    },
+    {
+      "id": "cta",
+      "seconds": 6.919,
+      "sentences": [
+        {
+          "text": "I'm open to internships, freelance work, and interesting collaborations.",
+          "start": 0.0,
+          "end": 4.736
+        },
+        {
+          "text": "Let's build something worth using.",
+          "start": 4.956,
+          "end": 6.919
+        }
+      ]
+    },
+    {
+      "id": "contact",
+      "seconds": 4.117,
+      "sentences": [
+        {
+          "text": "Email me at carltampus5@gmail.com.",
+          "start": 0.0,
+          "end": 4.117
+        }
+      ]
+    }
+  ]
+}

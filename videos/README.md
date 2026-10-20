@@ -13,3 +13,5 @@ Drop files here with these exact names and the matching card on the site becomes
 Tips
 - Use MP4 (H.264), 1080p or 720p, and keep each file under ~50 MB. GitHub rejects files over 100 MB.
 - For long videos, upload to YouTube instead and put the video ID on the card in `index.html`: `data-youtube="VIDEO_ID"`.
+
+`intro.mp4` and `flow-auto.mp4` are rendered from the Remotion project in `motion/` (see `motion/README.md`).
