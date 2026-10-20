@@ -18,24 +18,6 @@ const projectData = {
     problem: 'Health information can become fragmented across appointments, case notes, and follow-up schedules, making day-to-day case tracking harder than it needs to be.',
     approach: 'A focused desktop workflow combines patient profiles, case status, scheduling, and an appointment calendar so information stays visible and actionable.',
     tags: ['WinUI 3', 'C#', 'SQLite', '.NET']
-  },
-  barangay: {
-    index: '03',
-    kicker: 'Civic Tech · Desktop',
-    title: 'Barangay Case Management',
-    summary: 'A social-services case management system for local government workflows, combining resident records, case tracking, and direct SMS notifications.',
-    problem: 'Community case work involves many records, changing case states, and follow-ups that can be difficult to coordinate manually.',
-    approach: 'The system organizes resident and case information in one desktop interface and connects notifications through the PhilSMS API for faster follow-up.',
-    tags: ['WinForms', 'C#', 'SQLite', 'PhilSMS']
-  },
-  nursedesk: {
-    index: '04',
-    kicker: 'Health Tech · Desktop',
-    title: 'NurseDesk',
-    summary: 'A school clinic management system that brings student health records, medicine inventory, and health-log activity into one operational dashboard.',
-    problem: 'School clinic work mixes record keeping, inventory awareness, and daily visit logging—tasks that become cumbersome when handled separately.',
-    approach: 'NurseDesk groups the clinic workflow into a practical desktop system where student records, medicine stock, and health encounters can be managed together.',
-    tags: ['WinForms', 'C#', 'SQLite']
   }
 };
 
@@ -980,4 +962,49 @@ qsa('.video-card').forEach(async card => {
     player.play?.();
     player.focus?.();
   });
+});
+
+/* =====================
+   SWIPEABLE ROWS ON PHONES
+   Adds page dots under every [data-carousel] strip and keeps them in sync.
+   ===================== */
+const phone = matchMedia('(max-width: 640px)');
+qsa('[data-carousel]').forEach(track => {
+  const dots = document.createElement('div');
+  dots.className = 'carousel-dots';
+  dots.setAttribute('role', 'group');
+  dots.setAttribute('aria-label', `${track.getAttribute('aria-label') || 'Cards'}: choose a card`);
+  track.after(dots);
+
+  const items = () => [...track.children].filter(el => !el.classList.contains('is-filtered-out'));
+  function build() {
+    dots.innerHTML = '';
+    items().forEach((item, index) => {
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.setAttribute('aria-label', `Show card ${index + 1}`);
+      dot.addEventListener('click', () => track.scrollTo({ left: item.offsetLeft - track.offsetLeft - 16, behavior: prefersReducedMotion ? 'auto' : 'smooth' }));
+      dots.appendChild(dot);
+    });
+    sync();
+  }
+  function sync() {
+    const list = items();
+    const center = track.scrollLeft + track.clientWidth * .35;
+    let active = 0;
+    list.forEach((item, index) => { if (item.offsetLeft - track.offsetLeft <= center) active = index; });
+    if (track.scrollLeft + track.clientWidth >= track.scrollWidth - 4) active = list.length - 1;
+    [...dots.children].forEach((dot, index) => {
+      dot.classList.toggle('is-active', index === active);
+      dot.setAttribute('aria-current', index === active ? 'true' : 'false');
+    });
+  }
+  track.addEventListener('scroll', () => requestAnimationFrame(sync), { passive: true });
+  // Rebuild only when project filters hide or show a card (not for reveal or Pip classes).
+  const filterWatch = new MutationObserver(mutations => {
+    const changed = mutations.some(m => (m.oldValue || '').includes('is-filtered-out') !== m.target.classList.contains('is-filtered-out'));
+    if (changed) { track.scrollLeft = 0; build(); }
+  });
+  [...track.children].forEach(child => filterWatch.observe(child, { attributes: true, attributeFilter: ['class'], attributeOldValue: true }));
+  build();
 });

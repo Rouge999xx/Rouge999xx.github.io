@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="description" content="Portfolio of Carl Marvic Tampus — computer engineering student and developer building practical desktop software and digital tools." />
   <meta name="theme-color" content="#0a0718" />
   <title>Carl Tampus — Developer Portfolio</title>
@@ -306,7 +306,7 @@
         </div>
       </div>
 
-      <ol class="fa-pipeline reveal" aria-label="How a story moves through Flow Auto">
+      <ol class="fa-pipeline reveal" data-carousel aria-label="How a story moves through Flow Auto">
         <li>
           <span class="fa-step">01</span>
           <h3>Import</h3>
@@ -334,7 +334,7 @@
         </li>
       </ol>
 
-      <div class="fa-capabilities">
+      <div class="fa-capabilities" data-carousel aria-label="Flow Auto capabilities">
         <article class="bento fa-cap reveal tilt">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 7l10 5 10-5Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg>
           <h3>Continuity that sticks</h3>
@@ -453,7 +453,7 @@
           </a>
         </div>
 
-        <div class="video-samples">
+        <div class="video-samples" data-carousel aria-label="Product demo videos">
           <figure class="bento video-card video-card--small tilt reveal" data-video="videos/flow-auto.mp4" data-poster="videos/flow-auto.jpg">
             <div class="video-frame">
               <span class="video-badge">Coming soon</span>
@@ -480,32 +480,6 @@
               <p>Patient cases, appointments and status tracking.</p>
             </figcaption>
           </figure>
-          <figure class="bento video-card video-card--small tilt reveal" data-video="videos/barangay.mp4" data-poster="videos/barangay.jpg">
-            <div class="video-frame">
-              <span class="video-badge">Coming soon</span>
-              <div class="video-placeholder">
-                <button class="video-play" type="button" aria-label="Play video: Barangay Case Management"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg></button>
-              </div>
-            </div>
-            <figcaption class="video-caption">
-              <span class="video-kicker">Civic tech</span>
-              <h3>Barangay Case Management</h3>
-              <p>Resident records, case tracking and SMS updates.</p>
-            </figcaption>
-          </figure>
-          <figure class="bento video-card video-card--small tilt reveal" data-video="videos/nursedesk.mp4" data-poster="videos/nursedesk.jpg">
-            <div class="video-frame">
-              <span class="video-badge">Coming soon</span>
-              <div class="video-placeholder">
-                <button class="video-play" type="button" aria-label="Play video: NurseDesk tour"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg></button>
-              </div>
-            </div>
-            <figcaption class="video-caption">
-              <span class="video-kicker">Health tech</span>
-              <h3>NurseDesk tour</h3>
-              <p>Student health records and medicine inventory.</p>
-            </figcaption>
-          </figure>
         </div>
       </div>
     </section>
@@ -516,22 +490,10 @@
           <span class="section-index">03 — More work</span>
           <h2 id="projectsTitle">Projects built around <em>real problems.</em></h2>
         </div>
-        <p>Desktop systems and automation tools made for actual workflows. Filter by focus, then open a project to see the thinking behind it.</p>
+        <p>Desktop systems and automation tools made for actual workflows. Open a project to see the thinking behind it.</p>
       </div>
 
-      <div class="project-toolbar reveal">
-        <div class="filter-group" id="projectFilterGroup" role="group" aria-label="Filter projects">
-          <span class="selector-hover-pill" aria-hidden="true"></span>
-          <button class="filter-button is-active" type="button" data-filter="all" aria-pressed="true">All <span>4</span></button>
-          <button class="filter-button" type="button" data-filter="desktop" aria-pressed="false">Desktop <span>3</span></button>
-          <button class="filter-button" type="button" data-filter="health" aria-pressed="false">Health <span>2</span></button>
-          <button class="filter-button" type="button" data-filter="civic" aria-pressed="false">Civic <span>1</span></button>
-          <button class="filter-button" type="button" data-filter="automation" aria-pressed="false">Automation <span>1</span></button>
-        </div>
-        <p class="toolbar-hint" id="projectCount" aria-live="polite">Showing 4 projects</p>
-      </div>
-
-      <div class="project-list">
+      <div class="project-list" data-carousel aria-label="Projects">
         <article class="project-card tilt reveal" data-category="automation" data-project="flowauto">
           <div class="project-visual visual-flow-mini" aria-hidden="true">
             <img src="flow-auto-icon.svg" alt="" width="72" height="72" />
@@ -573,56 +535,6 @@
             <h3><button class="project-open" type="button" aria-haspopup="dialog">HealthNest</button></h3>
             <p>Maternal and child health monitoring with patient case management, appointment scheduling, and longitudinal status tracking.</p>
             <ul class="project-tags" aria-label="Built with"><li>WinUI 3</li><li>C#</li><li>SQLite</li><li>.NET</li></ul>
-            <span class="project-link" aria-hidden="true">Read case study <svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg></span>
-          </div>
-        </article>
-
-        <article class="project-card tilt reveal" data-category="desktop civic" data-project="barangay">
-          <div class="project-visual visual-barangay" aria-hidden="true">
-            <div class="civic-ui">
-              <div class="civic-nav"><b>BCMS</b><i></i><i></i><i></i></div>
-              <div class="civic-main">
-                <div class="civic-title"><span></span><i></i></div>
-                <div class="civic-table">
-                  <span></span><span></span><span></span><span></span>
-                </div>
-                <div class="sms-toast"><i></i><div><b>SMS sent</b><small>Resident notified</small></div></div>
-              </div>
-            </div>
-            <span class="visual-caption">Case tracking · SMS workflow</span>
-          </div>
-          <div class="project-copy">
-            <div class="project-topline">
-              <span class="project-kicker">Civic tech · Desktop</span>
-              <span class="project-number">03</span>
-            </div>
-            <h3><button class="project-open" type="button" aria-haspopup="dialog">Barangay Case Management</button></h3>
-            <p>A local government social-services workflow for resident records, case tracking, and SMS notifications through the PhilSMS API.</p>
-            <ul class="project-tags" aria-label="Built with"><li>WinForms</li><li>C#</li><li>SQLite</li><li>PhilSMS</li></ul>
-            <span class="project-link" aria-hidden="true">Read case study <svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg></span>
-          </div>
-        </article>
-
-        <article class="project-card tilt reveal" data-category="desktop health" data-project="nursedesk">
-          <div class="project-visual visual-nursedesk" aria-hidden="true">
-            <div class="nurse-ui">
-              <div class="nurse-header"><span>+</span><b>NurseDesk</b><i></i></div>
-              <div class="nurse-grid">
-                <div class="nurse-panel"><small>STUDENTS</small><strong>1,248</strong><span></span></div>
-                <div class="nurse-panel"><small>MEDICINE</small><strong>86%</strong><span></span></div>
-                <div class="nurse-log"><i></i><i></i><i></i><i></i></div>
-              </div>
-            </div>
-            <span class="visual-caption">Clinic records · inventory</span>
-          </div>
-          <div class="project-copy">
-            <div class="project-topline">
-              <span class="project-kicker">Health tech · Desktop</span>
-              <span class="project-number">04</span>
-            </div>
-            <h3><button class="project-open" type="button" aria-haspopup="dialog">NurseDesk</button></h3>
-            <p>A school clinic management system for student health records, medicine inventory, and day-to-day health log tracking.</p>
-            <ul class="project-tags" aria-label="Built with"><li>WinForms</li><li>C#</li><li>SQLite</li></ul>
             <span class="project-link" aria-hidden="true">Read case study <svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg></span>
           </div>
         </article>
@@ -731,7 +643,7 @@
         </div>
 
         <div class="about-content">
-          <div class="principle-list">
+          <div class="principle-list" data-carousel aria-label="How I work">
             <article class="principle bento reveal">
               <span>01</span>
               <div><h3>Build for the workflow</h3><p>I start with what the user actually needs to accomplish, then shape the interface around that sequence.</p></div>
