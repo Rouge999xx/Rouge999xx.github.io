@@ -69,8 +69,8 @@
     },
     {
       "id": "desktop",
-      "say": "Desktop systems, built with C sharp, WinUI and WinForms, backed by SQLite.",
-      "text": "Desktop systems, built with C#, WinUI and WinForms, backed by SQLite."
+      "say": "Desktop systems, built with C sharp, WinUI and dot net, backed by SQLite.",
+      "text": "Desktop systems, built with C#, WinUI and .NET, backed by SQLite."
     },
     {
       "id": "automation",
@@ -84,8 +84,8 @@
     },
     {
       "id": "proof",
-      "say": "HealthNest tracks maternal and child health. Barangay Case Management keeps residents updated by S M S. NurseDesk runs a school clinic's records and medicine inventory. And Flow Auto turns scripts into finished AI videos.",
-      "text": "HealthNest tracks maternal and child health. Barangay Case Management keeps residents updated by SMS. NurseDesk runs a school clinic's records and medicine inventory. And Flow Auto turns scripts into finished AI videos."
+      "say": "HealthNest monitors maternal and child health, with case management and appointment scheduling. And Flow Auto turns scripts into finished AI videos.",
+      "text": "HealthNest monitors maternal and child health, with case management and appointment scheduling. And Flow Auto turns scripts into finished AI videos."
     },
     {
       "id": "approach",

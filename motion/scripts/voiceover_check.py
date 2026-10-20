@@ -4,7 +4,7 @@ import re
 # Spoken spellings in narration.json and the forms Whisper writes them back as.
 ALIASES = {"ten-eighty p": "1080p", "jason": "json", "p n g": "png", "m c p": "mcp", "s m s": "sms",
            "c sharp": "c#", "chat gpt": "chatgpt", "back-end": "backend", "back end": "backend", "signed in": "signed-in",
-           "sq-lite": "sqlite", "nurse desk": "nursedesk", "carl tampus five at gmail dot com": "carltampus5@gmail.com",
+           "sq-lite": "sqlite", "dot net": ".net", "nurse desk": "nursedesk", "carl tampus five at gmail dot com": "carltampus5@gmail.com",
            "karltampus5@gmail.com": "carltampus5@gmail.com", "cue": "queue", "one, two, three": "1, 2, 3"}
 
 def norm(s):

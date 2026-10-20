@@ -219,7 +219,7 @@ const AiBridge: React.FC = () => {
 };
 
 const Desktop: React.FC<{line: Line}> = ({line}) => (
-  <Service line={line} n="01" title="Desktop systems" grad={['systems']} copy="Records, scheduling and case management that run fast on the machines your team already uses." chips={['C#', 'WinUI 3', 'WinForms', '.NET', 'SQLite']} visual={<AppWindow />} />
+  <Service line={line} n="01" title="Desktop systems" grad={['systems']} copy="Records, scheduling and case management that run fast on the machines your team already uses." chips={['C#', 'WinUI 3', '.NET', 'SQLite']} visual={<AppWindow />} />
 );
 const Automation: React.FC<{line: Line}> = ({line}) => (
   <Service line={line} n="02" title="Automation & extensions" grad={['Automation']} copy="Browser extensions and tools that take the repetitive steps off your plate." chips={['TypeScript', 'React', 'Chrome MV3', 'JavaScript']} visual={<Pipeline />} />
@@ -230,11 +230,61 @@ const Ai: React.FC<{line: Line}> = ({line}) => (
 
 /* 6. Proof: projects, one per narrated sentence */
 const PROJECTS = [
-  {name: 'HealthNest', tag: 'Healthcare · Desktop', copy: 'Maternal & child health monitoring', col: c.pink, stack: 'WinUI 3 · C# · SQLite'},
-  {name: 'Barangay Case Management', tag: 'Civic tech · Desktop', copy: 'Resident cases + SMS via PhilSMS', col: c.amber, stack: 'WinForms · C# · SQLite'},
-  {name: 'NurseDesk', tag: 'Health tech · Desktop', copy: 'School clinic records & medicine inventory', col: c.teal, stack: 'WinForms · C# · SQLite'},
+  {name: 'HealthNest', tag: 'Healthcare · Desktop', copy: 'Maternal & child health, cases and appointments', col: c.pink, stack: 'WinUI 3 · C# · SQLite'},
   {name: 'Flow Auto', tag: 'Automation · Extension', copy: 'Scripts to finished 1080p AI videos', col: c.lime, stack: 'React · TypeScript · MCP'},
 ];
+/** Small product previews that fill the lower half of each proof card. */
+const HealthPreview: React.FC<{from: number}> = ({from}) => {
+  const frame = useCurrentFrame();
+  const bars = [48, 64, 58, 76, 70, 88, 82];
+  return (
+    <Row gap={30} style={{alignItems: 'stretch', height: '100%'}}>
+      <div style={{display: 'flex', flexDirection: 'column', gap: 14, width: 260}}>
+        {[
+          ['Mothers tracked', '128'],
+          ['Visits today', '14'],
+          ['Follow-ups', '6'],
+        ].map(([k, v]) => (
+          <div key={k} style={{padding: '12px 18px', borderRadius: 14, background: 'rgba(255,255,255,.05)'}}>
+            <div style={{fontFamily: fonts.mono, fontSize: 16, color: c.dim}}>{k}</div>
+            <div style={{fontFamily: fonts.display, fontSize: 34, fontWeight: 700, color: c.text}}>{v}</div>
+          </div>
+        ))}
+      </div>
+      <Row gap={14} style={{flex: 1, alignItems: 'flex-end'}}>
+        {bars.map((b, i) => (
+          <div
+            key={i}
+            style={{flex: 1, height: `${interpolate(frame, [from + i * 4, from + 26 + i * 4], [0, b], clamp)}%`, borderRadius: 8, background: c.grad}}
+          />
+        ))}
+      </Row>
+    </Row>
+  );
+};
+
+const FlowPreview: React.FC<{from: number}> = ({from}) => {
+  const frame = useCurrentFrame();
+  return (
+    <Row gap={30} style={{alignItems: 'center', height: '100%'}}>
+      <Img src={staticFile('flow-auto-icon.svg')} style={{width: 150, height: 150, filter: 'drop-shadow(0 0 30px rgba(185,243,107,.4))'}} />
+      <div style={{flex: 1, display: 'flex', flexDirection: 'column', gap: 10}}>
+        {[1, 2, 3, 4].map((n, i) => (
+          <Row
+            key={n}
+            gap={14}
+            style={{padding: '10px 18px', borderRadius: 12, background: 'rgba(255,255,255,.05)', opacity: interpolate(frame, [from + i * 6, from + 10 + i * 6], [0, 1], clamp)}}
+          >
+            <span style={{fontFamily: fonts.mono, fontSize: 22, color: c.text, flex: 1}}>story/{n}.mp4</span>
+            <span style={{fontFamily: fonts.mono, fontSize: 18, color: c.lime}}>1080p</span>
+            <Check size={22} />
+          </Row>
+        ))}
+      </div>
+    </Row>
+  );
+};
+
 const Proof: React.FC<{line: Line}> = ({line}) => {
   const frame = useCurrentFrame();
   const current = PROJECTS.reduce((k, _, i) => (frame >= sentenceFrame(line, i) - 6 ? i : k), 0);
@@ -259,6 +309,8 @@ const Proof: React.FC<{line: Line}> = ({line}) => {
                   borderColor: on ? `${p.col}88` : c.border,
                   background: on ? c.glassStrong : c.glass,
                   transform: `scale(${on ? 1.02 : 1})`,
+                  display: 'flex',
+                  flexDirection: 'column',
                 }}
               >
                 <Row gap={14}>
@@ -268,6 +320,9 @@ const Proof: React.FC<{line: Line}> = ({line}) => {
                 <div style={{fontFamily: fonts.display, fontSize: 46, fontWeight: 700, color: c.text, margin: '10px 0 6px'}}>{p.name}</div>
                 <div style={{fontFamily: fonts.body, fontSize: 28, color: c.muted}}>{p.copy}</div>
                 <div style={{fontFamily: fonts.mono, fontSize: 20, color: c.dim, marginTop: 14}}>{p.stack}</div>
+                <div style={{flex: 1, marginTop: 30, minHeight: 0}}>
+                  {i === 0 ? <HealthPreview from={d + 10} /> : <FlowPreview from={d + 10} />}
+                </div>
               </Glass>
             </Enter>
           );
