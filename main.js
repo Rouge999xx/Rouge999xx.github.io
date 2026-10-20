@@ -46,6 +46,10 @@ const stackData = {
 
 // Motion follows the OS setting unless the visitor flips the header switch (saved per browser).
 const prefersReducedMotion = document.documentElement.dataset.motion === 'reduced';
+// story.js tells the page as scroll chapters when GSAP loaded; otherwise simple reveals take over.
+const storyMode = Boolean(window.gsap && window.ScrollTrigger);
+document.documentElement.classList.toggle('story', storyMode);
+if (!storyMode) document.documentElement.classList.remove('story-intro');
 
 function toggleMotion() {
   try { localStorage.setItem('portfolio-motion', prefersReducedMotion ? 'full' : 'reduced'); } catch {}
@@ -86,7 +90,7 @@ function setTheme(theme) {
 
 // Browser chrome matches the page, and the toggle names the theme it switches to.
 function syncThemeUI(theme = document.documentElement.dataset.theme) {
-  qs('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#0a0718' : '#f4f1ff');
+  qs('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#0b0c0e' : '#f4f3ee');
   qs('#themeToggle').setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`);
 }
 
@@ -169,17 +173,14 @@ addEventListener('resize', () => syncNavPill(false), { passive: true });
 desktopNavHover.addEventListener?.('change', () => syncNavPill(false));
 requestAnimationFrame(() => syncNavPill(false));
 
-const scrollProgress = qs('#scrollProgress');
 const siteHeader = qs('#siteHeader');
 function updateScrollUI() {
-  const max = document.documentElement.scrollHeight - innerHeight;
-  const progress = max > 0 ? scrollY / max : 0;
-  scrollProgress.style.transform = `scaleX(${progress})`;
   siteHeader.classList.toggle('is-scrolled', scrollY > 24);
 }
 addEventListener('scroll', updateScrollUI, { passive: true });
 updateScrollUI();
 
+// Fallback reveals (story.js handles them when GSAP is available).
 // Cards that enter together cascade in reading order, so a grid ripples in instead of popping.
 const revealObserver = new IntersectionObserver(entries => {
   const entering = entries
@@ -191,17 +192,19 @@ const revealObserver = new IntersectionObserver(entries => {
     revealObserver.unobserve(entry.target);
   });
 }, { threshold: .08, rootMargin: '0px 0px -8% 0px' });
-qsa('.reveal').forEach(el => revealObserver.observe(el));
-// Whatever is on screen at load reveals right away instead of waiting for the observer.
-requestAnimationFrame(() => {
-  qsa('.reveal:not(.is-visible)')
-    .filter(el => { const r = el.getBoundingClientRect(); return r.top < innerHeight * .92 && r.bottom > 0; })
-    .forEach((el, index) => {
-      el.style.setProperty('--delay', `${Math.min(index * 60, 360)}ms`);
-      el.classList.add('is-visible');
-      revealObserver.unobserve(el);
-    });
-});
+if (!storyMode) {
+  qsa('.reveal').forEach(el => revealObserver.observe(el));
+  // Whatever is on screen at load reveals right away instead of waiting for the observer.
+  requestAnimationFrame(() => {
+    qsa('.reveal:not(.is-visible)')
+      .filter(el => { const r = el.getBoundingClientRect(); return r.top < innerHeight * .92 && r.bottom > 0; })
+      .forEach((el, index) => {
+        el.style.setProperty('--delay', `${Math.min(index * 60, 360)}ms`);
+        el.classList.add('is-visible');
+        revealObserver.unobserve(el);
+      });
+  });
+}
 // Drop the delay once revealed so hover and tilt respond instantly.
 document.addEventListener('transitionend', event => {
   if (event.target.classList?.contains('reveal') && event.propertyName === 'opacity') event.target.style.removeProperty('--delay');
@@ -852,8 +855,15 @@ let lenis = null;
 
 if (!prefersReducedMotion && window.Lenis) {
   lenis = new Lenis({ lerp: .09, wheelMultiplier: 1, smoothWheel: true });
-  const raf = time => { lenis.raf(time); requestAnimationFrame(raf); };
-  requestAnimationFrame(raf);
+  if (storyMode) {
+    // One clock for smooth scrolling and the scroll story, so pinned and scrubbed scenes stay in sync.
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add(time => lenis.raf(time * 1000));
+    gsap.ticker.lagSmoothing(0);
+  } else {
+    const raf = time => { lenis.raf(time); requestAnimationFrame(raf); };
+    requestAnimationFrame(raf);
+  }
   // Dialogs lock the page; pause smoothing so their own content can scroll.
   new MutationObserver(() => {
     document.body.classList.contains('is-locked') ? lenis.stop() : lenis.start();

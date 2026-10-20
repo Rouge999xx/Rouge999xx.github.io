@@ -335,6 +335,12 @@
     wake();
   }
   document.querySelectorAll('[data-pip-action]').forEach(b=>b.addEventListener('click',()=>perform(b.dataset.pipAction)));
+  // story.js says hello as the playground chapter arrives; Pip only waves if he is idle at home and on screen.
+  addEventListener('pip-greet',()=>{
+    const r=home.getBoundingClientRect();
+    if(free||hidden||grab||adventure||action!=='idle'||document.body.classList.contains('is-locked')||r.bottom<80||r.top>innerHeight)return;
+    setAction('wave',2.5);say('Hello, human.',2.5);wake();
+  });
   $('ragdollReset').addEventListener('click',resetHome);hideButton.addEventListener('click',toggleHidden);
   autoButton.addEventListener('click',setAutonomy);
   // The only input surface is the character's small bounding box, not the canvas.

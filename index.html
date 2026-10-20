@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="description" content="Portfolio of Carl Marvic Tampus — computer engineering student and developer building practical desktop software and digital tools." />
-  <meta name="theme-color" content="#0a0718" />
+  <meta name="theme-color" content="#0b0c0e" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Carl Tampus — Developer Portfolio" />
   <meta property="og:description" content="Portfolio of Carl Marvic Tampus — computer engineering student and developer building practical desktop software and digital tools." />
@@ -22,7 +22,7 @@
         var saved = localStorage.getItem('portfolio-theme');
         var theme = saved || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
         document.documentElement.dataset.theme = theme;
-        document.querySelector('meta[name="theme-color"]').setAttribute('content', theme === 'light' ? '#f4f1ff' : '#0a0718');
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', theme === 'light' ? '#f4f3ee' : '#0b0c0e');
       } catch (e) {}
       document.documentElement.classList.add('js');
       try {
@@ -31,17 +31,17 @@
       } catch (e) {
         document.documentElement.dataset.motion = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'reduced' : 'full';
       }
+      if (document.documentElement.dataset.motion === 'full') document.documentElement.classList.add('story-intro');
     })();
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
   <div class="page-backdrop" aria-hidden="true"><i class="blob blob-1" data-parallax="-0.08"></i><i class="blob blob-2" data-parallax="0.12"></i><i class="blob blob-3" data-parallax="-0.05"></i></div>
   <canvas class="particle-field" id="particleField" aria-hidden="true"></canvas>
 
@@ -96,7 +96,7 @@
 
           <h1 class="hero-title" id="heroTitle">
             I build software<br />
-            that feels <em>alive.</em>
+            that feels <em>alive.<svg class="alive-underline" viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M3 13C40 6 90 3 130 8s55 7 67 1" pathLength="1" vector-effect="non-scaling-stroke"/></svg></em>
           </h1>
 
           <p class="hero-intro">
@@ -228,6 +228,7 @@
                       </div>
                     </div>
             <span class="visual-caption">Current Flow Auto UI · story workspace</span>
+            <span class="flow-tour" aria-hidden="true"><b class="flow-tour-step">01 / 04</b><i class="flow-tour-bar"><i></i></i></span>
           </div>
         </div>
       </div>
@@ -600,7 +601,7 @@
       <div class="contact-card bento reveal" data-reveal="zoom">
         <div class="contact-copy">
           <span class="section-index">07 — Contact</span>
-          <h2 id="contactTitle">Have something worth <em>building?</em></h2>
+          <h2 id="contactTitle">Have something worth <em>building?<svg class="alive-underline" viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M3 13C40 6 90 3 130 8s55 7 67 1" pathLength="1" vector-effect="non-scaling-stroke"/></svg></em></h2>
           <p>I'm open to internships, freelance work, and interesting collaborations.</p>
           <div class="contact-actions">
             <a class="button button-primary" href="mailto:carltampus5@gmail.com">
@@ -710,7 +711,11 @@
   </div>
   <span class="sr-only" id="ragdollStatus" role="status" aria-live="polite"></span>
   <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/ScrollTrigger.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/SplitText.min.js" defer></script>
   <script src="main.js" defer></script>
+  <script src="story.js" defer></script>
   <script src="ragdoll-physics.js" defer></script>
   <script src="ragdoll-brain.js" defer></script>
   <script src="ragdoll.js" defer></script>
