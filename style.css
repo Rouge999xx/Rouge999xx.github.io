@@ -51,6 +51,7 @@
   --title-glow: rgba(140, 180, 255, .18);
   --glow: #8cb4ff;
   --glow-halo: rgba(90, 140, 255, .7);
+  --spot-glow: rgba(110, 150, 255, .09);
 
   --sans: "Inter Tight", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --serif: "Instrument Serif", Georgia, "Times New Roman", serif;
@@ -104,6 +105,7 @@
   --title-glow: transparent;
   --glow: #1d4ed8;
   --glow-halo: rgba(29, 78, 216, .45);
+  --spot-glow: rgba(29, 78, 216, .06);
 }
 
 /* Switching themes eases the colors instead of flashing. */
@@ -297,6 +299,59 @@ html[data-motion="reduced"] .motion-toggle .motion-on, html[data-motion="full"] 
 .tags li { padding: 5px 11px; border: 1px solid var(--line); border-radius: 999px; color: var(--text-2); font: 500 12px/1.4 var(--mono); }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
 
+/* Home hero on wide screens: the pitch on the left, an "at a glance" panel on the right. */
+.hero-body--split { grid-template-columns: minmax(0, 1.15fr) minmax(380px, .95fr); align-items: center; gap: clamp(40px, 4vw, 72px); }
+.hero-body--split > :not(.spot, .hero-cue) { position: relative; z-index: 1; }
+.hero-body--split .hero-title { font-size: clamp(2.75rem, 4.6vw, 6rem); }
+.hero-body--split .hero-sub { justify-self: start; max-width: 28em; margin-top: clamp(24px, 2.6vw, 40px); }
+.hero-body--split .hero-actions { margin-top: clamp(28px, 3vw, 40px); }
+.hero-cue { z-index: 1; }
+.hero-card {
+  display: grid; padding: 8px;
+  border: 1px solid var(--line); border-radius: 20px;
+  background: color-mix(in srgb, var(--surface-2) 55%, transparent);
+  box-shadow: inset 0 1px 0 var(--highlight), 0 30px 60px -40px var(--shadow);
+}
+.hero-card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 12px 14px; }
+.hero-card-head .eyebrow { white-space: nowrap; }
+.hero-place { display: inline-flex; align-items: center; gap: 8px; color: var(--text-2); font: 500 12px/1.4 var(--mono); white-space: nowrap; }
+.hero-place .status-dot { width: 6px; height: 6px; box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 18%, transparent); }
+.hero-clock { font-variant-numeric: tabular-nums; }
+.hero-clock-diff { color: var(--text-3); }
+.hero-clock-diff:not(:empty)::before { content: " · "; }
+.glance { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.glance div { display: grid; grid-template-columns: 84px 1fr; gap: 12px; padding: 12px 14px; }
+.glance div + div { border-top: 1px solid var(--line); }
+.glance dt { color: var(--text-3); font: 500 11px/2 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.glance dd { font-size: 14px; line-height: 1.55; }
+.hero-card-label { padding: 18px 12px 8px; color: var(--text-3); font: 500 11px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+.glance-work { display: grid; gap: 2px; }
+.glance-work a { display: grid; grid-template-columns: 24px auto minmax(0, 1fr) 16px; align-items: center; gap: 12px; min-height: 48px; padding: 0 12px; border-radius: 12px; transition: background-color 160ms ease; }
+.glance-work span { color: var(--text-3); font: 500 12px var(--mono); }
+.glance-work strong { font-size: 15px; }
+.glance-work small { overflow: hidden; color: var(--text-3); font-size: 13px; white-space: nowrap; text-overflow: ellipsis; }
+.glance-work svg { width: 16px; height: 16px; color: var(--text-3); transition: translate 180ms var(--ease), color 160ms ease; }
+.glance-work .glance-play { width: 12px; height: 12px; margin-left: 2px; fill: currentColor; stroke: none; }
+.glance-work a:hover { background: var(--surface); }
+.glance-work a:hover svg { color: var(--text); translate: 3px 0; }
+.glance-email { justify-content: space-between; width: 100%; margin-top: 8px; border-radius: 14px; }
+.glance-email.is-copied { color: var(--ok); }
+
+/* A soft light that follows the pointer (main.js adds it to [data-spot] on mouse screens). */
+.spot {
+  position: absolute; left: 0; top: 0; z-index: 0;
+  width: 560px; height: 560px; margin: -280px 0 0 -280px; border-radius: 50%;
+  background: radial-gradient(closest-side, var(--spot-glow), transparent);
+  opacity: 0; pointer-events: none; transition: opacity 200ms ease;
+}
+.is-lit > .spot { opacity: 1; }
+
+/* Reading progress: a hairline of the accent across the top of the screen. */
+.scroll-progress {
+  position: fixed; left: 0; top: 0; z-index: 101; width: 100%; height: 2px;
+  background: var(--accent-text); transform: scaleX(0); transform-origin: 0 50%; pointer-events: none;
+}
+
 /* ---------- Buttons ---------- */
 .button {
   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
@@ -353,7 +408,8 @@ html[data-motion="reduced"] .motion-toggle .motion-on, html[data-motion="full"] 
   box-shadow: inset 0 1px 0 var(--highlight);
 }
 a.project-card:hover { border-color: var(--line-2); }
-.project-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; padding: clamp(22px, 3.2vw, 50px) clamp(22px, 3.2vw, 46px) 0; }
+.project-head { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; padding: clamp(22px, 3.2vw, 50px) clamp(22px, 3.2vw, 46px) 0; }
+.project-head .tags { margin-top: 16px; }
 .project-title { font-size: clamp(24px, 2.2vw, 34px); line-height: 1.15; letter-spacing: -.025em; text-shadow: 0 0 28px var(--title-glow); }
 .project-meta { margin-top: 8px; color: var(--text-3); font-size: clamp(15px, 1.1vw, 18px); line-height: 1.5; }
 .project-meta strong { color: var(--text); }
@@ -363,7 +419,7 @@ a.project-card:hover .project-arrow { background: var(--surface-2); }
 a.project-card:hover .project-arrow svg { translate: 4px 0; }
 /* The screenshot rises out of the card's bottom edge; motion.js lifts it as you scroll. */
 .project-media {
-  position: relative; overflow: hidden;
+  position: relative; z-index: 1; overflow: hidden;
   height: clamp(240px, 46vw, 700px); margin-top: clamp(26px, 4.6vw, 90px);
   padding: 0 clamp(14px, 7.8%, 120px);
 }
@@ -639,6 +695,10 @@ main:focus { outline: none; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1080px) {
+  /* Tablets stack the glance panel under the pitch. */
+  .hero-body--split { grid-template-columns: 1fr; align-content: center; }
+  .hero-body--split .hero-title { font-size: clamp(2.75rem, 6.2vw, 7rem); }
+  .hero-card { width: min(560px, 100%); }
   .pipeline { grid-template-columns: 1fr; border-top: 0; border-left: 1px solid var(--line); }
   .pipeline li, .pipeline li + li { padding: 4px 0 26px 26px; border-left: 0; }
   .pipeline::before { left: -1px; top: 0; width: 1px; height: 100%; transform: scaleY(var(--progress, 0)); transform-origin: 50% 0; }
@@ -684,6 +744,9 @@ main:focus { outline: none; }
   .hero { min-height: 0; padding-top: calc(var(--nav-h) + 8px); padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
   .hero-body { min-height: calc(100svh - var(--nav-h) - 8px - 38px - 84px - env(safe-area-inset-bottom)); padding: 34px 22px 84px; }
   .hero-sub { justify-self: start; }
+  /* Phones keep the one-screen intro; the same facts live in About. */
+  .hero-card { display: none; }
+  .hero-body--split .hero-actions .button { flex: 1 1 auto; }
   .case-hero .hero-body { padding-bottom: 34px; }
   .project-card { padding: 8px; border-radius: 26px; }
   .project-panel { border-radius: 19px; }
@@ -719,5 +782,6 @@ html[data-motion="reduced"] .marquee::-webkit-scrollbar { display: none; }
 html[data-motion="reduced"] .marquee-toggle { display: none; }
 html[data-motion="reduced"] .pipeline { --progress: 1; }
 html[data-motion="reduced"] .pipeline span { color: var(--accent-text); }
-html[data-motion="reduced"] :is(.button, .video-play, .button svg, .project-arrow svg, .next-card strong svg, .project-media > .window, .project-media > .mock) { transition: none; }
+html[data-motion="reduced"] :is(.button, .video-play, .button svg, .project-arrow svg, .next-card strong svg, .project-media > .window, .project-media > .mock, .glance-work svg) { transition: none; }
 html[data-motion="reduced"] a.project-card:hover :is(.project-media > .window, .project-media > .mock, .project-arrow svg) { translate: none; }
+html[data-motion="reduced"] .glance-work a:hover svg { translate: none; }

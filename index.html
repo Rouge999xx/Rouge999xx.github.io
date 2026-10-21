@@ -69,13 +69,39 @@
     <section class="hero" id="top" aria-labelledby="heroTitle">
       <div class="window hero-window" data-hero>
         <div class="window-bar" aria-hidden="true"><span class="window-dots"><i></i><i></i><i></i></span><span class="window-plus">+</span></div>
-        <div class="hero-body">
-          <p class="status"><span class="status-dot" aria-hidden="true"></span>Available for internships &amp; freelance</p>
-          <h1 class="hero-title" id="heroTitle" data-blur>I build software<br /> that feels <em>alive.</em></h1>
-          <div class="hero-sub" data-blur-lines>
-            <p>Computer Engineering student. Based in Cebu, Philippines.</p>
-            <p>I make desktop systems, automation tools and polished digital experiences.</p>
+        <div class="hero-body hero-body--split" data-spot>
+          <div class="hero-main">
+            <p class="status"><span class="status-dot" aria-hidden="true"></span>Available for internships &amp; freelance</p>
+            <h1 class="hero-title" id="heroTitle" data-blur>I build software<br /> that feels <em>alive.</em></h1>
+            <div class="hero-sub" data-blur-lines>
+              <p>Computer Engineering student. Based in Cebu, Philippines.</p>
+              <p>I make desktop systems, automation tools and polished digital experiences.</p>
+            </div>
+            <div class="hero-actions">
+              <a class="button" href="#work">See my work<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+              <a class="button button-ghost" href="#contact">Get in touch</a>
+            </div>
           </div>
+
+          <aside class="hero-card" aria-labelledby="glanceTitle">
+            <div class="hero-card-head">
+              <h2 class="eyebrow" id="glanceTitle">At a glance</h2>
+              <p class="hero-place"><span class="status-dot" aria-hidden="true"></span>Cebu, PH</p>
+            </div>
+            <dl class="glance">
+              <div><dt>Local time</dt><dd class="hero-clock"><time data-clock>UTC+8</time><span class="hero-clock-diff" data-clock-diff></span></dd></div>
+              <div><dt>Focus</dt><dd>Desktop apps, automation &amp; AI tooling</dd></div>
+              <div><dt>Stack</dt><dd>C# · .NET · TypeScript · React · SQLite</dd></div>
+              <div><dt>Studying</dt><dd>B.S. Computer Engineering</dd></div>
+            </dl>
+            <p class="hero-card-label">Selected work</p>
+            <ul class="glance-work">
+              <li><a href="flow-auto.html"><span>01</span><strong>Flow Auto</strong><small>Chrome extension · MCP</small><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></li>
+              <li><a href="healthnest.html"><span>02</span><strong>HealthNest</strong><small>Windows desktop app</small><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></li>
+              <li><a href="#intro-video" data-play-video="videos/intro.mp4"><span>03</span><strong>Meet Carl</strong><small>Intro video</small><svg class="glance-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg></a></li>
+            </ul>
+            <button class="chip glance-email" type="button" data-copy-email aria-label="Copy email address carltampus5@gmail.com"><span>carltampus5@gmail.com</span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+          </aside>
           <a class="hero-cue" href="#work" aria-label="Scroll to my work"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M6 14l6 6 6-6"/></svg></a>
         </div>
       </div>
@@ -86,11 +112,12 @@
 
       <article class="project" data-project>
         <a class="project-card" href="flow-auto.html">
-          <div class="project-panel">
+          <div class="project-panel" data-spot>
             <div class="project-head">
               <div>
                 <h3 class="project-title">Flow Auto</h3>
                 <p class="project-meta"><strong>Chrome &amp; Edge extension</strong> — A production line for AI video, with its own MCP server.</p>
+                <ul class="tags" aria-label="Built with"><li>React</li><li>TypeScript</li><li>Chrome MV3</li><li>MCP</li></ul>
               </div>
               <span class="project-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
             </div>
@@ -106,11 +133,12 @@
 
       <article class="project" data-project>
         <a class="project-card" href="healthnest.html">
-          <div class="project-panel">
+          <div class="project-panel" data-spot>
             <div class="project-head">
               <div>
                 <h3 class="project-title">HealthNest</h3>
                 <p class="project-meta"><strong>Windows desktop app</strong> — Maternal and child health monitoring, in one clear workflow.</p>
+                <ul class="tags" aria-label="Built with"><li>WinUI 3</li><li>C#</li><li>SQLite</li><li>.NET</li></ul>
               </div>
               <span class="project-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
             </div>
@@ -132,7 +160,7 @@
 
       <article class="project" data-project id="intro-video">
         <div class="project-card project-card--video" data-video="videos/intro.mp4" data-poster="videos/intro.jpg">
-          <div class="project-panel">
+          <div class="project-panel" data-spot>
             <div class="project-head">
               <div>
                 <h3 class="project-title">Meet Carl</h3>

@@ -111,7 +111,8 @@
     const body = qs('.hero-body', win);
     const status = qs('.status', body);
     const extras = qsa('.case-meta, .tags, .hero-actions, .hero-cue', body);
-    gsap.set([status, ...extras].filter(Boolean), { opacity: 0 });
+    const card = qsa('.hero-card > *', body);
+    gsap.set([status, ...extras, ...card].filter(Boolean), { opacity: 0 });
 
     const start = performance.now();
     if (full) {
@@ -133,6 +134,8 @@
       const sub = qs('[data-blur-lines]', body);
       if (sub) tl.add(prepare(sub, 'lines').play(), full ? .7 : .35);
       if (extras.length) tl.fromTo(extras, { opacity: 0, filter: 'blur(8px)', y: full ? 16 : 0 }, { opacity: 1, filter: 'blur(0px)', y: 0, duration: 1, stagger: .1, ease: 'power3.out', clearProps: 'filter,transform' }, full ? 1.05 : .5);
+      // The glance panel fills in row by row beside the title.
+      if (card.length) tl.fromTo(card, { opacity: 0, filter: 'blur(6px)', y: full ? 14 : 0 }, { opacity: 1, filter: 'blur(0px)', y: 0, duration: .9, stagger: .08, ease: 'power3.out', clearProps: 'filter,transform' }, full ? .8 : .4);
       const cue = qs('.hero-cue svg', body);
       if (cue && full) tl.to(cue, { y: 7, duration: .9, ease: 'sine.inOut', repeat: 5, yoyo: true }, '>');
     });
