@@ -56,8 +56,7 @@ function showToast(message = 'Email copied to clipboard') {
   showToast.timer = setTimeout(() => toast.classList.remove('is-visible'), 2200);
 }
 
-async function copyEmail(event) {
-  const chip = event?.currentTarget; // read before awaiting: it is cleared once the click is handled
+async function copyEmail() {
   try {
     await navigator.clipboard.writeText(EMAIL);
   } catch {
@@ -71,32 +70,8 @@ async function copyEmail(event) {
     temp.remove();
   }
   showToast();
-  // Chips that show the address say "Copied" for a moment, too.
-  const label = chip && qs('span', chip);
-  if (!label) return;
-  chip.classList.add('is-copied');
-  label.textContent = 'Copied to clipboard';
-  clearTimeout(chip.copiedTimer);
-  chip.copiedTimer = setTimeout(() => { chip.classList.remove('is-copied'); label.textContent = EMAIL; }, 1600);
 }
-qsa('#copyEmail, [data-copy-email]').forEach(button => button.addEventListener('click', copyEmail));
-
-/* ---------- Local time in Cebu, and how it compares with the visitor's ---------- */
-const clock = qs('[data-clock]');
-if (clock) {
-  const clockDiff = qs('[data-clock-diff]');
-  const cebuTime = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' });
-  const tick = () => {
-    const now = new Date();
-    clock.textContent = cebuTime.format(now);
-    clock.dateTime = now.toISOString();
-    if (!clockDiff) return;
-    const hours = 8 + now.getTimezoneOffset() / 60; // Cebu is UTC+8 all year
-    clockDiff.textContent = hours === 0 ? 'same time as you' : `${Math.abs(hours)}h ${hours > 0 ? 'ahead of' : 'behind'} you`;
-  };
-  tick();
-  setTimeout(() => { tick(); setInterval(tick, 60000); }, 60000 - Date.now() % 60000);
-}
+qs('#copyEmail')?.addEventListener('click', copyEmail);
 
 /* ---------- Smooth scrolling ----------
    Matches perryw-2023, which runs Locomotive Scroll: each screen frame closes 10% of the gap to where
@@ -200,14 +175,6 @@ const pillLinks = pill ? qsa('a', pill) : [];
 const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
 let hovered = null;
 
-// A hairline across the top of the screen shows how far down the page you are. The browser runs it
-// from the scroll position itself (see style.css), so scrolling does no extra work for it here.
-if (window.CSS?.supports?.('animation-timeline: scroll()')) {
-  const progress = document.createElement('span');
-  progress.className = 'scroll-progress';
-  progress.setAttribute('aria-hidden', 'true');
-  document.body.appendChild(progress);
-}
 const onScroll = () => nav?.classList.toggle('is-scrolled', scrollY > 24);
 addEventListener('scroll', onScroll, { passive: true });
 onScroll();
@@ -254,34 +221,6 @@ if (spySections.length) {
   addEventListener('scroll', spy, { passive: true });
   addEventListener('resize', spy, { passive: true });
   spy();
-}
-
-/* ---------- A soft light follows the mouse across the hero and the project cards ---------- */
-if (motion === 'full' && finePointer.matches) {
-  qsa('[data-spot]').forEach(el => {
-    const spot = document.createElement('span');
-    spot.className = 'spot';
-    spot.setAttribute('aria-hidden', 'true');
-    el.prepend(spot);
-    let frame = 0, pointerX = 0, pointerY = 0;
-    el.addEventListener('pointermove', event => {
-      if (event.pointerType !== 'mouse') return;
-      pointerX = event.clientX;
-      pointerY = event.clientY;
-      // Measured inside the frame, where the page is laid out anyway, never in the event itself.
-      if (!frame) frame = requestAnimationFrame(() => {
-        frame = 0;
-        const box = el.getBoundingClientRect();
-        spot.style.transform = `translate(${pointerX - box.left}px, ${pointerY - box.top}px)`;
-        el.classList.add('is-lit');
-      });
-    });
-    el.addEventListener('pointerleave', () => {
-      cancelAnimationFrame(frame);
-      frame = 0;
-      el.classList.remove('is-lit');
-    });
-  });
 }
 
 /* ---------- Rows you scroll sideways yourself get a keyboard stop ---------- */
