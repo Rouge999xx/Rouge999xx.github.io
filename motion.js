@@ -380,14 +380,15 @@
     });
   }
 
-  /* ---------- Stacked cards: each card shrinks back a little as the next one slides over it ---------- */
+  /* ---------- Stacked cards: each card shrinks back a little as the next one slides over it ----------
+     Only scale: the cards stay solid, so a covered card shows as an edge above the next, never through it. */
   function stack() {
     if (!full) return;
     qsa('[data-stack]').forEach(list => {
       const cards = qsa(':scope > li', list);
       cards.slice(0, -1).forEach((card, index) => {
         gsap.to(card, {
-          scale: .94, opacity: .55, ease: 'none',
+          scale: .94, ease: 'none',
           scrollTrigger: { trigger: cards[index + 1], start: 'top bottom', end: () => `top ${parseFloat(getComputedStyle(cards[index + 1]).top) || 0}px`, scrub: true, invalidateOnRefresh: true }
         });
       });

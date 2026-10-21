@@ -736,7 +736,9 @@ html[data-motion="reduced"] .sheet-cap, .motion-fallback .sheet-cap { transform:
 .statement { margin-top: 18px; font-size: clamp(1.5rem, 2.7vw, 2.35rem); line-height: 1.28; letter-spacing: -.025em; }
 .statement em { font-size: 1.06em; }
 /* The principles are cards that stack as you scroll: each one slides up over the last and settles a step lower. */
-.principles { display: grid; gap: clamp(14px, 2vw, 22px); margin-top: clamp(40px, 5vw, 64px); }
+/* Equal rows (the cards share the tallest height) spaced by gaps: the gaps give each card room to arrive,
+   the short last row lets the third settle onto the stack, and equal heights make all three leave as one. */
+.principles { display: grid; grid-template-rows: repeat(3, 1fr) 4vh; row-gap: 14vh; margin-top: clamp(40px, 5vw, 64px); }
 .principles li {
   --n: 0;
   position: sticky; top: calc(var(--nav-h) + 24px + var(--n) * 16px);
@@ -748,8 +750,7 @@ html[data-motion="reduced"] .sheet-cap, .motion-fallback .sheet-cap { transform:
 }
 .principles li:nth-child(2) { --n: 1; }
 .principles li:nth-child(3) { --n: 2; }
-/* Room to scroll while a card is stuck, so the next one has somewhere to come from. */
-.principles li:not(:last-child) { margin-bottom: 14vh; }
+.principles::after { content: ""; }
 .principles span { color: var(--text-3); font: 500 13px/1.9 var(--mono); }
 .principles h3 { font-size: 20px; letter-spacing: -.015em; }
 .principles p { margin-top: 4px; color: var(--text-2); }
