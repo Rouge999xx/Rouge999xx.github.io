@@ -4,7 +4,7 @@
    frames, generous space, and text that blurs into focus as you scroll.
    Palette "Midnight & Cobalt": deep navy surfaces, cool off-white text and
    one confident blue, used sparingly for actions, links and live states.
-   Every color lives in the tokens below.
+   Light theme "Paper & Ink" swaps the same tokens. Every color lives below.
    Type: Inter Tight (UI and display) · Instrument Serif italic (accents) ·
    JetBrains Mono (small labels). Motion lives in motion.js.
    ========================================================= */
@@ -65,6 +65,50 @@
 
   --ease: cubic-bezier(.22, 1, .36, 1);
   --dur: 220ms;
+}
+
+/* Light theme, "Paper & Ink" (chosen with the header switch): warm paper surfaces, ink text and the same single blue, deeper. */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #f5f4f0;
+  --surface: #ffffff;
+  --surface-2: #f0eee9;
+  --surface-3: #e6e3dc;
+  --line: rgba(24, 28, 40, .10);
+  --line-2: rgba(24, 28, 40, .18);
+  --text: #14161b;
+  --text-2: #4b5261;
+  --text-3: #5f6675;
+  --em: #1d4ed8;
+
+  --accent: #1d4ed8;
+  --accent-hover: #1e40af;
+  --on-accent: #ffffff;
+  --accent-text: #1d4ed8;
+  --accent-soft: rgba(29, 78, 216, .10);
+  --focus: #1d4ed8;
+
+  --dot: #d3d0c8;
+  --bar: linear-gradient(90deg, #e2e0da 0%, #f8f7f3 50%, #e2e0da 100%);
+  --bar-ink: rgba(20, 22, 27, .35);
+  --rim: #eceae4;
+  --panel: linear-gradient(165deg, #ffffff 0%, #fbfaf7 42%, #f5f3ee 100%);
+  --panel-line: rgba(24, 28, 40, .09);
+  --highlight: rgba(255, 255, 255, .9);
+  --edge-light: rgba(255, 255, 255, .9);
+  --shadow: rgba(30, 35, 50, .18);
+  --spot-1: rgba(29, 78, 216, .07);
+  --spot-2: rgba(29, 78, 216, .02);
+  --hero-glow: rgba(29, 78, 216, .04);
+  --title-glow: transparent;
+  --glow: #1d4ed8;
+  --glow-halo: rgba(29, 78, 216, .45);
+}
+
+/* Switching themes eases the colors instead of flashing. */
+.theme-fade, .theme-fade *, .theme-fade *::before, .theme-fade *::after {
+  transition: background-color .35s ease, color .35s ease, border-color .35s ease, box-shadow .35s ease, fill .35s ease !important;
 }
 
 /* ---------- Base ---------- */
@@ -172,13 +216,15 @@ em { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spa
 }
 .nav-out svg { width: 15px; height: 15px; }
 .nav-out:hover { color: var(--text-2); }
-.motion-toggle {
+.motion-toggle, .theme-toggle {
   display: inline-grid; place-items: center; width: 44px; height: 44px; margin-left: 4px;
   border: 1px solid var(--line); border-radius: 999px; color: var(--text-2);
   transition: color var(--dur) ease, border-color var(--dur) ease, background-color var(--dur) ease;
 }
-.motion-toggle svg { width: 17px; height: 17px; }
-.motion-toggle:hover { color: var(--text); border-color: var(--line-2); background: var(--surface-2); }
+.motion-toggle svg, .theme-toggle svg { width: 17px; height: 17px; }
+.motion-toggle:hover, .theme-toggle:hover { color: var(--text); border-color: var(--line-2); background: var(--surface-2); }
+/* The switch shows where it takes you: a sun in the dark theme, a moon in the light one. */
+:root[data-theme="light"] .theme-toggle .theme-light, :root:not([data-theme="light"]) .theme-toggle .theme-dark { display: none; }
 html[data-motion="reduced"] .motion-toggle .motion-on, html[data-motion="full"] .motion-toggle .motion-off { display: none; }
 
 /* ---------- Window frames ---------- */

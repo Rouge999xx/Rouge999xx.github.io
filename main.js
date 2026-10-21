@@ -22,6 +22,26 @@ if (motionToggle) {
   });
 }
 
+/* ---------- Theme switch: dark (Midnight & Cobalt) by default, light (Paper & Ink) when the visitor picks it ---------- */
+const themeToggle = qs('#themeToggle');
+const themeMeta = qs('meta[name="theme-color"]');
+function syncTheme() {
+  const light = root.dataset.theme === 'light';
+  themeToggle?.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to light theme');
+  if (themeToggle) themeToggle.title = light ? 'Dark theme' : 'Light theme';
+  themeMeta?.setAttribute('content', light ? '#f5f4f0' : '#0a0f1a');
+}
+function setTheme(theme) {
+  root.classList.add('theme-fade');
+  root.dataset.theme = theme;
+  try { localStorage.setItem('portfolio-theme', theme); } catch {}
+  syncTheme();
+  clearTimeout(setTheme.timer);
+  setTheme.timer = setTimeout(() => root.classList.remove('theme-fade'), 400);
+}
+themeToggle?.addEventListener('click', () => setTheme(root.dataset.theme === 'light' ? 'dark' : 'light'));
+syncTheme();
+
 qsa('[data-year]').forEach(el => { el.textContent = new Date().getFullYear(); });
 // The skip link lands on <main> and keeps keyboard focus there.
 qs('#main')?.setAttribute('tabindex', '-1');

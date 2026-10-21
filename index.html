@@ -19,9 +19,14 @@
   <script>
     (function () {
       // Full motion and smooth scrolling unless the visitor turned motion down with the header switch.
-      var root = document.documentElement, saved = '';
-      try { saved = localStorage.getItem('portfolio-motion-choice') || ''; } catch (e) {}
+      var root = document.documentElement, saved = '', theme = '';
+      try { saved = localStorage.getItem('portfolio-motion-choice') || ''; theme = localStorage.getItem('portfolio-theme') || ''; } catch (e) {}
       root.dataset.motion = saved === 'reduced' ? 'reduced' : 'full';
+      // Navy (dark) for everyone; light only once the visitor picks it with the header switch.
+      if (theme !== 'light') theme = 'dark';
+      root.dataset.theme = theme;
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', theme === 'light' ? '#f5f4f0' : '#0a0f1a');
       root.classList.add('js');
       if (root.dataset.motion === 'full') root.classList.add('intro-pending');
     })();
@@ -49,6 +54,10 @@
     <div class="nav-end">
       <a class="nav-out" href="https://github.com/Rouge999xx" target="_blank" rel="noreferrer">GitHub<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg><span class="sr-only"> (opens in a new tab)</span></a>
       <a class="nav-out" href="https://linkedin.com/in/carl-marvic-tampus-478a932b8" target="_blank" rel="noreferrer">LinkedIn<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg><span class="sr-only"> (opens in a new tab)</span></a>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme">
+        <svg class="theme-light" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        <svg class="theme-dark" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
       <button class="motion-toggle" id="motionToggle" type="button" aria-pressed="true" aria-label="Full motion">
         <svg class="motion-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8Z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8Z"/></svg>
         <svg class="motion-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8Z"/><path d="M3 3l18 18"/></svg>

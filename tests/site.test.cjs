@@ -115,3 +115,16 @@ test('pages default to full motion and smooth scrolling; only the header switch 
     assert.match(source, /id="motionToggle"/, `${page}: motion switch`);
   }
 });
+
+test('every page has the light/dark switch, defaults to navy and picks a theme before it paints', () => {
+  for (const [page, source] of Object.entries(html)) {
+    const head = source.slice(0, source.indexOf('</head>'));
+    assert.match(head, /root\.dataset\.theme = theme/, `${page}: theme set in the head`);
+    assert.match(head, /if \(theme !== 'light'\) theme = 'dark';/, `${page}: navy is the default`);
+    assert.doesNotMatch(head, /prefers-color-scheme/, `${page}: the device setting does not pick the theme`);
+    assert.match(source, /<button class="theme-toggle" id="themeToggle" type="button" aria-label="[^"]+">/, `${page}: theme switch`);
+  }
+  const css = read('style.css');
+  assert.match(css, /:root\[data-theme="light"\] \{[\s\S]*?--bg: #f5f4f0;/, 'light tokens');
+});
+
