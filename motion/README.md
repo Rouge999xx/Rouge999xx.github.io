@@ -33,6 +33,7 @@ python3 scripts/score.py   # intro score, follows the scene timing in src/timing
 python3 scripts/sfx.py     # SFX kit + public/sfx/cues.json (hit offsets mirrored in SFX_HIT in src/fx.tsx)
 # 3. Render
 node render.mjs            # out/flow-auto.mp4, out/intro.mp4 (the intro is loudness-mastered with ffmpeg)
+SILENT=FlowAuto node render.mjs   # picture only, keeping the soundtrack of ../videos/flow-auto.mp4 (no voiceover files needed; timing must be unchanged)
 node render.mjs posters    # out/flow-auto.jpg, out/intro.jpg
 node render.mjs stills     # two review frames per scene in out/stills/
 npm run studio             # live preview

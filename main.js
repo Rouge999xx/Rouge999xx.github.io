@@ -1,66 +1,35 @@
+/* =========================================================
+   Carl Tampus — Portfolio
+   Shared page behavior: smooth scrolling, the nav pill, email, the contact
+   form and videos. Scroll animations live in motion.js.
+   ========================================================= */
 const EMAIL = 'carltampus5@gmail.com';
+const root = document.documentElement;
+const motion = root.dataset.motion === 'reduced' ? 'reduced' : 'full';
+const hasGsap = Boolean(window.gsap && window.ScrollTrigger);
+const qs = (selector, scope = document) => scope.querySelector(selector);
+const qsa = (selector, scope = document) => [...scope.querySelectorAll(selector)];
 
-const projectData = {
-  flowauto: {
-    index: '01',
-    kicker: 'Automation · Browser Extension',
-    title: 'Flow Auto',
-    summary: 'A local Chrome / Edge extension for scene-based Google Flow production: import structured prompts, make reference images in Flow, ChatGPT, Grok or Meta AI, preserve continuity across batches, run a durable generation queue, request Flow\'s 1080p upscale, and save scene-numbered exports. Its MCP server lets Claude and Gemini import scripts, edit scenes and settings, and run the queue.',
-    problem: 'Multi-scene Flow projects require repetitive setup, careful continuity tracking, manual batch coordination, export handling, and recovery when browser automation or generated results become ambiguous.',
-    approach: 'Flow Auto combines a React / TypeScript production dashboard with a Manifest V3 background queue and Flow DOM automation. It keeps project rules and scene state durable, validates controls, pauses safely on ambiguous results, and verifies numbered 1080p exports before marking scenes complete.',
-    tags: ['React', 'TypeScript', 'Chrome MV3', 'Vite', 'MCP', 'Automation']
-  },
-  healthnest: {
-    index: '02',
-    kicker: 'Healthcare · Desktop',
-    title: 'HealthNest',
-    summary: 'A maternal and child health monitoring desktop application designed to keep patient cases, appointments, and status changes in one clear workflow.',
-    problem: 'Health information can become fragmented across appointments, case notes, and follow-up schedules, making day-to-day case tracking harder than it needs to be.',
-    approach: 'A focused desktop workflow combines patient profiles, case status, scheduling, and an appointment calendar so information stays visible and actionable.',
-    tags: ['WinUI 3', 'C#', 'SQLite', '.NET']
-  }
-};
-
-const stackData = {
-  languages: {
-    index: '01', kicker: 'Core languages', title: 'Languages',
-    description: 'The languages I reach for when building application logic, systems exercises, and interactive interfaces.',
-    skills: ['C#', 'C', 'JavaScript', 'TypeScript', 'HTML', 'CSS']
-  },
-  desktop: {
-    index: '02', kicker: 'Application layer', title: 'Desktop & UI',
-    description: 'My current comfort zone: building practical Windows applications with interfaces shaped around real workflows.',
-    skills: ['WinUI 3', 'WinForms', '.NET', 'XAML', 'React', 'UI Architecture']
-  },
-  data: {
-    index: '03', kicker: 'Persistence layer', title: 'Data',
-    description: 'Tools I use to structure, query, and persist application data across local and relational systems.',
-    skills: ['SQLite', 'MySQL', 'MS Access', 'SQL', 'Data Modeling']
-  },
-  concepts: {
-    index: '04', kicker: 'Engineering foundations', title: 'Foundations',
-    description: 'The computer-science and engineering concepts behind the implementation decisions I make.',
-    skills: ['Data Structures', 'Algorithms', 'Numerical Methods', 'Linear Algebra', 'Problem Solving']
-  }
-};
-
-// Motion follows the OS setting unless the visitor flips the header switch (saved per browser).
-const prefersReducedMotion = document.documentElement.dataset.motion === 'reduced';
-// story.js tells the page as scroll chapters when GSAP loaded; otherwise simple reveals take over.
-const storyMode = Boolean(window.gsap && window.ScrollTrigger);
-document.documentElement.classList.toggle('story', storyMode);
-if (!storyMode) document.documentElement.classList.remove('story-intro');
-
-function toggleMotion() {
-  try { localStorage.setItem('portfolio-motion', prefersReducedMotion ? 'full' : 'reduced'); } catch {}
-  location.reload();
+/* ---------- Motion switch: full motion by default; the visitor can turn it down (saved per browser) ---------- */
+const motionToggle = qs('#motionToggle');
+if (motionToggle) {
+  const on = motion === 'full';
+  motionToggle.setAttribute('aria-pressed', String(on));
+  motionToggle.title = on ? 'Animations on. Click to reduce motion.' : 'Motion reduced. Click for full animations.';
+  motionToggle.addEventListener('click', () => {
+    try { localStorage.setItem('portfolio-motion-choice', on ? 'reduced' : 'full'); } catch {}
+    location.reload();
+  });
 }
 
-const qs = (selector, root = document) => root.querySelector(selector);
-const qsa = (selector, root = document) => [...root.querySelectorAll(selector)];
+qsa('[data-year]').forEach(el => { el.textContent = new Date().getFullYear(); });
+// The skip link lands on <main> and keeps keyboard focus there.
+qs('#main')?.setAttribute('tabindex', '-1');
 
+/* ---------- Email ---------- */
 function showToast(message = 'Email copied to clipboard') {
   const toast = qs('#toast');
+  if (!toast) return;
   qs('p', toast).textContent = message;
   toast.classList.add('is-visible');
   clearTimeout(showToast.timer);
@@ -70,387 +39,196 @@ function showToast(message = 'Email copied to clipboard') {
 async function copyEmail() {
   try {
     await navigator.clipboard.writeText(EMAIL);
-    showToast();
   } catch {
     const temp = document.createElement('textarea');
     temp.value = EMAIL;
+    temp.setAttribute('readonly', '');
+    temp.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
     document.body.appendChild(temp);
     temp.select();
     document.execCommand('copy');
     temp.remove();
-    showToast();
+  }
+  showToast();
+}
+qs('#copyEmail')?.addEventListener('click', copyEmail);
+
+/* ---------- Smooth scrolling ----------
+   Matches perryw-2023, which runs Locomotive Scroll: each screen frame closes 10% of the gap to where
+   the wheel is heading, and on Windows a wheel notch travels 120px. Measured side by side on Carl's
+   144 Hz laptop with the same wheel input, both settle half a notch in about 0.09s and finish by about
+   0.35s. Phones keep their own native momentum. */
+const isWindows = /Windows/i.test(navigator.userAgentData?.platform || navigator.userAgent);
+const PER_FRAME = .1;
+let lenis = null;
+if (motion === 'full' && window.Lenis) {
+  lenis = new Lenis({ lerp: PER_FRAME, wheelMultiplier: isWindows ? 1.2 : 1, smoothWheel: true });
+  // Lenis eases per second, so turn 10% per frame into a rate for this screen's real frame time.
+  let frameMs = 1000 / 60;
+  const tune = deltaMs => {
+    if (deltaMs > 3 && deltaMs < 50) frameMs += (deltaMs - frameMs) * .05;
+    lenis.options.lerp = Math.min(.5, -Math.log(1 - PER_FRAME) / (60 * frameMs / 1000));
+  };
+  if (hasGsap) {
+    // One clock for smooth scrolling and the scroll animations, so pinned and scrubbed scenes stay in sync.
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add((time, deltaMs) => { tune(deltaMs); lenis.raf(time * 1000); });
+    gsap.ticker.lagSmoothing(0);
+  } else {
+    let last = 0;
+    const raf = time => { if (last) tune(time - last); last = time; lenis.raf(time); requestAnimationFrame(raf); };
+    requestAnimationFrame(raf);
   }
 }
 
-function setTheme(theme) {
-  document.documentElement.dataset.theme = theme;
-  try { localStorage.setItem('portfolio-theme', theme); } catch {}
-  syncThemeUI(theme);
+// cubic-bezier(.25, 0, .35, 1): Locomotive Scroll's easing for jumps to a section.
+function bezier(x1, y1, x2, y2) {
+  const coef = (p1, p2) => [1 - 3 * p2 + 3 * p1, 3 * p2 - 6 * p1, 3 * p1];
+  const [ax, bx, cx] = coef(x1, x2);
+  const [ay, by, cy] = coef(y1, y2);
+  const x = t => ((ax * t + bx) * t + cx) * t;
+  const dx = t => (3 * ax * t + 2 * bx) * t + cx;
+  return progress => {
+    if (progress <= 0 || progress >= 1) return Math.min(1, Math.max(0, progress));
+    let t = progress;
+    for (let i = 0; i < 8; i++) {
+      const slope = dx(t);
+      if (Math.abs(slope) < 1e-6) break;
+      t -= (x(t) - progress) / slope;
+    }
+    t = Math.min(1, Math.max(0, t));
+    return ((ay * t + by) * t + cy) * t;
+  };
+}
+const glide = bezier(.25, 0, .35, 1);
+
+// The keyboard glides the same way (arrows 240px, Page Up/Down and Space a screen, Home and End),
+// as Locomotive Scroll does. Keys that belong to a control keep their usual job.
+if (lenis) {
+  const typing = el => el.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"], video, audio, [data-lenis-prevent]');
+  const pressable = el => el.closest('a[href], button, summary, [role="button"], label');
+  addEventListener('keydown', event => {
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || typing(event.target)) return;
+    let delta = null;
+    switch (event.key) {
+      case 'ArrowDown': delta = 240; break;
+      case 'ArrowUp': delta = -240; break;
+      case 'PageDown': delta = innerHeight; break;
+      case 'PageUp': delta = -innerHeight; break;
+      case ' ': if (!pressable(event.target)) delta = event.shiftKey ? -innerHeight : innerHeight; break;
+      case 'Home': delta = -Infinity; break;
+      case 'End': delta = Infinity; break;
+    }
+    if (delta === null || (event.shiftKey && event.key !== ' ')) return;
+    event.preventDefault();
+    lenis.scrollTo(Math.max(0, Math.min(lenis.limit, (lenis.targetScroll ?? scrollY) + delta)));
+  });
 }
 
-// Browser chrome matches the page, and the toggle names the theme it switches to.
-function syncThemeUI(theme = document.documentElement.dataset.theme) {
-  qs('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#0b0c0e' : '#f4f3ee');
-  qs('#themeToggle').setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`);
+const navOffset = () => (qs('#nav')?.offsetHeight || 64) + 8;
+function scrollToTarget(target) {
+  if (!target) return;
+  if (lenis) lenis.scrollTo(target, { offset: -navOffset(), duration: 1, easing: glide });
+  else target.scrollIntoView();
 }
 
-function toggleTheme() {
-  setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
-}
-
-qs('#year').textContent = new Date().getFullYear();
-syncThemeUI();
-qs('#themeToggle').addEventListener('click', toggleTheme);
-const motionToggle = qs('#motionToggle');
-if (motionToggle) {
-  motionToggle.setAttribute('aria-pressed', String(!prefersReducedMotion));
-  motionToggle.setAttribute('aria-label', prefersReducedMotion ? 'Turn page animations on' : 'Turn page animations off');
-  motionToggle.addEventListener('click', toggleMotion);
-}
-qs('#copyEmailHero')?.addEventListener('click', copyEmail);
-qs('#copyEmailContact').addEventListener('click', copyEmail);
-
-const menuToggle = qs('#menuToggle');
-const navLinks = qs('#navLinks');
-function setMenu(open) {
-  navLinks.classList.toggle('is-open', open);
-  menuToggle.setAttribute('aria-expanded', String(open));
-}
-menuToggle.addEventListener('click', () => setMenu(!navLinks.classList.contains('is-open')));
-qsa('a', navLinks).forEach(link => link.addEventListener('click', () => setMenu(false)));
+// Same-page links glide with Lenis; links to the other pages are left to the browser (and motion.js).
+const samePage = url => url.pathname.replace(/index\.html$/, '') === location.pathname.replace(/index\.html$/, '');
 document.addEventListener('click', event => {
-  if (navLinks.classList.contains('is-open') && !event.target.closest('.nav-shell')) setMenu(false);
+  const link = event.target.closest('a[href]');
+  if (!link || !lenis || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  if (link.classList.contains('skip-link') || link.target === '_blank') return;
+  const url = new URL(link.href, location.href);
+  if (url.origin !== location.origin || !samePage(url) || !url.hash) return;
+  const target = url.hash === '#top' ? qs('#top') : document.getElementById(decodeURIComponent(url.hash.slice(1)));
+  if (!target) return;
+  event.preventDefault();
+  if (url.hash === '#top') lenis.scrollTo(0, { duration: 1, easing: glide });
+  else scrollToTarget(target);
 });
 
-const navItems = qsa('a[data-nav]', navLinks);
-const navHoverPill = qs('#navHoverPill');
-const desktopNavHover = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1001px)');
-let navPointerInside = false;
+/* ---------- Navigation: a lit tab follows the current section ---------- */
+const nav = qs('#nav');
+const pill = qs('.nav-pill');
+const glow = qs('.nav-glow');
+const pillLinks = pill ? qsa('a', pill) : [];
+const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
+let hovered = null;
 
-function positionNavPill(link, animate = true) {
-  if (!navHoverPill || !link || !desktopNavHover.matches) return;
+const onScroll = () => nav?.classList.toggle('is-scrolled', scrollY > 24);
+addEventListener('scroll', onScroll, { passive: true });
+onScroll();
 
-  const navRect = navLinks.getBoundingClientRect();
-  const linkRect = link.getBoundingClientRect();
-
-  if (!animate) navHoverPill.style.transition = 'none';
-
-  navHoverPill.style.width = `${linkRect.width}px`;
-  navHoverPill.style.transform = `translate3d(${linkRect.left - navRect.left}px, 0, 0)`;
-  navHoverPill.classList.add('is-visible');
-
-  if (!animate) {
-    requestAnimationFrame(() => {
-      navHoverPill.style.transition = '';
-    });
-  }
+const activeLink = () => pillLinks.find(link => link.classList.contains('is-active'));
+function placeGlow(link, animate = true) {
+  if (!glow) return;
+  if (!link) { glow.classList.remove('is-on'); return; }
+  if (!animate) glow.style.transition = 'none';
+  glow.style.width = `${link.offsetWidth}px`;
+  glow.style.transform = `translateX(${link.offsetLeft}px)`;
+  glow.classList.add('is-on');
+  if (!animate) requestAnimationFrame(() => { glow.style.transition = ''; });
 }
+pillLinks.forEach(link => link.addEventListener('pointerenter', () => {
+  if (!finePointer.matches) return;
+  hovered = link;
+  placeGlow(link);
+}));
+pill?.addEventListener('pointerleave', () => { hovered = null; placeGlow(activeLink()); });
+addEventListener('resize', () => placeGlow(hovered || activeLink(), false), { passive: true });
+document.fonts?.ready.then(() => placeGlow(hovered || activeLink(), false));
+placeGlow(activeLink(), false);
 
-function syncNavPill(animate = true) {
-  if (!desktopNavHover.matches) {
-    navHoverPill?.classList.remove('is-visible');
-    return;
-  }
-
-  const activeLink = qs('a[data-nav].is-active', navLinks);
-  if (activeLink) positionNavPill(activeLink, animate);
-  else navHoverPill?.classList.remove('is-visible');
-}
-
-navItems.forEach(link => {
-  link.addEventListener('pointerenter', () => {
-    navPointerInside = true;
-    positionNavPill(link, true);
-  });
-});
-
-navLinks.addEventListener('pointerleave', () => {
-  navPointerInside = false;
-  syncNavPill(true);
-});
-
-addEventListener('resize', () => syncNavPill(false), { passive: true });
-desktopNavHover.addEventListener?.('change', () => syncNavPill(false));
-requestAnimationFrame(() => syncNavPill(false));
-
-const siteHeader = qs('#siteHeader');
-function updateScrollUI() {
-  siteHeader.classList.toggle('is-scrolled', scrollY > 24);
-}
-addEventListener('scroll', updateScrollUI, { passive: true });
-updateScrollUI();
-
-// Fallback reveals (story.js handles them when GSAP is available).
-// Cards that enter together cascade in reading order, so a grid ripples in instead of popping.
-const revealObserver = new IntersectionObserver(entries => {
-  const entering = entries
-    .filter(entry => entry.isIntersecting)
-    .sort((a, b) => (a.boundingClientRect.top - b.boundingClientRect.top) || (a.boundingClientRect.left - b.boundingClientRect.left));
-  entering.forEach((entry, index) => {
-    entry.target.style.setProperty('--delay', `${Math.min(index * 60, 360)}ms`);
-    entry.target.classList.add('is-visible');
-    revealObserver.unobserve(entry.target);
-  });
-}, { threshold: .08, rootMargin: '0px 0px -8% 0px' });
-if (!storyMode) {
-  qsa('.reveal').forEach(el => revealObserver.observe(el));
-  // Whatever is on screen at load reveals right away instead of waiting for the observer.
-  requestAnimationFrame(() => {
-    qsa('.reveal:not(.is-visible)')
-      .filter(el => { const r = el.getBoundingClientRect(); return r.top < innerHeight * .92 && r.bottom > 0; })
-      .forEach((el, index) => {
-        el.style.setProperty('--delay', `${Math.min(index * 60, 360)}ms`);
-        el.classList.add('is-visible');
-        revealObserver.unobserve(el);
-      });
-  });
-}
-// Drop the delay once revealed so hover and tilt respond instantly.
-document.addEventListener('transitionend', event => {
-  if (event.target.classList?.contains('reveal') && event.propertyName === 'opacity') event.target.style.removeProperty('--delay');
-});
-
-const sectionObserver = new IntersectionObserver(entries => {
-  entries.forEach(entry => {
-    if (!entry.isIntersecting) return;
-    qsa('[data-nav]').forEach(link => {
-      const active = link.dataset.nav === entry.target.id;
-      link.classList.toggle('is-active', active);
-      if (active) link.setAttribute('aria-current', 'true');
+// Home page: the section passing 40% down the screen lights its link (none while the hero is up).
+const spyLinks = qsa('a[data-nav]');
+const spySections = spyLinks.map(link => document.getElementById(link.dataset.nav)).filter(Boolean);
+if (spySections.length) {
+  let current;
+  const spy = () => {
+    const line = innerHeight * .4;
+    let id = null;
+    spySections.forEach(section => { if (section.getBoundingClientRect().top <= line) id = section.id; });
+    if (id === current) return;
+    current = id;
+    spyLinks.forEach(link => {
+      const on = link.dataset.nav === id;
+      link.classList.toggle('is-active', on);
+      if (on) link.setAttribute('aria-current', 'true');
       else link.removeAttribute('aria-current');
     });
-    if (!navPointerInside) syncNavPill(true);
-  });
-}, { rootMargin: '-35% 0px -55%', threshold: 0 });
-qsa('main section[id]').forEach(section => sectionObserver.observe(section));
-
-const roles = ['software engineering', 'desktop application design', 'automation workflows', 'interactive web experiences'];
-let roleIndex = 0;
-const roleEl = qs('#roleRotator');
-if (!prefersReducedMotion) {
-  setInterval(() => {
-    if (document.hidden) return;
-    roleEl.animate([{ opacity: 1, transform: 'translateY(0)' }, { opacity: 0, transform: 'translateY(-6px)' }], { duration: 180, easing: 'ease-in', fill: 'forwards' }).finished.then(() => {
-      roleIndex = (roleIndex + 1) % roles.length;
-      roleEl.textContent = roles[roleIndex];
-      roleEl.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 240, easing: 'ease-out', fill: 'forwards' });
-    });
-  }, 2800);
+    if (!hovered) placeGlow(activeLink());
+  };
+  addEventListener('scroll', spy, { passive: true });
+  addEventListener('resize', spy, { passive: true });
+  spy();
 }
 
-const projectCount = qs('#projectCount');
-qsa('.filter-button').forEach(button => {
-  button.addEventListener('click', () => {
-    qsa('.filter-button').forEach(btn => {
-      btn.classList.toggle('is-active', btn === button);
-      btn.setAttribute('aria-pressed', String(btn === button));
-    });
-    const filter = button.dataset.filter;
-    let shown = 0;
-    qsa('.project-card').forEach(card => {
-      const matches = filter === 'all' || card.dataset.category.split(' ').includes(filter);
-      card.classList.toggle('is-filtered-out', !matches);
-      if (matches) shown++;
-    });
-    if (projectCount) projectCount.textContent = `Showing ${shown} project${shown === 1 ? '' : 's'}`;
-  });
-});
-
-// Keep Tab focus inside an open dialog.
-function trapFocus(container, event) {
-  if (event.key !== 'Tab') return;
-  const focusable = qsa('button:not([disabled]), a[href], input, textarea, [tabindex]', container)
-    .filter(el => el.tabIndex >= 0 && !el.hidden && el.offsetParent !== null);
-  if (!focusable.length) return;
-  const first = focusable[0];
-  const last = focusable[focusable.length - 1];
-  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-  else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+/* ---------- Rows you scroll sideways yourself get a keyboard stop ---------- */
+function scrollRegion(el, label, when) {
+  if (!el) return;
+  const apply = () => {
+    if (when()) {
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('role', 'region');
+      el.setAttribute('aria-label', label);
+    } else {
+      ['tabindex', 'role', 'aria-label'].forEach(name => el.removeAttribute(name));
+    }
+  };
+  apply();
+  addEventListener('resize', apply, { passive: true });
+}
+const narrow = matchMedia('(max-width: 900px)');
+scrollRegion(qs('.marquee'), 'Screens and tools, scrolls sideways', () => motion === 'reduced' || !hasGsap);
+scrollRegion(qs('.gallery-viewport'), 'App screens, scrolls sideways', () => narrow.matches);
+const galleryHint = qs('.gallery-hint');
+if (galleryHint) {
+  const label = () => { galleryHint.textContent = narrow.matches ? 'Swipe to see more' : 'Scroll to move through the screens'; };
+  narrow.addEventListener?.('change', label);
+  label();
 }
 
-const modal = qs('#projectModal');
-let lastFocusedElement = null;
-function openProject(key) {
-  const data = projectData[key];
-  if (!data) return;
-  lastFocusedElement = document.activeElement;
-  qs('#modalIndex').textContent = data.index;
-  qs('#modalKicker').textContent = data.kicker;
-  qs('#modalTitle').textContent = data.title;
-  qs('#modalSummary').textContent = data.summary;
-  qs('#modalProblem').textContent = data.problem;
-  qs('#modalApproach').textContent = data.approach;
-  qs('#modalTags').innerHTML = data.tags.map(tag => `<span>${tag}</span>`).join('');
-  modal.classList.add('is-open');
-  modal.setAttribute('aria-hidden', 'false');
-  document.body.classList.add('is-locked');
-  setTimeout(() => qs('#modalClose').focus(), 30);
-}
-function closeProject() {
-  modal.classList.remove('is-open');
-  modal.setAttribute('aria-hidden', 'true');
-  document.body.classList.remove('is-locked');
-  lastFocusedElement?.focus();
-}
-// The whole card is clickable; the title button is the keyboard / screen-reader target.
-qsa('.project-card').forEach(card => {
-  card.addEventListener('click', event => {
-    if (event.target.closest('[data-flow-preview]')) return;
-    openProject(card.dataset.project);
-  });
-});
-
-qsa('[data-flow-preview]').forEach(preview => {
-  const buttons = qsa('[data-flow-view]', preview);
-  const snapshots = qsa('[data-flow-snapshot]', preview);
-
-  function showFlowSnapshot(view) {
-    buttons.forEach(button => {
-      const active = button.dataset.flowView === view;
-      button.classList.toggle('is-active', active);
-      button.setAttribute('aria-pressed', String(active));
-    });
-    snapshots.forEach(snapshot => {
-      snapshot.classList.toggle('is-active', snapshot.dataset.flowSnapshot === view);
-    });
-  }
-
-  buttons.forEach(button => {
-    button.setAttribute('aria-pressed', String(button.classList.contains('is-active')));
-    button.addEventListener('click', event => {
-      event.stopPropagation();
-      showFlowSnapshot(button.dataset.flowView);
-    });
-  });
-});
-qs('#modalClose').addEventListener('click', closeProject);
-modal.addEventListener('click', event => { if (event.target === modal) closeProject(); });
-modal.addEventListener('keydown', event => trapFocus(modal, event));
-
-qsa('.stack-button').forEach(button => {
-  button.addEventListener('click', () => {
-    const data = stackData[button.dataset.stack];
-    qsa('.stack-button').forEach(btn => {
-      btn.classList.toggle('is-active', btn === button);
-      btn.setAttribute('aria-pressed', String(btn === button));
-    });
-    qs('#stackIndex').textContent = data.index;
-    qs('#stackKicker').textContent = data.kicker;
-    qs('#stackTitle').textContent = data.title;
-    qs('#stackDescription').textContent = data.description;
-    qs('#skillCloud').innerHTML = data.skills.map((skill, index) => `<li style="animation-delay:${index * 45}ms">${skill}</li>`).join('');
-  });
-});
-
-const palette = qs('#commandPalette');
-const commandInput = qs('#commandInput');
-const commandItems = () => qsa('#commandList > button:not([hidden]), #commandList > a:not([hidden])');
-let commandIndex = 0;
-let paletteReturnFocus = null;
-
-// The search box is a combobox: arrows move the highlighted option and screen readers hear it.
-qsa('#commandList > *').forEach((item, index) => {
-  item.id ||= `command-${index}`;
-  item.setAttribute('role', 'option');
-  item.tabIndex = -1;
-  qs('kbd', item)?.setAttribute('aria-hidden', 'true');
-});
-
-function highlightCommand(index) {
-  const items = commandItems();
-  qsa('#commandList > *').forEach(item => {
-    item.classList.remove('is-selected');
-    item.setAttribute('aria-selected', 'false');
-  });
-  if (!items.length) {
-    commandInput.removeAttribute('aria-activedescendant');
-    return;
-  }
-  commandIndex = (index + items.length) % items.length;
-  const current = items[commandIndex];
-  current.classList.add('is-selected');
-  current.setAttribute('aria-selected', 'true');
-  current.scrollIntoView({ block: 'nearest' });
-  commandInput.setAttribute('aria-activedescendant', current.id);
-}
-
-if (/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) {
-  const trigger = qs('#commandTrigger');
-  qs('kbd', trigger).textContent = '⌘ K';
-  trigger.setAttribute('aria-label', 'Open command palette (⌘K)');
-}
-
-function openPalette() {
-  paletteReturnFocus = document.activeElement;
-  palette.classList.add('is-open');
-  palette.setAttribute('aria-hidden', 'false');
-  document.body.classList.add('is-locked');
-  commandInput.value = '';
-  qsa('#commandList > *').forEach(item => item.hidden = false);
-  commandIndex = 0;
-  highlightCommand(0);
-  setTimeout(() => commandInput.focus(), 20);
-}
-
-function closePalette() {
-  palette.classList.remove('is-open');
-  palette.setAttribute('aria-hidden', 'true');
-  document.body.classList.remove('is-locked');
-  paletteReturnFocus?.focus?.({ preventScroll: true });
-}
-
-function runAction(action) {
-  if (['flow-auto','videos','projects','stack','about','contact'].includes(action)) {
-    closePalette();
-    scrollToTarget(qs('#' + action));
-  } else if (action === 'copy') {
-    copyEmail();
-    closePalette();
-  } else if (action === 'motion') {
-    toggleMotion();
-  } else if (action === 'theme') {
-    toggleTheme();
-    closePalette();
-  }
-}
-
-qs('#commandTrigger').addEventListener('click', openPalette);
-palette.addEventListener('click', event => { if (event.target === palette) closePalette(); });
-palette.addEventListener('keydown', event => trapFocus(palette, event));
-qsa('#commandList button').forEach(button => button.addEventListener('click', () => runAction(button.dataset.action)));
-qsa('#commandList a').forEach(link => link.addEventListener('click', closePalette));
-
-commandInput.addEventListener('input', () => {
-  const query = commandInput.value.toLowerCase().trim();
-  qsa('#commandList > *').forEach(item => {
-    item.hidden = query && !item.textContent.toLowerCase().includes(query);
-  });
-  // A single letter picks the command with that key hint, so "E" then Enter copies the email.
-  const hinted = query.length === 1 ? commandItems().findIndex(item => qs('kbd', item)?.textContent.toLowerCase() === query) : -1;
-  highlightCommand(Math.max(0, hinted));
-});
-
-addEventListener('keydown', event => {
-  const shortcut = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k';
-  if (shortcut) {
-    event.preventDefault();
-    palette.classList.contains('is-open') ? closePalette() : openPalette();
-    return;
-  }
-  if (event.key === 'Escape') {
-    if (modal.classList.contains('is-open')) closeProject();
-    if (palette.classList.contains('is-open')) closePalette();
-    if (navLinks.classList.contains('is-open')) { setMenu(false); menuToggle.focus(); }
-  }
-  if (!palette.classList.contains('is-open')) return;
-  if (event.key === 'ArrowDown') { event.preventDefault(); highlightCommand(commandIndex + 1); }
-  if (event.key === 'ArrowUp') { event.preventDefault(); highlightCommand(commandIndex - 1); }
-  if (event.key === 'Enter' && document.activeElement === commandInput) {
-    event.preventDefault();
-    commandItems()[commandIndex]?.click();
-  }
-});
-
+/* ---------- Contact form ---------- */
 const contactForm = qs('#contactForm');
 const fieldMessages = {
   name: 'Please add your name.',
@@ -479,582 +257,115 @@ function validateField(input) {
   return valid;
 }
 
-qsa('input, textarea', contactForm).forEach(input => {
-  input.addEventListener('blur', () => { if (input.value) validateField(input); });
-  input.addEventListener('input', () => { if (input.getAttribute('aria-invalid') === 'true') validateField(input); });
-});
-
-contactForm.addEventListener('submit', async event => {
-  event.preventDefault();
-  const inputs = qsa('input, textarea', contactForm);
-  const invalid = inputs.filter(input => !validateField(input));
-  if (invalid.length) {
-    invalid[0].focus();
-    return;
-  }
-  const button = qs('.form-submit', contactForm);
-  const label = qs('span', button);
-  const status = qs('#formStatus');
-  button.disabled = true;
-  button.classList.add('is-loading');
-  label.textContent = 'Sending...';
-  status.textContent = '';
-  status.classList.remove('is-error', 'is-success');
-  try {
-    const response = await fetch('https://formspree.io/f/meedylgw', {
-      method: 'POST',
-      body: new FormData(contactForm),
-      headers: { Accept: 'application/json' }
-    });
-    if (!response.ok) throw new Error('Request failed');
-    contactForm.reset();
-    status.textContent = 'Message sent. I’ll get back to you soon.';
-    status.classList.add('is-success');
-  } catch {
-    status.textContent = 'Could not send right now. Email me directly instead.';
-    status.classList.add('is-error');
-  } finally {
-    button.disabled = false;
-    button.classList.remove('is-loading');
-    label.textContent = 'Send message';
-  }
-});
-
-/* =====================
-   INTERACTIVE PARTICLE FIELD
-   ===================== */
-const particleCanvas = qs('#particleField');
-
-if (particleCanvas) {
-  const particleCtx = particleCanvas.getContext('2d', { alpha: true });
-  const particlePointer = {
-    x: -9999,
-    y: -9999,
-    lastX: -9999,
-    lastY: -9999,
-    vx: 0,
-    vy: 0,
-    active: false,
-    type: 'mouse'
-  };
-
-  let particleWidth = 0;
-  let particleHeight = 0;
-  let particleDpr = 1;
-  let particleItems = [];
-  let particleFrame = 0;
-  let particleLastTime = performance.now();
-  let particlePaused = false;
-  let particleTextColor = '#f4f3ef';
-  let particleAccentColor = '#b8ff5a';
-  const particleMotionScale = prefersReducedMotion ? .66 : 3;
-  let particleScrollBoost = 1;
-  let particleScrollTarget = 1;
-  let particleScrollTimer = 0;
-
-  function refreshParticleColors() {
-    const styles = getComputedStyle(document.documentElement);
-    particleTextColor = styles.getPropertyValue('--text').trim() || '#f4f3ef';
-    particleAccentColor = styles.getPropertyValue('--accent').trim() || '#b8ff5a';
-  }
-
-  function makeParticle(initial = false) {
-    const sizeBias = Math.random();
-    return {
-      x: Math.random() * particleWidth,
-      y: initial ? Math.random() * particleHeight : -12 - Math.random() * 90,
-      radius: .55 + sizeBias * 1.25,
-      alpha: .16 + Math.random() * .38,
-      vx: (Math.random() - .5) * .08,
-      vy: .12 + Math.random() * .28,
-      baseVy: .12 + Math.random() * .28,
-      drift: .006 + Math.random() * .018,
-      phase: Math.random() * Math.PI * 2,
-      accent: Math.random() < .08
-    };
-  }
-
-  function desiredParticleCount() {
-    const finePointer = matchMedia('(pointer: fine)').matches;
-    const raw = Math.floor((particleWidth * particleHeight) / 9000);
-    const max = finePointer ? 150 : 80;
-    const min = finePointer ? 65 : 42;
-    return Math.max(min, Math.min(max, raw));
-  }
-
-  function resizeParticleField() {
-    particleWidth = innerWidth;
-    particleHeight = innerHeight;
-    particleDpr = Math.min(window.devicePixelRatio || 1, 2);
-
-    particleCanvas.width = Math.round(particleWidth * particleDpr);
-    particleCanvas.height = Math.round(particleHeight * particleDpr);
-    particleCanvas.style.width = particleWidth + 'px';
-    particleCanvas.style.height = particleHeight + 'px';
-    particleCtx.setTransform(particleDpr, 0, 0, particleDpr, 0, 0);
-
-    const target = desiredParticleCount();
-    if (particleItems.length > target) {
-      particleItems.length = target;
-    } else {
-      while (particleItems.length < target) particleItems.push(makeParticle(true));
-    }
-  }
-
-  function drawParticleField() {
-    particleCtx.clearRect(0, 0, particleWidth, particleHeight);
-
-    for (const particle of particleItems) {
-      particleCtx.globalAlpha = particle.alpha;
-      particleCtx.fillStyle = particle.accent ? particleAccentColor : particleTextColor;
-      particleCtx.beginPath();
-      particleCtx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
-      particleCtx.fill();
-    }
-
-    particleCtx.globalAlpha = 1;
-  }
-
-  function updateParticleField(now) {
-    if (particlePaused) return;
-
-    const delta = Math.min(2, Math.max(.4, (now - particleLastTime) / 16.67));
-    particleLastTime = now;
-
-    particleScrollBoost += (particleScrollTarget - particleScrollBoost) * Math.min(1, .12 * delta);
-    const particleSpeed = particleMotionScale * particleScrollBoost;
-
-    for (const particle of particleItems) {
-      particle.vx += Math.sin(now * .00055 + particle.phase) * particle.drift * delta * particleSpeed;
-      particle.vx *= Math.pow(.985, delta);
-      particle.vy += (particle.baseVy - particle.vy) * .012 * delta;
-
-      if (particlePointer.active) {
-        const dx = particle.x - particlePointer.x;
-        const dy = particle.y - particlePointer.y;
-        const distanceSq = dx * dx + dy * dy;
-        const radius = particlePointer.type === 'touch' ? 105 : 135;
-
-        if (distanceSq < radius * radius && distanceSq > .01) {
-          const distance = Math.sqrt(distanceSq);
-          const influence = 1 - distance / radius;
-          const force = influence * influence * .14 * particleSpeed;
-          particle.vx += (dx / distance) * force * delta;
-          particle.vy += (dy / distance) * force * delta;
-          particle.vx += particlePointer.vx * influence * .0025 * particleSpeed;
-          particle.vy += particlePointer.vy * influence * .0016 * particleSpeed;
-        }
-      }
-
-      particle.x += particle.vx * delta * particleSpeed;
-      particle.y += particle.vy * delta * particleSpeed;
-
-      if (particle.y > particleHeight + 14) {
-        Object.assign(particle, makeParticle(false));
-      }
-      if (particle.x < -18) particle.x = particleWidth + 18;
-      if (particle.x > particleWidth + 18) particle.x = -18;
-    }
-
-    particlePointer.vx *= .82;
-    particlePointer.vy *= .82;
-
-    drawParticleField();
-    particleFrame = requestAnimationFrame(updateParticleField);
-  }
-
-  function scatterParticles(x, y, strength = 1) {
-    for (const particle of particleItems) {
-      const dx = particle.x - x;
-      const dy = particle.y - y;
-      const distanceSq = dx * dx + dy * dy;
-      const radius = 175;
-
-      if (distanceSq < radius * radius && distanceSq > .01) {
-        const distance = Math.sqrt(distanceSq);
-        const influence = 1 - distance / radius;
-        const impulse = influence * .9 * strength * particleMotionScale;
-        particle.vx += (dx / distance) * impulse;
-        particle.vy += (dy / distance) * impulse;
-      }
-    }
-  }
-
-  addEventListener('pip-play', event => {
-    const { x, y } = event.detail || {};
-    if (!prefersReducedMotion && Number.isFinite(x) && Number.isFinite(y)) {
-      scatterParticles(x, y, .45);
-    }
+if (contactForm) {
+  qsa('input, textarea', contactForm).forEach(input => {
+    input.addEventListener('blur', () => { if (input.value) validateField(input); });
+    input.addEventListener('input', () => { if (input.getAttribute('aria-invalid') === 'true') validateField(input); });
   });
 
-  addEventListener('pointermove', event => {
-    particlePointer.type = event.pointerType || 'mouse';
-
-    if (particlePointer.lastX < -1000) {
-      particlePointer.lastX = event.clientX;
-      particlePointer.lastY = event.clientY;
-    }
-
-    particlePointer.vx = event.clientX - particlePointer.lastX;
-    particlePointer.vy = event.clientY - particlePointer.lastY;
-    particlePointer.x = event.clientX;
-    particlePointer.y = event.clientY;
-    particlePointer.lastX = event.clientX;
-    particlePointer.lastY = event.clientY;
-    particlePointer.active = true;
-  }, { passive: true });
-
-  addEventListener('pointerdown', event => {
-    particlePointer.type = event.pointerType || 'mouse';
-    particlePointer.x = event.clientX;
-    particlePointer.y = event.clientY;
-    particlePointer.active = true;
-    scatterParticles(event.clientX, event.clientY, event.pointerType === 'touch' ? .7 : 1);
-  }, { passive: true });
-
-  addEventListener('pointerup', event => {
-    if (event.pointerType === 'touch' || event.pointerType === 'pen') {
-      particlePointer.active = false;
-    }
-  }, { passive: true });
-
-  document.documentElement.addEventListener('mouseleave', () => {
-    particlePointer.active = false;
-  });
-
-  addEventListener('blur', () => {
-    particlePointer.active = false;
-  });
-
-  addEventListener('scroll', () => {
-    particleScrollBoost = 2;
-    particleScrollTarget = 2;
-
-    clearTimeout(particleScrollTimer);
-    particleScrollTimer = setTimeout(() => {
-      particleScrollTarget = 1;
-    }, 120);
-  }, { passive: true });
-
-  addEventListener('resize', resizeParticleField, { passive: true });
-
-  document.addEventListener('visibilitychange', () => {
-    particlePaused = document.hidden;
-
-    if (particlePaused) {
-      cancelAnimationFrame(particleFrame);
-    } else {
-      particleLastTime = performance.now();
-      particleFrame = requestAnimationFrame(updateParticleField);
-    }
-  });
-
-  new MutationObserver(refreshParticleColors).observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ['data-theme']
-  });
-
-  refreshParticleColors();
-  resizeParticleField();
-  drawParticleField();
-
-  particleFrame = requestAnimationFrame(updateParticleField);
-}
-
-
-/* =====================
-   SHARED SELECTOR PILL MOTION
-   ===================== */
-function initSlidingSelector(containerSelector, itemSelector) {
-  const container = qs(containerSelector);
-  if (!container) return;
-
-  const pill = qs('.selector-hover-pill', container);
-  const items = qsa(itemSelector, container);
-  const hoverCapable = matchMedia('(hover: hover) and (pointer: fine)');
-  let pointerInside = false;
-
-  if (!pill || !items.length) return;
-
-  function positionPill(item, animate = true) {
-    if (!item || !hoverCapable.matches) {
-      pill.classList.remove('is-visible');
+  contactForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    const invalid = qsa('input, textarea', contactForm).filter(input => !validateField(input));
+    if (invalid.length) {
+      invalid[0].focus();
       return;
     }
-
-    const containerRect = container.getBoundingClientRect();
-    const itemRect = item.getBoundingClientRect();
-
-    if (!animate) pill.style.transition = 'none';
-
-    pill.style.width = `${itemRect.width}px`;
-    pill.style.height = `${itemRect.height}px`;
-    pill.style.transform = `translate3d(${itemRect.left - containerRect.left}px, ${itemRect.top - containerRect.top}px, 0)`;
-    pill.classList.add('is-visible');
-
-    if (!animate) {
-      requestAnimationFrame(() => {
-        pill.style.transition = '';
+    const button = qs('.form-submit', contactForm);
+    const label = qs('span', button);
+    const status = qs('#formStatus');
+    button.disabled = true;
+    label.textContent = 'Sending...';
+    status.textContent = '';
+    status.classList.remove('is-error', 'is-success');
+    try {
+      const response = await fetch('https://formspree.io/f/meedylgw', {
+        method: 'POST',
+        body: new FormData(contactForm),
+        headers: { Accept: 'application/json' }
       });
+      if (!response.ok) throw new Error('Request failed');
+      contactForm.reset();
+      status.textContent = 'Message sent. I’ll get back to you soon.';
+      status.classList.add('is-success');
+    } catch {
+      status.textContent = 'Could not send right now. Email me directly instead.';
+      status.classList.add('is-error');
+    } finally {
+      button.disabled = false;
+      label.textContent = 'Send message';
     }
-  }
-
-  function syncPill(animate = true) {
-    if (!hoverCapable.matches) {
-      pill.classList.remove('is-visible');
-      return;
-    }
-
-    const active = items.find(item => item.classList.contains('is-active'));
-    if (active) {
-      positionPill(active, animate);
-    } else {
-      pill.classList.remove('is-visible');
-    }
-  }
-
-  items.forEach(item => {
-    item.addEventListener('pointerenter', () => {
-      pointerInside = true;
-      positionPill(item, true);
-    });
   });
-
-  container.addEventListener('pointerleave', () => {
-    pointerInside = false;
-    syncPill(true);
-  });
-
-  const observer = new MutationObserver(() => {
-    if (!pointerInside) requestAnimationFrame(() => syncPill(true));
-  });
-
-  items.forEach(item => {
-    observer.observe(item, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-  });
-
-  addEventListener('resize', () => syncPill(false), { passive: true });
-  hoverCapable.addEventListener?.('change', () => syncPill(false));
-
-  requestAnimationFrame(() => syncPill(false));
 }
 
-initSlidingSelector('#coreViewGrid', '.core-view');
-initSlidingSelector('#projectFilterGroup', '.filter-button');
-initSlidingSelector('#stackSelector', '.stack-button');
-
-
-/* =====================
-   SMOOTH SCROLL + SCROLL-LINKED MOTION
-   ===================== */
-const header = () => (qs('#siteHeader')?.offsetHeight || 64) + 16;
-let lenis = null;
-
-if (!prefersReducedMotion && window.Lenis) {
-  lenis = new Lenis({ lerp: .09, wheelMultiplier: 1, smoothWheel: true });
-  if (storyMode) {
-    // One clock for smooth scrolling and the scroll story, so pinned and scrubbed scenes stay in sync.
-    lenis.on('scroll', ScrollTrigger.update);
-    gsap.ticker.add(time => lenis.raf(time * 1000));
-    gsap.ticker.lagSmoothing(0);
-  } else {
-    const raf = time => { lenis.raf(time); requestAnimationFrame(raf); };
-    requestAnimationFrame(raf);
-  }
-  // Dialogs lock the page; pause smoothing so their own content can scroll.
-  new MutationObserver(() => {
-    document.body.classList.contains('is-locked') ? lenis.stop() : lenis.start();
-  }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
-}
-
-function scrollToTarget(target) {
-  if (!target) return;
-  if (lenis) lenis.scrollTo(target, { offset: -header(), duration: 1.4 });
-  else target.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' });
-}
-
-document.addEventListener('click', event => {
-  const link = event.target.closest('a[href^="#"]');
-  if (!link || link.classList.contains('skip-link') || !lenis) return;
-  const id = link.getAttribute('href').slice(1);
-  const target = id ? document.getElementById(id) : document.body;
-  if (!target) return;
-  event.preventDefault();
-  scrollToTarget(id === 'home' ? document.body : target);
-});
-
-const parallaxItems = qsa('[data-parallax]');
-const hero = qs('#home');
-const tickerTrack = qs('.ticker-track');
-let lastScrollY = scrollY;
-let scrollVelocity = 0;
-let tickerX = 0;
-
-function scrollEffects() {
-  const y = scrollY;
-  scrollVelocity += ((y - lastScrollY) - scrollVelocity) * .2;
-  lastScrollY = y;
-
-  if (!prefersReducedMotion) {
-    parallaxItems.forEach(el => el.style.setProperty('--py', `${(y * Number(el.dataset.parallax)).toFixed(1)}px`));
-    if (hero) {
-      const progress = Math.min(1, Math.max(0, y / (hero.offsetHeight * .9)));
-      hero.style.setProperty('--hero-p', progress.toFixed(3));
-    }
+/* ---------- Videos: a card plays the file named in data-video ---------- */
+async function videoExists(src) {
+  if (location.protocol === 'file:') return true;
+  try {
+    const response = await fetch(src, { method: 'HEAD' });
+    return response.ok && (response.headers.get('content-type') || '').startsWith('video');
+  } catch {
+    return false;
   }
 }
-addEventListener('scroll', scrollEffects, { passive: true });
-scrollEffects();
 
-// The ticker drifts on its own and speeds up with the scroll, in either direction.
-if (tickerTrack && !prefersReducedMotion) {
-  tickerTrack.style.animation = 'none';
-  const loop = () => {
-    const half = tickerTrack.scrollWidth / 2;
-    tickerX -= .5 + Math.min(Math.abs(scrollVelocity) * .35, 18);
-    if (half && tickerX <= -half) tickerX += half;
-    tickerTrack.style.transform = `translate3d(${tickerX}px, 0, 0)`;
-    scrollVelocity *= .94;
-    requestAnimationFrame(loop);
-  };
-  requestAnimationFrame(loop);
-}
-
-/* =====================
-   GLASS GLARE + PLAYFUL TILT
-   ===================== */
-if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
-  qsa('.bento, .project-card').forEach(card => {
-    const tilts = card.classList.contains('tilt') && !prefersReducedMotion;
-    card.addEventListener('pointermove', event => {
-      const rect = card.getBoundingClientRect();
-      const x = (event.clientX - rect.left) / rect.width;
-      const y = (event.clientY - rect.top) / rect.height;
-      card.style.setProperty('--gx', `${(x * 100).toFixed(1)}%`);
-      card.style.setProperty('--gy', `${(y * 100).toFixed(1)}%`);
-      if (tilts) {
-        card.style.setProperty('--rx', `${((.5 - y) * 6).toFixed(2)}deg`);
-        card.style.setProperty('--ry', `${((x - .5) * 7).toFixed(2)}deg`);
-      }
-    }, { passive: true });
-    card.addEventListener('pointerleave', () => {
-      card.style.setProperty('--rx', '0deg');
-      card.style.setProperty('--ry', '0deg');
-    });
-  });
-}
-
-/* =====================
-   SHOWREEL VIDEOS
-   Drop a file at the path in data-video (e.g. videos/intro.mp4) and its card
-   becomes playable. A data-youtube="VIDEO_ID" attribute works too.
-   ===================== */
-qsa('.video-card').forEach(async card => {
+const videoCards = qsa('[data-video]');
+videoCards.forEach(card => {
   const frame = qs('.video-frame', card);
   const button = qs('.video-play', card);
-  const badge = qs('.video-badge', card);
-  const youtube = card.dataset.youtube;
   const src = card.dataset.video;
-  let available = Boolean(youtube);
+  const ready = videoExists(src);
 
-  if (!available && src && location.protocol !== 'file:') {
-    try {
-      const response = await fetch(src, { method: 'HEAD' });
-      available = response.ok && (response.headers.get('content-type') || '').startsWith('video');
-    } catch {}
-  }
-
-  card.classList.toggle('is-ready', available);
-  if (available) {
-    badge.hidden = true;
-    const poster = card.dataset.poster;
-    if (poster && !youtube) {
-      fetch(poster, { method: 'HEAD' }).then(r => {
-        if (r.ok) frame.style.setProperty('--poster', `url("${poster}")`);
-      }).catch(() => {});
+  ready.then(available => {
+    card.classList.toggle('is-ready', available);
+    if (available && card.dataset.poster) {
+      const poster = new Image();
+      poster.onload = () => frame.style.setProperty('--poster', `url("${card.dataset.poster}")`);
+      poster.src = card.dataset.poster;
     }
-  }
+  });
 
-  button.addEventListener('click', event => {
-    event.stopPropagation();
-    if (!available) {
+  button?.addEventListener('click', async () => {
+    if (!(await ready)) {
       showToast('This video is coming soon.');
       return;
     }
-    let player = qs('video, iframe', frame);
+    let player = qs('video', frame);
     if (!player) {
-      if (youtube) {
-        player = document.createElement('iframe');
-        player.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(youtube)}?autoplay=1&rel=0`;
-        player.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
-        player.allowFullscreen = true;
-        player.title = button.getAttribute('aria-label').replace('Play video: ', '');
-      } else {
-        player = document.createElement('video');
-        player.src = src;
-        player.setAttribute('aria-label', button.getAttribute('aria-label').replace('Play video: ', ''));
-        player.controls = true;
-        player.playsInline = true;
-        player.preload = 'auto';
-      }
+      player = document.createElement('video');
+      player.src = src;
+      player.controls = true;
+      player.playsInline = true;
+      player.preload = 'auto';
+      player.setAttribute('aria-label', button.getAttribute('aria-label').replace('Play video: ', ''));
       frame.appendChild(player);
     }
     card.classList.add('is-playing');
-    player.play?.();
-    player.focus?.({ preventScroll: true });
+    player.play()?.catch(() => {});
+    player.focus({ preventScroll: true });
   });
 });
 
-// "Watch my intro" starts the intro inside the same click (so sound is allowed) while the page scrolls to it.
+// "Watch the demo" starts the video inside the same click (so sound is allowed) while the page glides to it.
 qsa('[data-play-video]').forEach(link => link.addEventListener('click', () => {
-  const card = qsa('.video-card').find(item => item.dataset.video === link.dataset.playVideo);
-  if (card?.classList.contains('is-ready') && !card.classList.contains('is-playing')) qs('.video-play', card).click();
+  const card = videoCards.find(item => item.dataset.video === link.dataset.playVideo);
+  if (card && !card.classList.contains('is-playing')) qs('.video-play', card)?.click();
 }));
 
-/* =====================
-   SWIPEABLE ROWS ON PHONES
-   Adds page dots under every [data-carousel] strip and keeps them in sync.
-   ===================== */
-const phone = matchMedia('(max-width: 640px)');
-qsa('[data-carousel]').forEach(track => {
-  const dots = document.createElement('div');
-  dots.className = 'carousel-dots';
-  dots.setAttribute('role', 'group');
-  dots.setAttribute('aria-label', `${track.getAttribute('aria-label') || 'Cards'}: choose a card`);
-  track.after(dots);
+/* ---------- Without GSAP: things fade and sharpen in as they arrive ---------- */
+if (!hasGsap) {
+  root.classList.add('motion-fallback');
+  root.classList.remove('intro-pending');
+  const items = qsa('[data-hero], [data-project], [data-reveal], [data-blur], [data-blur-lines], [data-blur-scrub]');
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('is-in');
+      observer.unobserve(entry.target);
+    }), { rootMargin: '0px 0px -6% 0px' });
+    items.forEach(el => observer.observe(el));
+  } else {
+    items.forEach(el => el.classList.add('is-in'));
+  }
+}
 
-  const items = () => [...track.children].filter(el => !el.classList.contains('is-filtered-out'));
-  function build() {
-    dots.innerHTML = '';
-    items().forEach((item, index) => {
-      const dot = document.createElement('button');
-      dot.type = 'button';
-      dot.setAttribute('aria-label', `Show card ${index + 1}`);
-      dot.addEventListener('click', () => track.scrollTo({ left: item.offsetLeft - track.offsetLeft - 16, behavior: prefersReducedMotion ? 'auto' : 'smooth' }));
-      dots.appendChild(dot);
-    });
-    sync();
-  }
-  function sync() {
-    const list = items();
-    const center = track.scrollLeft + track.clientWidth * .35;
-    let active = 0;
-    list.forEach((item, index) => { if (item.offsetLeft - track.offsetLeft <= center) active = index; });
-    if (track.scrollLeft + track.clientWidth >= track.scrollWidth - 4) active = list.length - 1;
-    [...dots.children].forEach((dot, index) => {
-      dot.classList.toggle('is-active', index === active);
-      dot.setAttribute('aria-current', index === active ? 'true' : 'false');
-    });
-  }
-  track.addEventListener('scroll', () => requestAnimationFrame(sync), { passive: true });
-  // Rebuild only when project filters hide or show a card (not for reveal or Pip classes).
-  const filterWatch = new MutationObserver(mutations => {
-    const changed = mutations.some(m => (m.oldValue || '').includes('is-filtered-out') !== m.target.classList.contains('is-filtered-out'));
-    if (changed) { track.scrollLeft = 0; build(); }
-  });
-  [...track.children].forEach(child => filterWatch.observe(child, { attributes: true, attributeFilter: ['class'], attributeOldValue: true }));
-  build();
-});
+window.site = { motion, lenis, scrollToTarget, showToast };

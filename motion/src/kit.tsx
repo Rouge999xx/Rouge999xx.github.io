@@ -12,7 +12,7 @@ import {
   useVideoConfig,
 } from 'remotion';
 import timing from './timing.json';
-import {c, FPS, fonts, LEAD, OUTRO, TAIL} from './theme';
+import {c, FPS, fonts, LEAD, OUTRO, TAIL, accentWord} from './theme';
 
 export type Sentence = {text: string; start: number; end: number};
 export type Line = {id: string; seconds: number; sentences: Sentence[]};
@@ -76,7 +76,7 @@ export const Aurora: React.FC<{tint?: 'aurora' | 'flow'}> = ({tint = 'aurora'}) 
   const blobs =
     tint === 'flow'
       ? [c.lime, c.teal, c.violet, c.accentStrong]
-      : [c.accentStrong, c.pink, c.amber, '#6d5bd0'];
+      : [c.accentStrong, c.pink, c.amber, '#1e3a8a'];
   const pos = [
     [18 + 8 * Math.sin(t * 0.21), 22 + 7 * Math.cos(t * 0.17)],
     [80 + 7 * Math.cos(t * 0.19), 28 + 9 * Math.sin(t * 0.23)],
@@ -112,7 +112,7 @@ export const Aurora: React.FC<{tint?: 'aurora' | 'flow'}> = ({tint = 'aurora'}) 
           maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 78%)',
         }}
       />
-      <AbsoluteFill style={{background: 'radial-gradient(ellipse at center, transparent 50%, rgba(5,3,14,.75) 100%)'}} />
+      <AbsoluteFill style={{background: 'radial-gradient(ellipse at center, transparent 50%, rgba(3,6,14,.78) 100%)'}} />
     </AbsoluteFill>
   );
 };
@@ -127,7 +127,7 @@ export const Glass: React.FC<{style?: React.CSSProperties; children?: React.Reac
       background: c.glass,
       border: `1px solid ${c.border}`,
       borderRadius: 26,
-      boxShadow: `inset 0 1px 0 rgba(255,255,255,.16), 0 40px 100px -20px rgba(5,2,20,.75)${
+      boxShadow: `inset 0 1px 0 rgba(255,255,255,.16), 0 40px 100px -20px rgba(2,6,16,.75)${
         glow ? `, 0 0 80px -10px ${glow}` : ''
       }`,
       backdropFilter: 'blur(18px)',
@@ -204,7 +204,7 @@ export const Words: React.FC<{
     <div
       style={{
         fontFamily: fonts.display,
-        fontWeight: 700,
+        fontWeight: 600,
         fontSize: size,
         lineHeight: 1.04,
         letterSpacing: -size * 0.03,
@@ -226,7 +226,7 @@ export const Words: React.FC<{
                 transform: `translateY(${(1 - p) * 105}%)`,
                 opacity: p,
                 ...(g
-                  ? {background: gradient, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent'}
+                  ? {...accentWord}
                   : {}),
               }}
             >
@@ -307,11 +307,12 @@ export const Timeline: React.FC<{
 }> = ({video, scenes, tint}) => {
   const frame = useCurrentFrame();
   const total = totalFrames(video);
+  const withAudio = getInputProps().audio !== false;
   let from = 0;
   return (
     <AbsoluteFill style={{background: c.bg}}>
       <Aurora tint={tint} />
-      <Audio src={staticFile('music/bed.wav')} volume={(f) => musicVolume(video, f, total)} />
+      {withAudio && <Audio src={staticFile('music/bed.wav')} volume={(f) => musicVolume(video, f, total)} />}
       {lines(video).map((l) => {
         const dur = sceneFrames(l);
         const Scene = scenes[l.id];
@@ -324,9 +325,11 @@ export const Timeline: React.FC<{
             <AbsoluteFill style={{opacity: fade}}>
               <Scene line={l} />
             </AbsoluteFill>
-            <Sequence from={Math.round(LEAD * FPS)}>
-              <Audio src={staticFile(`vo/${video}/${l.id}.wav`)} />
-            </Sequence>
+            {withAudio && (
+              <Sequence from={Math.round(LEAD * FPS)}>
+                <Audio src={staticFile(`vo/${video}/${l.id}.wav`)} />
+              </Sequence>
+            )}
             {getInputProps().captions !== false && <Captions line={l} />}
           </Sequence>
         );

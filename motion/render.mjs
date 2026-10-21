@@ -9,6 +9,9 @@ import path from 'node:path';
 const timing = JSON.parse(fs.readFileSync('src/timing.json', 'utf8'));
 const OUTRO = {flowauto: 0, services: 2.5}; // keep in sync with src/theme.ts
 const browserExecutable = process.env.REMOTION_BROWSER || undefined;
+// SILENT=FlowAuto (comma separated) renders a video's picture only and keeps the soundtrack of the
+// current file in ../videos/, for machines without the voiceover files. Timing must not have changed.
+const silent = new Set((process.env.SILENT || '').split(',').filter(Boolean));
 const mode = process.argv[2] ?? 'video';
 const only = process.argv[3];
 const serveUrl = await bundle({entryPoint: path.resolve('src/index.ts')});
@@ -47,19 +50,29 @@ for (const [id, key] of Object.entries(videos)) {
     }
     console.log(`${id}: stills done`);
   } else {
+    const name = key === 'flowauto' ? 'flow-auto' : 'intro';
+    const quiet = silent.has(id);
+    const inputProps = quiet ? {audio: false} : {};
     await renderMedia({
       serveUrl,
-      composition,
+      composition: quiet ? await selectComposition({serveUrl, id, inputProps, browserExecutable}) : composition,
+      inputProps,
+      muted: quiet,
       codec: 'h264',
       crf: 20,
       audioBitrate: '192k',
-      outputLocation: `out/${key === 'flowauto' ? 'flow-auto' : 'intro'}.mp4`,
+      outputLocation: quiet ? `out/${name}.picture.mp4` : `out/${name}.mp4`,
       browserExecutable,
       concurrency: 4,
       onProgress: ({progress}) => process.stdout.write(`\r${id} ${(progress * 100).toFixed(0)}%   `),
     });
     console.log(`\n${id}: done`);
-    if (key === 'services') master('out/intro.mp4');
+    if (quiet) {
+      // New picture, existing soundtrack from the site's current file.
+      execFileSync('ffmpeg', ['-hide_banner', '-v', 'error', '-y', '-i', `out/${name}.picture.mp4`, '-i', `../videos/${name}.mp4`, '-map', '0:v:0', '-map', '1:a:0', '-c', 'copy', '-shortest', '-movflags', '+faststart', `out/${name}.mp4`]);
+      fs.rmSync(`out/${name}.picture.mp4`);
+      console.log(`${id}: soundtrack carried over from ../videos/${name}.mp4`);
+    } else if (key === 'services') master('out/intro.mp4');
   }
 }
 

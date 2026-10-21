@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Flow Auto, by Carl Tampus: a Chrome and Edge extension that turns a scene-by-scene script into finished, numbered 1080p videos on Google Flow, with its own MCP server." />
+  <meta name="theme-color" content="#0a0f1a" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Flow Auto — Carl Tampus" />
+  <meta property="og:description" content="A Chrome and Edge extension that turns a scene-by-scene script into finished, numbered 1080p videos on Google Flow." />
+  <meta property="og:image" content="https://rouge999xx.github.io/videos/flow-auto.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <title>Flow Auto — Carl Tampus</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <script>
+    (function () {
+      // Full motion and smooth scrolling unless the visitor turned motion down with the header switch.
+      var root = document.documentElement, saved = '';
+      try { saved = localStorage.getItem('portfolio-motion-choice') || ''; } catch (e) {}
+      root.dataset.motion = saved === 'reduced' ? 'reduced' : 'full';
+      root.classList.add('js');
+      if (root.dataset.motion === 'full') root.classList.add('intro-pending');
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="case">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="backdrop" aria-hidden="true"></div>
+
+  <header class="nav" id="nav">
+    <a class="nav-id" href="index.html" aria-label="Carl Tampus, home">
+      <strong>Carl Tampus</strong>
+      <span>Computer Engineering student</span>
+    </a>
+    <nav class="nav-pill" aria-label="Primary">
+      <span class="nav-glow" aria-hidden="true"></span>
+      <a href="index.html#work" aria-current="page" class="is-active">Work</a>
+      <a href="index.html#about">About</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+    <div class="nav-end">
+      <a class="nav-out" href="https://github.com/Rouge999xx" target="_blank" rel="noreferrer">GitHub<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg><span class="sr-only"> (opens in a new tab)</span></a>
+      <a class="nav-out" href="https://linkedin.com/in/carl-marvic-tampus-478a932b8" target="_blank" rel="noreferrer">LinkedIn<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg><span class="sr-only"> (opens in a new tab)</span></a>
+      <button class="motion-toggle" id="motionToggle" type="button" aria-pressed="true" aria-label="Full motion">
+        <svg class="motion-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8Z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8Z"/></svg>
+        <svg class="motion-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8Z"/><path d="M3 3l18 18"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero case-hero" id="top" aria-labelledby="caseTitle">
+      <div class="window hero-window" data-hero>
+        <div class="window-bar" aria-hidden="true"><span class="window-dots"><i></i><i></i><i></i></span><span class="window-plus">+</span></div>
+        <div class="hero-body">
+          <p class="status"><img decoding="async" src="flow-auto-icon.svg" alt="" width="22" height="22" />Case study · Browser extension</p>
+          <h1 class="hero-title" id="caseTitle" data-blur>Flow Auto. <em>A production line for AI video.</em></h1>
+          <div class="hero-sub" data-blur-lines>
+            <p>A Chrome / Edge extension that turns a scene-by-scene script into finished, numbered 1080p videos on Google Flow.</p>
+            <p>With its own MCP server, Claude and Gemini can run it too.</p>
+          </div>
+          <p class="case-meta">v0.1.122 · Chrome &amp; Edge · Manifest V3</p>
+          <ul class="tags" aria-label="Built with"><li>React</li><li>TypeScript</li><li>Chrome MV3</li><li>Vite</li><li>MCP</li></ul>
+          <div class="hero-actions">
+            <a class="button" href="#demo" data-play-video="videos/flow-auto.mp4">Watch the demo<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg></a>
+            <a class="button button-ghost" href="index.html#work">All work</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="case-section" aria-labelledby="factsTitle">
+      <h2 class="sr-only" id="factsTitle">Flow Auto in numbers</h2>
+      <ul class="facts-row">
+        <li data-reveal><strong data-count>4</strong><span>reference image sources</span></li>
+        <li data-reveal><strong data-count>2</strong><span>video engines</span></li>
+        <li data-reveal><strong data-count>1080p</strong><span>exports, verified</span></li>
+        <li data-reveal><strong data-count>18</strong><span>MCP tools</span></li>
+      </ul>
+    </section>
+
+    <section class="case-section" aria-labelledby="whyTitle">
+      <h2 class="display" id="whyTitle" data-blur>Multi-scene stories, <em>without the busywork.</em></h2>
+      <div class="split">
+        <div data-blur-lines><h3 class="eyebrow">The problem</h3><p>Multi-scene Flow projects require repetitive setup, careful continuity tracking, manual batch coordination, export handling, and recovery when browser automation or generated results become ambiguous.</p></div>
+        <div data-blur-lines><h3 class="eyebrow">The approach</h3><p>Flow Auto combines a React / TypeScript production dashboard with a Manifest V3 background queue and Flow DOM automation. It keeps project rules and scene state durable, validates controls, pauses safely on ambiguous results, and verifies numbered 1080p exports before marking scenes complete.</p></div>
+      </div>
+    </section>
+
+    <section class="gallery" aria-labelledby="galleryTitle" data-gallery>
+      <div class="gallery-head">
+        <h2 class="display" id="galleryTitle" data-blur>Inside <em>the app.</em></h2>
+        <p class="gallery-hint">Scroll to move through the screens</p>
+      </div>
+      <div class="gallery-viewport">
+        <ol class="gallery-track">
+          <li class="gallery-item">
+            <div class="window window-shot"><div class="window-bar" aria-hidden="true"><span class="window-dots"><i></i><i></i><i></i></span><b>Scenes &amp; batches</b></div><img decoding="async" src="img/flow-auto/scenes.webp" width="1600" height="1000" alt="Flow Auto Scenes and batches page: story stats, global rules and scene cards with a run queue." loading="lazy" /></div>
+            <p><span>01</span> Scenes and batches: story stats, global rules and every scene with its run queue.</p>
+          </li>
+          <li class="gallery-item">
+            <div class="window window-shot"><div class="window-bar" aria-hidden="true"><span class="window-dots"><i></i><i></i><i></i></span><b>Story &amp; continuity</b></div><img decoding="async" src="img/flow-auto/story.webp" width="1600" height="1000" alt="Flow Auto Story and continuity page with story name, rules version, story structure and master prompt." loading="lazy" /></div>
+            <p><span>02</span> Story and continuity: the story name, rules version, structure and master prompt.</p>
+          </li>
+          <li class="gallery-item">
+            <div class="window window-shot"><div class="window-bar" aria-hidden="true"><span class="window-dots"><i></i><i></i><i></i></span><b>Generation settings</b></div><img decoding="async" src="img/flow-auto/settings.webp" width="1600" height="1000" alt="Flow Auto Generation settings page with Standard or Agent interface, video provider, model, aspect ratio and duration." loading="lazy" /></div>
+            <p><span>03</span> Generation settings: Standard or Agent mode, provider, model, aspect ratio and duration.</p>
+          </li>
+          <li class="gallery-item">
+            <div class="window window-shot"><div class="window-bar" aria-hidden="true"><span class="window-dots"><i></i><i></i><i></i></span><b>Connect Flow</b></div><img decoding="async" src="img/flow-auto/connect.webp" width="1600" height="1000" alt="Flow Auto Connect Flow page for linking a Flow project, checking controls and locating page controls." loading="lazy" /></div>
+            <p><span>04</span> Connect Flow: link a Flow project, check its controls and teach it new ones.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="case-section" aria-labelledby="pipelineTitle">
+      <h2 class="display" id="pipelineTitle" data-blur>How a story moves <em>through Flow Auto.</em></h2>
+      <ol class="pipeline" data-pipeline>
+        <li><span>01</span><h3>Import</h3><p>Paste a ChatGPT script or JSON. Scenes, batches and global rules are checked before you accept them.</p></li>
+        <li><span>02</span><h3>Reference</h3><p>Storyboards and character sheets from Flow, ChatGPT, Grok or Meta AI, saved as real PNGs.</p></li>
+        <li><span>03</span><h3>Generate</h3><p>Each scene goes to Flow (Standard or Agent) or Grok Imagine with its rules and references attached.</p></li>
+        <li><span>04</span><h3>Upscale</h3><p>Flow Auto picks Flow's own 1080p upscale. Nothing is re-encoded on your machine.</p></li>
+        <li><span>05</span><h3>Download</h3><p>Files land as <code>story/1.mp4</code>, <code>2.mp4</code> and so on, checked for the exact name and resolution.</p></li>
+      </ol>
+    </section>
+
+    <section class="case-section" aria-labelledby="capsTitle">
+      <h2 class="display" id="capsTitle" data-blur>Built to <em>run unattended.</em></h2>
+      <div class="caps">
+        <article data-reveal><h3>Continuity that sticks</h3><p>Global rules, character descriptions and a character sheet go into every image and video prompt, so batches stay consistent without relying on Flow's memory.</p></article>
+        <article data-reveal><h3>A queue that survives restarts</h3><p>Submission intent is saved before Generate is pressed. After a refresh or crash the queue picks up where it was, and an uncertain result never triggers a duplicate.</p></article>
+        <article data-reveal><h3>Pauses instead of guessing</h3><p>Ambiguous results stop for your choice. Retry an export, attach an existing result, or crop one storyboard panel for a single scene.</p></article>
+        <article data-reveal><h3>Standard and Agent mode</h3><p>Drives Flow's regular prompt box or its Agent composer, applying the model, aspect ratio and reference settings before each run.</p></article>
+        <article data-reveal><h3>Adapts when Flow changes</h3><p>If Google moves a button, record the clicks or paste a CSS selector in Connect Flow. No waiting for an update.</p></article>
+        <article data-reveal><h3>Private by design</h3><p>No hosted backend, API keys, analytics, cookie extraction or password storage. It all runs in your own signed-in browser.</p></article>
+      </div>
+    </section>
+
+    <section class="case-section mcp" id="mcp" aria-labelledby="mcpTitle">
+      <div class="mcp-grid">
+        <div class="mcp-copy">
+          <p class="eyebrow">MCP server</p>
+          <h2 class="display" id="mcpTitle" data-blur>Run Flow Auto from <em>Claude or Gemini.</em></h2>
+          <p data-blur-lines>Flow Auto ships its own Model Context Protocol server. An AI assistant can read the queue, import a script, edit a single scene or the story's settings, and start, pause or cancel generation, all through the extension that is already signed in to Flow.</p>
+          <ul class="checks">
+            <li>Works with Claude Desktop, Claude Code, claude.ai, Gemini CLI and the Gemini web app</li>
+            <li>Runs locally over stdio, or over HTTPS with OAuth sign-in and a one-time pairing code</li>
+            <li>Asks before anything that spends credits</li>
+            <li>One switch in Connect Flow turns it on or off</li>
+          </ul>
+        </div>
+        <div class="window chat" role="img" aria-label="Example conversation: the user asks Claude to import a script and check scene 4; Claude calls import_script and get_scene, then asks before starting generation because it spends credits." data-reveal>
+          <div class="window-bar" aria-hidden="true"><span class="window-dots"><i></i><i></i><i></i></span><b>Example session</b></div>
+          <div class="chat-body" aria-hidden="true" data-chat>
+            <p class="msg msg-user">Import tonight's script and check scene 4.</p>
+            <p class="call"><code>import_script</code><span>10 scenes · 4 batches</span></p>
+            <p class="call"><code>get_scene</code><span>scene 4 · ready</span></p>
+            <p class="msg msg-ai">Scene 4 has its storyboard and prompt. Starting generation spends Flow credits. Should I run batch 2?</p>
+          </div>
+        </div>
+      </div>
+      <ol class="chain" aria-label="How the pieces connect" data-chain>
+        <li><strong>Claude / Gemini</strong><span>Desktop, CLI, web or phone</span></li>
+        <li><strong>Flow Auto MCP</strong><span>Node server on your machine</span></li>
+        <li><strong>Flow Auto extension</strong><span>Chrome / Edge, local link</span></li>
+        <li><strong>Google Flow</strong><span>your signed-in project</span></li>
+      </ol>
+      <div class="tools">
+        <div><h3>Read</h3><ul><li><code>flow_auto_status</code></li><li><code>list_stories</code></li><li><code>get_story</code></li><li><code>get_scene</code></li><li><code>get_settings</code></li><li><code>get_activity_log</code></li><li><code>get_script_guide</code></li></ul></div>
+        <div><h3>Edit</h3><ul><li><code>import_script</code></li><li><code>replace_scene</code></li><li><code>add_scene</code></li><li><code>update_settings</code></li><li><code>select_story</code></li></ul></div>
+        <div><h3>Run</h3><ul><li><code>start_generation</code></li><li><code>pause_queue</code></li><li><code>resume_queue</code></li><li><code>cancel_current_job</code></li><li><code>clear_queue</code></li><li><code>check_again</code></li></ul></div>
+      </div>
+    </section>
+
+    <section class="case-section" id="demo" aria-labelledby="demoTitle">
+      <h2 class="display" id="demoTitle" data-blur>See it <em>in motion.</em></h2>
+      <div class="project-card project-card--video" data-video="videos/flow-auto.mp4" data-poster="videos/flow-auto.jpg" data-reveal>
+        <div class="project-panel">
+          <div class="project-head">
+            <div>
+              <h3 class="project-title">Flow Auto demo</h3>
+              <p class="project-meta"><strong>Walkthrough</strong> — From an imported script to numbered 1080p videos.</p>
+            </div>
+          </div>
+          <div class="project-media">
+            <div class="video-frame">
+              <button class="video-play" type="button" aria-label="Play video: Flow Auto demo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg><span>Play</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="case-section next" aria-label="Next project">
+      <a class="next-card" href="healthnest.html" data-reveal>
+        <span class="eyebrow">Next project</span>
+        <strong>HealthNest<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></strong>
+        <span class="next-meta">Windows desktop app — Maternal and child health monitoring.</span>
+      </a>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-grid">
+      <div class="footer-col"><p class="footer-label">Main</p><a href="index.html#work">Work</a><a href="index.html#about">About</a><a href="index.html#contact">Contact</a></div>
+      <div class="footer-col"><p class="footer-label">Elsewhere</p><a href="https://github.com/Rouge999xx" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a><a href="https://linkedin.com/in/carl-marvic-tampus-478a932b8" target="_blank" rel="noreferrer">LinkedIn <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a><a href="mailto:carltampus5@gmail.com">Email</a></div>
+      <p class="footer-note">© <span data-year></span> Carl Tampus. Designed and built in Cebu, Philippines.</p>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"><p>Email copied to clipboard</p></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/ScrollTrigger.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/SplitText.min.js" defer></script>
+  <script src="main.js" defer></script>
+  <script src="motion.js" defer></script>
+</body>
+</html>

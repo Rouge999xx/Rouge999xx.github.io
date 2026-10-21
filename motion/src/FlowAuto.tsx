@@ -111,7 +111,7 @@ const Intro: React.FC<{line: Line}> = () => {
       <div
         style={{
           transform: `scale(${p}) rotate(${(1 - p) * -20}deg)`,
-          filter: `drop-shadow(0 0 ${40 + 20 * Math.sin(frame / 12)}px rgba(185,243,107,.45))`,
+          filter: `drop-shadow(0 0 ${40 + 20 * Math.sin(frame / 12)}px rgba(140,180,255,.45))`,
         }}
       >
         <Img src={staticFile('flow-auto-icon.svg')} style={{width: 220, height: 220}} />
@@ -210,9 +210,9 @@ const Import: React.FC<{line: Line}> = ({line}) => {
                 padding: '22px 30px',
                 borderRadius: 18,
                 background: FLOW,
-                color: '#0b1410',
+                color: '#0a1222',
                 fontFamily: fonts.display,
-                fontWeight: 700,
+                fontWeight: 600,
                 fontSize: 32,
                 textAlign: 'center',
               }}
@@ -303,10 +303,10 @@ const Flow: React.FC<{from: number}> = ({from}) => {
 const Thumb: React.FC<{i: number; sheet?: boolean}> = ({i, sheet}) => {
   const frame = useCurrentFrame();
   const hues = [
-    ['#2b1d5c', '#f9a8d4'],
-    ['#14303a', '#4ce0c1'],
+    ['#142a52', '#7eaaff'],
+    ['#0f2f3d', '#22d3ee'],
     ['#2d2a12', '#fcd34d'],
-    ['#1a2c18', '#b9f36b'],
+    ['#132238', '#8cb4ff'],
   ][i];
   return (
     <div
@@ -315,7 +315,7 @@ const Thumb: React.FC<{i: number; sheet?: boolean}> = ({i, sheet}) => {
         borderRadius: 14,
         overflow: 'hidden',
         position: 'relative',
-        background: `linear-gradient(160deg, ${hues[0]}, #0b0820)`,
+        background: `linear-gradient(160deg, ${hues[0]}, #070c18)`,
       }}
     >
       {sheet ? (
@@ -343,7 +343,7 @@ const Thumb: React.FC<{i: number; sheet?: boolean}> = ({i, sheet}) => {
             }}
           />
           <div style={{position: 'absolute', bottom: 0, left: 0, right: 0, height: 60, background: 'rgba(0,0,0,.35)'}} />
-          <div style={{position: 'absolute', bottom: 34, left: 60 + i * 30, width: 26, height: 66, borderRadius: 12, background: '#f5f3ff', opacity: 0.85}} />
+          <div style={{position: 'absolute', bottom: 34, left: 60 + i * 30, width: 26, height: 66, borderRadius: 12, background: '#e9eef7', opacity: 0.85}} />
         </>
       )}
     </div>
@@ -374,7 +374,7 @@ const Generate: React.FC<{line: Line}> = () => {
               <Enter key={i} delay={L0 + 10 + i * 6} x={-40} y={0}>
                 <div style={{position: 'relative'}}>
                   <Glass
-                    glow={state === 'sending' ? 'rgba(185,243,107,.4)' : undefined}
+                    glow={state === 'sending' ? 'rgba(140,180,255,.4)' : undefined}
                     style={{padding: '18px 26px', borderRadius: 18, display: 'flex', alignItems: 'center', gap: 18, background: state === 'sending' ? c.glassStrong : c.glass}}
                   >
                     <Mono size={28} color={c.lime}>
@@ -418,7 +418,7 @@ const Generate: React.FC<{line: Line}> = () => {
             return (
               <Enter key={e.name} delay={L0 + 14 + i * 10} x={60} y={0}>
                 <Glass glow={`${e.col}${Math.round(40 + pulse * 50).toString(16)}`} style={{padding: '34px 40px'}}>
-                  <div style={{fontFamily: fonts.display, fontWeight: 700, fontSize: 46, color: e.col}}>{e.name}</div>
+                  <div style={{fontFamily: fonts.display, fontWeight: 600, fontSize: 46, color: e.col}}>{e.name}</div>
                   <Mono size={26}>{e.sub}</Mono>
                 </Glass>
               </Enter>
@@ -451,7 +451,7 @@ const Export: React.FC<{line: Line}> = ({line}) => {
             <Mono size={24} color={c.dim}>
               UPSCALE THROUGH FLOW
             </Mono>
-            <div style={{fontFamily: fonts.display, fontWeight: 700, fontSize: 120, color: c.text, margin: '12px 0'}}>
+            <div style={{fontFamily: fonts.display, fontWeight: 600, fontSize: 120, color: c.text, margin: '12px 0'}}>
               {res}p
             </div>
             <div style={{height: 16, borderRadius: 8, background: 'rgba(255,255,255,.08)', overflow: 'hidden'}}>
@@ -508,7 +508,7 @@ const Continuity: React.FC<{line: Line}> = () => {
       <div style={{height: 50}} />
       <Row gap={70} style={{flex: 1, alignItems: 'center'}}>
         <Enter delay={L0 + 10} x={-50} y={0} style={{width: 640}}>
-          <Glass glow="rgba(76,224,193,.35)" style={{padding: 36}}>
+          <Glass glow="rgba(34,211,238,.35)" style={{padding: 36}}>
             <Row gap={14} style={{marginBottom: 20}}>
               <Chip color={c.teal}>Global rules · v3</Chip>
             </Row>
@@ -571,7 +571,7 @@ const Resilience: React.FC<{line: Line}> = ({line}) => {
           <Body delay={L0 + 30}>Submission intent is saved before Generate is pressed, so a result is never sent twice.</Body>
           <div style={{height: 40}} />
           <Enter delay={s2}>
-            <Glass glow="rgba(252,211,77,.3)" style={{padding: 32}}>
+            <Glass glow="rgba(56,189,248,.3)" style={{padding: 32}}>
               <div style={{fontFamily: fonts.display, fontSize: 34, color: c.amber, fontWeight: 600}}>Result unclear for scene 7</div>
               <Row gap={14} style={{marginTop: 20, flexWrap: 'wrap'}}>
                 {['Retry export', 'Attach existing', 'Crop one panel'].map((t, i) => (
@@ -629,7 +629,7 @@ const Mcp: React.FC<{line: Line}> = ({line}) => {
       <Row gap={60} style={{flex: 1, alignItems: 'flex-start'}}>
         <div style={{flex: 1.1, display: 'flex', flexDirection: 'column', gap: 18}}>
           <Enter delay={s2} x={40} y={0} style={{alignSelf: 'flex-end'}}>
-            <div style={{padding: '18px 26px', borderRadius: '22px 22px 6px 22px', background: c.accentStrong, color: '#1b0b3a', fontFamily: fonts.body, fontSize: 28, fontWeight: 500}}>
+            <div style={{padding: '18px 26px', borderRadius: '22px 22px 6px 22px', background: c.accentStrong, color: '#0a1222', fontFamily: fonts.body, fontSize: 28, fontWeight: 500}}>
               Import tonight's script and check scene 4.
             </div>
           </Enter>
@@ -649,7 +649,7 @@ const Mcp: React.FC<{line: Line}> = ({line}) => {
             </Enter>
           ))}
           <Enter delay={s3} x={-30} y={0}>
-            <Glass glow="rgba(196,181,253,.3)" style={{padding: '20px 26px', borderRadius: '22px 22px 22px 6px'}}>
+            <Glass glow="rgba(158,194,255,.3)" style={{padding: '20px 26px', borderRadius: '22px 22px 22px 6px'}}>
               <span style={{fontFamily: fonts.body, fontSize: 28, color: c.text}}>
                 Starting generation spends Flow credits. <span style={{color: c.amber}}>Should I run batch 2?</span>
               </span>
@@ -720,7 +720,7 @@ const Outro: React.FC<{line: Line}> = () => {
   const p = useSpring(L0 - 10, {damping: 14});
   return (
     <Stage style={{alignItems: 'center', justifyContent: 'center', textAlign: 'center'}}>
-      <div style={{transform: `scale(${p})`, filter: 'drop-shadow(0 0 50px rgba(185,243,107,.45))'}}>
+      <div style={{transform: `scale(${p})`, filter: 'drop-shadow(0 0 50px rgba(140,180,255,.45))'}}>
         <Img src={staticFile('flow-auto-icon.svg')} style={{width: 180, height: 180}} />
       </div>
       <div style={{height: 30}} />

@@ -2,7 +2,7 @@ import React from 'react';
 import {AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame} from 'remotion';
 import {Body, Check, Chip, clamp, Enter, Glass, Kicker, Line, sentenceFrame, Stage, useSpring, Words} from './kit';
 import {Burst, CountUp, PRE, Sfx, Sheen, ShowTimeline, Tilt, typeFrames, Typewriter, useEase, useShake} from './fx';
-import {c, fonts, FPS, LEAD, TAIL} from './theme';
+import {c, fonts, FPS, LEAD, TAIL, accentWord} from './theme';
 
 const L0 = Math.round(LEAD * FPS);
 type SceneProps = {line: Line; dur: number};
@@ -22,7 +22,7 @@ const Slam: React.FC<{text: string; delay: number; size: number; grad?: string[]
 }) => {
   const frame = useCurrentFrame();
   return (
-    <div style={{display: 'flex', flexWrap: 'wrap', justifyContent: 'center', columnGap: size * 0.26, fontFamily: fonts.display, fontWeight: 700, fontSize: size, lineHeight: 1.04, letterSpacing: -size * 0.03, color: c.text, ...style}}>
+    <div style={{display: 'flex', flexWrap: 'wrap', justifyContent: 'center', columnGap: size * 0.26, fontFamily: fonts.display, fontWeight: 600, fontSize: size, lineHeight: 1.04, letterSpacing: -size * 0.03, color: c.text, ...style}}>
       {text.split(' ').map((w, i) => {
         const p = interpolate(frame, [delay + i * stagger, delay + i * stagger + 9], [0, 1], {...clamp, easing: Easing.bezier(0.2, 0.9, 0.3, 1.25)});
         const g = grad.includes(w.replace(/[.,!?]/g, ''));
@@ -35,7 +35,7 @@ const Slam: React.FC<{text: string; delay: number; size: number; grad?: string[]
               transform: `scale(${interpolate(p, [0, 1], [1.9, 1])})`,
               filter: `blur(${(1 - Math.min(p, 1)) * 16}px)`,
               paddingBottom: size * 0.08,
-              ...(g ? {background: c.grad, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent'} : {}),
+              ...(g ? {...accentWord} : {}),
             }}
           >
             {w}
@@ -129,7 +129,7 @@ const Intro: React.FC<SceneProps> = ({line}) => {
               opacity: iris,
             }}
           />
-          <div style={{position: 'absolute', inset: -60, borderRadius: '50%', boxShadow: `0 0 120px 10px rgba(167,139,250,${0.35 * iris})`}} />
+          <div style={{position: 'absolute', inset: -60, borderRadius: '50%', boxShadow: `0 0 120px 10px rgba(59,116,238,${0.35 * iris})`}} />
           <Img
             src={staticFile('portrait.webp')}
             style={{
@@ -157,7 +157,7 @@ const Intro: React.FC<SceneProps> = ({line}) => {
           </svg>
           <div style={{position: 'absolute', right: -10, bottom: 40}}>
             <Enter delay={L0 + 40} scale={0.6}>
-              <Chip color={c.lime} style={{background: 'rgba(20,30,10,.85)'}}>
+              <Chip color={c.lime} style={{background: 'rgba(8,16,34,.85)'}}>
                 ● Open to work
               </Chip>
             </Enter>
@@ -180,7 +180,7 @@ const Intro: React.FC<SceneProps> = ({line}) => {
           <div style={{height: 50}} />
           <div style={{display: 'inline-block', position: 'relative'}}>
             <Words text="I build software that feels alive." size={66} grad={['alive.']} delay={s2} style={{fontWeight: 600}} />
-            <div style={{height: 4, width: `${underline * 100}%`, background: c.grad, borderRadius: 2, boxShadow: '0 0 20px rgba(249,168,212,.6)'}} />
+            <div style={{height: 4, width: `${underline * 100}%`, background: c.grad, borderRadius: 2, boxShadow: '0 0 20px rgba(91,140,255,.6)'}} />
           </div>
         </div>
       </Row>
@@ -211,11 +211,11 @@ const Service: React.FC<{
           right: 60 - frame * 0.6,
           top: 40,
           fontFamily: fonts.display,
-          fontWeight: 700,
+          fontWeight: 600,
           fontSize: 520,
           lineHeight: 1,
           color: 'transparent',
-          WebkitTextStroke: '2px rgba(196,181,253,.10)',
+          WebkitTextStroke: '2px rgba(158,194,255,.10)',
           letterSpacing: -20,
         }}
       >
@@ -285,14 +285,14 @@ const AppWindow: React.FC = () => {
             ].map(([k, v], i) => (
               <div key={k} style={{flex: 1, padding: 16, borderRadius: 14, background: 'rgba(255,255,255,.05)'}}>
                 <div style={{fontFamily: fonts.mono, fontSize: 16, color: c.dim}}>{k}</div>
-                <CountUp to={v as number} from={L0 + 16 + i * 4} dur={34} style={{fontFamily: fonts.display, fontSize: 40, fontWeight: 700, color: c.text}} />
+                <CountUp to={v as number} from={L0 + 16 + i * 4} dur={34} style={{fontFamily: fonts.display, fontSize: 40, fontWeight: 600, color: c.text}} />
               </div>
             ))}
           </Row>
           <Row gap={18} style={{alignItems: 'flex-end', height: 200, marginTop: 30}}>
             {bars.map((b, i) => {
               const h = interpolate(frame, [L0 + 20 + i * 5, L0 + 46 + i * 5], [0, b], {...clamp, easing: Easing.out(Easing.back(1.6))});
-              return <div key={i} style={{flex: 1, height: `${h}%`, borderRadius: 8, background: c.grad, boxShadow: '0 0 24px rgba(249,168,212,.25)'}} />;
+              return <div key={i} style={{flex: 1, height: `${h}%`, borderRadius: 8, background: c.grad, boxShadow: '0 0 24px rgba(91,140,255,.25)'}} />;
             })}
           </Row>
         </div>
@@ -325,11 +325,11 @@ const Pipeline: React.FC = () => {
                   display: 'grid',
                   placeItems: 'center',
                   background: done ? c.amber : 'rgba(255,255,255,.08)',
-                  color: done ? '#1b0b3a' : c.muted,
+                  color: done ? '#0a1222' : c.muted,
                   fontFamily: fonts.mono,
                   fontSize: 24,
                   fontWeight: 600,
-                  boxShadow: `0 0 ${40 * glow}px rgba(252,211,77,${0.8 * glow})`,
+                  boxShadow: `0 0 ${40 * glow}px rgba(56,189,248,${0.8 * glow})`,
                   transform: `scale(${1 + glow * 0.12})`,
                 }}
               >
@@ -361,7 +361,7 @@ const AiBridge: React.FC = () => {
   const typeAt = L0 + 18;
   return (
     <div style={{display: 'flex', flexDirection: 'column', gap: 26}}>
-      <Glass glow="rgba(196,181,253,.35)" style={{padding: '26px 32px'}}>
+      <Glass glow="rgba(158,194,255,.35)" style={{padding: '26px 32px'}}>
         <div style={{fontFamily: fonts.display, fontSize: 36, fontWeight: 600, color: c.accent}}>Claude · Gemini</div>
         <Typewriter text={PROMPT} from={typeAt} cps={30} style={{fontFamily: fonts.body, fontSize: 24, color: c.muted}} />
       </Glass>
@@ -440,7 +440,7 @@ const HealthPreview: React.FC<{from: number}> = ({from}) => {
         ].map(([k, v], i) => (
           <div key={k} style={{padding: '12px 18px', borderRadius: 14, background: 'rgba(255,255,255,.05)'}}>
             <div style={{fontFamily: fonts.mono, fontSize: 16, color: c.dim}}>{k}</div>
-            <CountUp to={v as number} from={from + i * 4} dur={30} style={{fontFamily: fonts.display, fontSize: 34, fontWeight: 700, color: c.text}} />
+            <CountUp to={v as number} from={from + i * 4} dur={30} style={{fontFamily: fonts.display, fontSize: 34, fontWeight: 600, color: c.text}} />
           </div>
         ))}
       </div>
@@ -467,7 +467,7 @@ const FlowPreview: React.FC<{from: number}> = ({from}) => {
   return (
     <div style={{position: 'relative', height: '100%', borderRadius: 16, overflow: 'hidden', border: `1px solid ${c.border}`, boxShadow: '0 30px 60px -20px rgba(0,0,0,.7)'}}>
       <Img src={staticFile('shots/scenes.webp')} style={{width: '100%', display: 'block', transform: `translateY(${scroll}px)`}} />
-      <div style={{position: 'absolute', inset: 0, background: 'linear-gradient(transparent 60%, rgba(10,7,24,.65))'}} />
+      <div style={{position: 'absolute', inset: 0, background: 'linear-gradient(transparent 60%, rgba(6,10,20,.65))'}} />
       <Sheen at={from + 16} width={800} />
     </div>
   );
@@ -508,7 +508,7 @@ const Proof: React.FC<SceneProps> = ({line}) => {
                   <span style={{fontFamily: fonts.mono, fontSize: 22, color: p.col}}>0{i + 1}</span>
                   <span style={{fontFamily: fonts.mono, fontSize: 20, color: c.dim}}>{p.tag}</span>
                 </Row>
-                <div style={{fontFamily: fonts.display, fontSize: 46, fontWeight: 700, color: c.text, margin: '10px 0 6px'}}>{p.name}</div>
+                <div style={{fontFamily: fonts.display, fontSize: 46, fontWeight: 600, color: c.text, margin: '10px 0 6px'}}>{p.name}</div>
                 <div style={{fontFamily: fonts.body, fontSize: 28, color: c.muted}}>{p.copy}</div>
                 <div style={{fontFamily: fonts.mono, fontSize: 20, color: c.dim, marginTop: 12}}>{p.stack}</div>
                 <div style={{flex: 1, marginTop: 24, minHeight: 0}}>{i === 0 ? <HealthPreview from={d + 10} /> : <FlowPreview from={d + 10} />}</div>
@@ -546,14 +546,14 @@ const Approach: React.FC<SceneProps> = ({line, dur}) => {
       <div style={{height: 60}} />
       <div style={{position: 'relative'}}>
         <div style={{position: 'absolute', left: '8%', right: '8%', top: 58, height: 2, background: 'rgba(255,255,255,.08)'}}>
-          <div style={{height: '100%', width: `${link * 100}%`, background: c.grad, boxShadow: '0 0 16px rgba(249,168,212,.6)'}} />
+          <div style={{height: '100%', width: `${link * 100}%`, background: c.grad, boxShadow: '0 0 16px rgba(91,140,255,.6)'}} />
         </div>
         <Row gap={30} style={{alignItems: 'stretch', position: 'relative'}}>
           {steps.map(([n, t, d], i) => {
             const glow = interpolate(frame, [at[i], at[i] + 8, at[i] + 30], [0, 1, 0.3], clamp);
             return (
               <Tilt key={n} delay={at[i]} from="bottom" style={{flex: 1}}>
-                <Glass glow={glow > 0.05 ? `rgba(196,181,253,${0.5 * glow})` : undefined} style={{padding: 36, height: '100%', boxSizing: 'border-box'}}>
+                <Glass glow={glow > 0.05 ? `rgba(158,194,255,${0.5 * glow})` : undefined} style={{padding: 36, height: '100%', boxSizing: 'border-box'}}>
                   <div
                     style={{
                       width: 46,
@@ -563,14 +563,14 @@ const Approach: React.FC<SceneProps> = ({line, dur}) => {
                       placeItems: 'center',
                       fontFamily: fonts.mono,
                       fontSize: 20,
-                      color: '#1b0b3a',
+                      color: '#0a1222',
                       background: c.grad,
-                      boxShadow: `0 0 ${30 * glow}px rgba(249,168,212,.8)`,
+                      boxShadow: `0 0 ${30 * glow}px rgba(91,140,255,.8)`,
                     }}
                   >
                     {n}
                   </div>
-                  <div style={{fontFamily: fonts.display, fontSize: 40, fontWeight: 700, color: c.text, margin: '18px 0 10px'}}>{t}</div>
+                  <div style={{fontFamily: fonts.display, fontSize: 40, fontWeight: 600, color: c.text, margin: '18px 0 10px'}}>{t}</div>
                   <div style={{fontFamily: fonts.body, fontSize: 28, color: c.muted}}>{d}</div>
                 </Glass>
               </Tilt>
@@ -611,7 +611,7 @@ const Cta: React.FC<SceneProps> = ({line}) => {
       <div style={{transform: shake}}>
         <Slam text="Let's build something worth using." size={124} grad={['worth', 'using.']} delay={s2} stagger={4} style={{maxWidth: 1500}} />
       </div>
-      <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 45%, rgba(255,240,250,.55), rgba(196,181,253,.15) 45%, transparent 75%)', opacity: interpolate(frame, [PRE, PRE + 2, PRE + 16], [0, 1, 0], clamp), pointerEvents: 'none'}} />
+      <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 45%, rgba(235,242,255,.55), rgba(158,194,255,.15) 45%, transparent 75%)', opacity: interpolate(frame, [PRE, PRE + 2, PRE + 16], [0, 1, 0], clamp), pointerEvents: 'none'}} />
       <Burst at={PRE + 1} x={960} y={440} count={40} radius={900} seed="drop" />
       <Burst at={s2 + 18} x={960} y={640} count={30} radius={700} seed="cta" />
       <Sfx name="impact" at={PRE} volume={0.5} />
@@ -641,8 +641,8 @@ const Contact: React.FC<SceneProps> = ({line}) => {
           <Kicker delay={2}>Start a conversation</Kicker>
           <div style={{height: 40}} />
           <Enter delay={2} scale={0.9}>
-            <Glass glow={`rgba(249,168,212,${0.25 + 0.35 * glow})`} style={{padding: '44px 70px', position: 'relative', overflow: 'hidden', minWidth: 1160}}>
-              <div style={{fontFamily: fonts.display, fontSize: 92, fontWeight: 700, background: c.grad, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent'}}>
+            <Glass glow={`rgba(91,140,255,${0.25 + 0.35 * glow})`} style={{padding: '44px 70px', position: 'relative', overflow: 'hidden', minWidth: 1160}}>
+              <div style={{fontFamily: fonts.display, fontSize: 92, fontWeight: 500, letterSpacing: -2, color: c.accent}}>
                 <Typewriter text={EMAIL} from={typeAt} cps={28} />
               </div>
               <Sheen at={typed + 2} dur={26} width={1200} />
@@ -668,19 +668,19 @@ const Contact: React.FC<SceneProps> = ({line}) => {
               display: 'grid',
               placeItems: 'center',
               background: c.grad,
-              boxShadow: `0 0 ${90 * logo}px rgba(249,168,212,.55)`,
+              boxShadow: `0 0 ${90 * logo}px rgba(91,140,255,.55)`,
               fontFamily: fonts.display,
-              fontWeight: 700,
+              fontWeight: 600,
               fontSize: 72,
-              color: '#1b0b3a',
+              color: '#0a1222',
               letterSpacing: -3,
             }}
           >
             CT
           </div>
-          <div style={{fontFamily: fonts.display, fontWeight: 700, fontSize: 84, color: c.text, letterSpacing: -2}}>
+          <div style={{fontFamily: fonts.display, fontWeight: 600, fontSize: 84, color: c.text, letterSpacing: -2}}>
             Carl{' '}
-            <span style={{background: c.grad, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent'}}>Tampus</span>
+            <span style={{...accentWord}}>Tampus</span>
           </div>
           <div style={{fontFamily: fonts.mono, fontSize: 28, color: c.muted, letterSpacing: 4, opacity: interpolate(frame, [outroAt + 14, outroAt + 26], [0, 1], clamp)}}>
             ROUGE999XX.GITHUB.IO

@@ -59,6 +59,7 @@ const SFX_TRIM: Record<string, number> = {tick_soft: 3, pop: 1.4, click: 1.3, sh
 
 /** Plays an effect so its hit lands exactly on frame `at` (relative to the enclosing Sequence). */
 export const Sfx: React.FC<{name: string; at: number; volume?: number}> = ({name, at, volume}) => {
+  if (getInputProps().audio === false) return null;
   const from = Math.round(at - (SFX_HIT[name] ?? 0) * FPS);
   return (
     <Sequence from={from} name={`sfx:${name}`} layout="none">
@@ -288,7 +289,7 @@ const CutFlash: React.FC<{at: number; dir: number}> = ({at, dir}) => {
   const x = dir > 0 ? interpolate(t, [0, 1], [2300, -700]) : interpolate(t, [0, 1], [-700, 2300]);
   return (
     <AbsoluteFill style={{pointerEvents: 'none', mixBlendMode: 'screen'}}>
-      <AbsoluteFill style={{background: `radial-gradient(ellipse at ${dir > 0 ? 70 : 30}% 50%, rgba(196,181,253,${0.28 * bloom}), transparent 70%)`}} />
+      <AbsoluteFill style={{background: `radial-gradient(ellipse at ${dir > 0 ? 70 : 30}% 50%, rgba(158,194,255,${0.28 * bloom}), transparent 70%)`}} />
       <div
         style={{
           position: 'absolute',
@@ -297,7 +298,7 @@ const CutFlash: React.FC<{at: number; dir: number}> = ({at, dir}) => {
           left: x,
           width: 220,
           transform: 'rotate(18deg)',
-          background: 'linear-gradient(90deg, transparent, rgba(249,168,212,.35), rgba(255,255,255,.55), rgba(252,211,77,.3), transparent)',
+          background: 'linear-gradient(90deg, transparent, rgba(91,140,255,.35), rgba(255,255,255,.55), rgba(56,189,248,.3), transparent)',
           filter: 'blur(18px)',
           opacity: bloom,
         }}
@@ -325,7 +326,7 @@ const Captions: React.FC<{line: Line}> = ({line}) => {
           maxWidth: 1480,
           padding: '14px 30px 16px',
           borderRadius: 16,
-          background: 'rgba(8,5,22,.66)',
+          background: 'rgba(6,10,20,.66)',
           border: '1px solid rgba(255,255,255,.08)',
           boxShadow: '0 20px 60px -20px rgba(0,0,0,.6)',
           position: 'relative',
@@ -362,11 +363,12 @@ export const ShowTimeline: React.FC<{video: VideoId; scenes: Record<string, Reac
   const ls = lines(video);
   const starts = lens.map((_, i) => lens.slice(0, i).reduce((a, b) => a + b, 0));
   const captions = getInputProps().captions !== false;
+  const withAudio = getInputProps().audio !== false;
   return (
     <AbsoluteFill style={{background: c.bg}}>
       <Aurora />
       <Particles />
-      <Audio src={staticFile('music/intro.wav')} volume={(f) => musicVolume(video, f, total)} />
+      {withAudio && <Audio src={staticFile('music/intro.wav')} volume={(f) => musicVolume(video, f, total)} />}
       {ls.map((l, i) => {
         const Scene = scenes[l.id];
         const dir = i % 2 === 0 ? 1 : -1;
@@ -378,9 +380,11 @@ export const ShowTimeline: React.FC<{video: VideoId; scenes: Record<string, Reac
               </Camera>
             </Sequence>
             <Sequence from={starts[i]} durationInFrames={lens[i]} name={`${l.id} audio`}>
-            <Sequence from={Math.round(LEAD * FPS)} layout="none">
-              <Audio src={staticFile(`vo/${video}/${l.id}.wav`)} />
-            </Sequence>
+            {withAudio && (
+              <Sequence from={Math.round(LEAD * FPS)} layout="none">
+                <Audio src={staticFile(`vo/${video}/${l.id}.wav`)} />
+              </Sequence>
+            )}
             {captions && <Captions line={l} />}
             </Sequence>
           </React.Fragment>

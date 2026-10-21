@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="HealthNest, by Carl Tampus: a maternal and child health monitoring desktop app that keeps patient cases, appointments and status changes in one clear workflow." />
+  <meta name="theme-color" content="#0a0f1a" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="HealthNest — Carl Tampus" />
+  <meta property="og:description" content="A maternal and child health monitoring desktop app built with WinUI 3, C# and SQLite." />
+  <meta property="og:image" content="https://rouge999xx.github.io/videos/intro.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <title>HealthNest — Carl Tampus</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <script>
+    (function () {
+      // Full motion and smooth scrolling unless the visitor turned motion down with the header switch.
+      var root = document.documentElement, saved = '';
+      try { saved = localStorage.getItem('portfolio-motion-choice') || ''; } catch (e) {}
+      root.dataset.motion = saved === 'reduced' ? 'reduced' : 'full';
+      root.classList.add('js');
+      if (root.dataset.motion === 'full') root.classList.add('intro-pending');
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="case">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="backdrop" aria-hidden="true"></div>
+
+  <header class="nav" id="nav">
+    <a class="nav-id" href="index.html" aria-label="Carl Tampus, home">
+      <strong>Carl Tampus</strong>
+      <span>Computer Engineering student</span>
+    </a>
+    <nav class="nav-pill" aria-label="Primary">
+      <span class="nav-glow" aria-hidden="true"></span>
+      <a href="index.html#work" aria-current="page" class="is-active">Work</a>
+      <a href="index.html#about">About</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+    <div class="nav-end">
+      <a class="nav-out" href="https://github.com/Rouge999xx" target="_blank" rel="noreferrer">GitHub<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg><span class="sr-only"> (opens in a new tab)</span></a>
+      <a class="nav-out" href="https://linkedin.com/in/carl-marvic-tampus-478a932b8" target="_blank" rel="noreferrer">LinkedIn<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg><span class="sr-only"> (opens in a new tab)</span></a>
+      <button class="motion-toggle" id="motionToggle" type="button" aria-pressed="true" aria-label="Full motion">
+        <svg class="motion-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8Z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8Z"/></svg>
+        <svg class="motion-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8Z"/><path d="M3 3l18 18"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero case-hero" id="top" aria-labelledby="caseTitle">
+      <div class="window hero-window" data-hero>
+        <div class="window-bar" aria-hidden="true"><span class="window-dots"><i></i><i></i><i></i></span><span class="window-plus">+</span></div>
+        <div class="hero-body">
+          <p class="status"><span class="status-dot status-dot--teal" aria-hidden="true"></span>Case study · Desktop app</p>
+          <h1 class="hero-title" id="caseTitle" data-blur>HealthNest. <em>One clear workflow for maternal and child health.</em></h1>
+          <div class="hero-sub" data-blur-lines>
+            <p>A maternal and child health monitoring desktop application designed to keep patient cases, appointments, and status changes in one clear workflow.</p>
+          </div>
+          <p class="case-meta">Windows desktop · WinUI 3</p>
+          <ul class="tags" aria-label="Built with"><li>WinUI 3</li><li>C#</li><li>SQLite</li><li>.NET</li></ul>
+          <div class="hero-actions">
+            <a class="button button-ghost" href="index.html#work">All work</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="case-section" aria-label="HealthNest dashboard preview">
+      <div class="window showcase" data-reveal>
+        <div class="window-bar" aria-hidden="true"><span class="window-dots"><i></i><i></i><i></i></span><b>HealthNest · Patient dashboard</b></div>
+        <div class="showcase-body" data-parallax aria-hidden="true">
+          <div class="mock mock-lg">
+            <div class="mock-side"><span class="mock-logo"></span><i class="is-on"></i><i></i><i></i><i></i><i></i></div>
+            <div class="mock-main">
+              <div class="mock-head"><strong>HealthNest</strong><span>● Active</span></div>
+              <div class="mock-stats"><i></i><i></i><i></i></div>
+              <div class="mock-chart"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+              <div class="mock-list"><i></i><i></i><i></i><i></i></div>
+              <div class="mock-rows"><i></i><i></i><i></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="showcase-note">An illustration of the patient dashboard. Repository links can be added when the source is published.</p>
+    </section>
+
+    <section class="case-section" aria-labelledby="whyTitle">
+      <h2 class="display" id="whyTitle" data-blur>Cases, appointments and status, <em>in one place.</em></h2>
+      <div class="split">
+        <div data-blur-lines><h3 class="eyebrow">The problem</h3><p>Health information can become fragmented across appointments, case notes, and follow-up schedules, making day-to-day case tracking harder than it needs to be.</p></div>
+        <div data-blur-lines><h3 class="eyebrow">The approach</h3><p>A focused desktop workflow combines patient profiles, case status, scheduling, and an appointment calendar so information stays visible and actionable.</p></div>
+      </div>
+    </section>
+
+    <section class="case-section" aria-labelledby="featuresTitle">
+      <h2 class="display" id="featuresTitle" data-blur>What it <em>keeps track of.</em></h2>
+      <div class="caps caps--three">
+        <article data-reveal><h3>Patient case management</h3><p>Profiles and case notes for each mother and child, with their current status always visible.</p></article>
+        <article data-reveal><h3>Appointment scheduling</h3><p>An appointment calendar for check-ups and follow-ups, so nothing slips between visits.</p></article>
+        <article data-reveal><h3>Longitudinal status tracking</h3><p>Status changes recorded over time, so health workers can see how each case is progressing.</p></article>
+      </div>
+    </section>
+
+
+    <section class="case-section next" aria-label="Next project">
+      <a class="next-card" href="flow-auto.html" data-reveal>
+        <span class="eyebrow">Next project</span>
+        <strong>Flow Auto<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></strong>
+        <span class="next-meta">Chrome &amp; Edge extension — A production line for AI video.</span>
+      </a>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-grid">
+      <div class="footer-col"><p class="footer-label">Main</p><a href="index.html#work">Work</a><a href="index.html#about">About</a><a href="index.html#contact">Contact</a></div>
+      <div class="footer-col"><p class="footer-label">Elsewhere</p><a href="https://github.com/Rouge999xx" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a><a href="https://linkedin.com/in/carl-marvic-tampus-478a932b8" target="_blank" rel="noreferrer">LinkedIn <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a><a href="mailto:carltampus5@gmail.com">Email</a></div>
+      <p class="footer-note">© <span data-year></span> Carl Tampus. Designed and built in Cebu, Philippines.</p>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"><p>Email copied to clipboard</p></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/ScrollTrigger.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/SplitText.min.js" defer></script>
+  <script src="main.js" defer></script>
+  <script src="motion.js" defer></script>
+</body>
+</html>
