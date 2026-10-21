@@ -148,8 +148,14 @@ if (lenis) {
 const navOffset = () => (qs('#nav')?.offsetHeight || 64) + 8;
 function scrollToTarget(target) {
   if (!target) return;
-  if (lenis) lenis.scrollTo(target, { offset: -navOffset(), duration: 1, easing: glide });
+  // The pinned studio starts at its very top, with the wide shot of the room.
+  const offset = target.matches('[data-studio]') && root.classList.contains('has-studio-pin') ? 0 : -navOffset();
+  if (lenis) lenis.scrollTo(target, { offset, duration: 1, easing: glide });
   else target.scrollIntoView();
+}
+function glideTo(y, duration = 1.2) {
+  if (lenis) lenis.scrollTo(y, { duration, easing: glide });
+  else scrollTo({ top: y, behavior: 'smooth' });
 }
 
 // Same-page links glide with Lenis; links to the other pages are left to the browser (and motion.js).
@@ -328,7 +334,7 @@ async function videoExists(src) {
   }
 }
 
-const videoCards = qsa('[data-video]');
+const videoCards = qsa('[data-video]').filter(el => !el.matches('dialog'));
 videoCards.forEach(card => {
   const frame = qs('.video-frame', card);
   const button = qs('.video-play', card);
@@ -371,11 +377,107 @@ qsa('[data-play-video]').forEach(link => link.addEventListener('click', () => {
   if (card && !card.classList.contains('is-playing')) qs('.video-play', card)?.click();
 }));
 
+/* ---------- The studio: pick a project from the list, or from the turntable itself ---------- */
+const studio = qs('[data-studio]');
+let showProject = () => {};
+if (studio) {
+  const tabs = qsa('[role="tab"]', studio);
+  const details = tabs.map(tab => document.getElementById(tab.getAttribute('aria-controls')));
+  const items = qsa('.orbit-item', studio);
+  let active = -1;
+  showProject = index => {
+    if (index === active || !tabs[index]) return;
+    active = index;
+    studio.style.setProperty('--active', index);
+    tabs.forEach((tab, i) => {
+      const on = i === index;
+      tab.setAttribute('aria-selected', String(on));
+      tab.tabIndex = on ? 0 : -1;
+      details[i]?.classList.toggle('is-on', on);
+      items[i]?.classList.toggle('is-front', on);
+    });
+  };
+  // motion.js gets the first say: while scrolling drives the camera, it glides there and the scroll calls showProject.
+  const pick = index => {
+    index = Math.max(0, Math.min(tabs.length - 1, index));
+    const go = studio.dispatchEvent(new CustomEvent('studio:pick', { detail: { index }, cancelable: true }));
+    if (go) showProject(index);
+  };
+  const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 };
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => pick(i));
+    tab.addEventListener('keydown', event => {
+      let next = null;
+      if (event.key in step) next = (i + step[event.key] + tabs.length) % tabs.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = tabs.length - 1;
+      if (next === null) return;
+      event.preventDefault();
+      tabs[next].focus({ preventScroll: true });
+      pick(next);
+    });
+  });
+  // A window at the side turns to face you; the one facing you opens.
+  items.forEach((item, i) => item.addEventListener('click', () => {
+    if (i !== active) return pick(i);
+    qs('[data-studio-open], [data-theater-open]', details[i])?.click();
+  }));
+  // Phones: swipe the stage sideways to turn the turntable.
+  const stage = qs('.studio-stage', studio);
+  let swipe = null;
+  stage?.addEventListener('pointerdown', event => { if (event.pointerType !== 'mouse') swipe = { x: event.clientX, y: event.clientY }; }, { passive: true });
+  stage?.addEventListener('pointerup', event => {
+    if (!swipe) return;
+    const dx = event.clientX - swipe.x, dy = event.clientY - swipe.y;
+    swipe = null;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) pick(active + (dx < 0 ? 1 : -1));
+  }, { passive: true });
+  stage?.addEventListener('pointercancel', () => { swipe = null; });
+  showProject(0);
+}
+
+/* ---------- The intro video plays in a theater: its window grows between two giant words ---------- */
+const theater = qs('#theater');
+if (theater) {
+  const frame = qs('.video-frame', theater);
+  let player = null;
+  let opener = null;
+  const open = () => {
+    opener = document.activeElement;
+    if (!player) {
+      player = document.createElement('video');
+      player.src = theater.dataset.video;
+      player.poster = 'videos/intro.jpg';
+      player.controls = true;
+      player.playsInline = true;
+      player.preload = 'auto';
+      player.setAttribute('aria-label', 'Meet Carl');
+      frame.appendChild(player);
+    }
+    // Where the window sits on the turntable right now, so the theater can grow out of it.
+    const from = qs('.orbit-item[data-orbit="2"] .orbit-body')?.getBoundingClientRect();
+    theater.showModal();
+    lenis?.stop();
+    theater.dispatchEvent(new CustomEvent('theater:open', { detail: { from } }));
+    // Started inside the click, so the browser lets it play with sound.
+    player.play()?.catch(() => {});
+  };
+  theater.addEventListener('close', () => {
+    player?.pause();
+    lenis?.start();
+    opener?.focus?.({ preventScroll: true });
+  });
+  qs('.theater-close', theater)?.addEventListener('click', () => theater.close());
+  // A click on the dimmed backdrop (the dialog itself, outside its content) closes it too.
+  theater.addEventListener('click', event => { if (event.target === theater) theater.close(); });
+  qsa('[data-theater-open]').forEach(button => button.addEventListener('click', open));
+}
+
 /* ---------- Without GSAP: things fade and sharpen in as they arrive ---------- */
 if (!hasGsap) {
   root.classList.add('motion-fallback');
   root.classList.remove('intro-pending');
-  const items = qsa('[data-hero], [data-project], [data-reveal], [data-blur], [data-blur-lines], [data-blur-scrub]');
+  const items = qsa('[data-hero], [data-reveal], [data-blur], [data-blur-lines], [data-blur-scrub]');
   if ('IntersectionObserver' in window) {
     const observer = new IntersectionObserver(entries => entries.forEach(entry => {
       if (!entry.isIntersecting) return;
@@ -388,4 +490,4 @@ if (!hasGsap) {
   }
 }
 
-window.site = { motion, lenis, scrollToTarget, showToast };
+window.site = { motion, lenis, scrollToTarget, glideTo, showToast, showProject };

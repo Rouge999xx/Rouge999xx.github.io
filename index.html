@@ -81,75 +81,95 @@
       </div>
     </section>
 
-    <section class="work" id="work" aria-labelledby="workTitle">
-      <h2 class="eyebrow" id="workTitle">Selected work</h2>
+    <section class="studio" id="work" aria-labelledby="workTitle" data-studio>
+      <div class="studio-frame">
+        <p class="studio-word" aria-hidden="true">Selected <em>work</em></p>
 
-      <article class="project" data-project>
-        <a class="project-card" href="flow-auto.html">
-          <div class="project-panel">
-            <div class="project-head">
-              <div>
-                <h3 class="project-title">Flow Auto</h3>
-                <p class="project-meta"><strong>Chrome &amp; Edge extension</strong> — A production line for AI video, with its own MCP server.</p>
-              </div>
-              <span class="project-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-            </div>
-            <div class="project-media" data-parallax>
-              <div class="window window-shot">
-                <div class="window-bar" aria-hidden="true"><span class="window-dots"><i></i><i></i><i></i></span><b>Flow Auto · Story workspace</b></div>
-                <img decoding="async" src="img/flow-auto/scenes.webp" width="1600" height="1000" alt="Flow Auto Scenes and batches page: story stats, global rules and scene cards with a run queue." />
-              </div>
-            </div>
-          </div>
-        </a>
-      </article>
-
-      <article class="project" data-project>
-        <a class="project-card" href="healthnest.html">
-          <div class="project-panel">
-            <div class="project-head">
-              <div>
-                <h3 class="project-title">HealthNest</h3>
-                <p class="project-meta"><strong>Windows desktop app</strong> — Maternal and child health monitoring, in one clear workflow.</p>
-              </div>
-              <span class="project-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-            </div>
-            <div class="project-media project-media--mock" data-parallax aria-hidden="true">
-              <div class="mock">
-                <div class="mock-side"><span class="mock-logo"></span><i class="is-on"></i><i></i><i></i><i></i></div>
-                <div class="mock-main">
-                  <div class="mock-head"><strong>HealthNest</strong><span>● Active</span></div>
-                  <div class="mock-stats"><i></i><i></i><i></i></div>
-                  <div class="mock-chart"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-                  <div class="mock-list"><i></i><i></i><i></i><i></i></div>
-                  <div class="mock-rows"><i></i><i></i><i></i></div>
+        <!-- The 3D studio: project windows stand on a turntable and the camera flies between them. Decorative; the list beside it carries the content. -->
+        <div class="studio-stage" aria-hidden="true">
+          <div class="studio-room"><span class="studio-wall"></span><span class="studio-floor"></span><span class="studio-beam"></span></div>
+          <div class="studio-dolly">
+            <div class="studio-camera">
+              <div class="studio-ring">
+                <span class="studio-orbit"></span>
+                <div class="orbit-item is-front" data-orbit="0">
+                  <div class="orbit-tilt">
+                    <div class="window orbit-window">
+                      <div class="window-bar"><span class="window-dots"><i></i><i></i><i></i></span><b>Flow Auto · Story workspace</b></div>
+                      <div class="orbit-body"><img decoding="async" src="img/flow-auto/scenes.webp" width="1600" height="1000" alt="" /></div>
+                    </div>
+                  </div>
+                  <span class="orbit-pool"></span>
+                </div>
+                <div class="orbit-item" data-orbit="1">
+                  <div class="orbit-tilt">
+                    <div class="window orbit-window">
+                      <div class="window-bar"><span class="window-dots"><i></i><i></i><i></i></span><b>HealthNest · Dashboard</b></div>
+                      <div class="orbit-body orbit-body--mock">
+                        <div class="mock">
+                          <div class="mock-side"><span class="mock-logo"></span><i class="is-on"></i><i></i><i></i><i></i></div>
+                          <div class="mock-main">
+                            <div class="mock-head"><strong>HealthNest</strong><span>● Active</span></div>
+                            <div class="mock-stats"><i></i><i></i><i></i></div>
+                            <div class="mock-chart"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+                            <div class="mock-list"><i></i><i></i><i></i><i></i></div>
+                            <div class="mock-rows"><i></i><i></i><i></i></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <span class="orbit-pool"></span>
+                </div>
+                <div class="orbit-item" data-orbit="2">
+                  <div class="orbit-tilt">
+                    <div class="window orbit-window">
+                      <div class="window-bar"><span class="window-dots"><i></i><i></i><i></i></span><b>Meet Carl · intro.mp4</b></div>
+                      <div class="orbit-body"><img decoding="async" loading="lazy" src="videos/intro.jpg" width="1920" height="1080" alt="" /><span class="orbit-play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg>Play</span></div>
+                    </div>
+                  </div>
+                  <span class="orbit-pool"></span>
                 </div>
               </div>
             </div>
           </div>
-        </a>
-      </article>
+          <p class="studio-hint"><span>Scroll to step inside</span></p>
+        </div>
+        <span class="studio-shade" aria-hidden="true"></span>
 
-      <article class="project" data-project id="intro-video">
-        <div class="project-card project-card--video" data-video="videos/intro.mp4" data-poster="videos/intro.jpg">
-          <div class="project-panel">
-            <div class="project-head">
-              <div>
-                <h3 class="project-title">Meet Carl</h3>
-                <p class="project-meta"><strong>Intro video</strong> — Who I am, what I build, and how I can help your team or business.</p>
-              </div>
+        <div class="studio-panel">
+          <div class="studio-panel-head">
+            <h2 class="eyebrow" id="workTitle">Selected work</h2>
+            <p class="studio-count" aria-hidden="true"><span class="count-roll"><i>01</i><i>02</i><i>03</i></span> / 03</p>
+          </div>
+          <div class="studio-tabs" role="tablist" aria-label="Projects" aria-orientation="vertical">
+            <button class="studio-tab" type="button" role="tab" id="tabFlow" aria-controls="panelFlow" aria-selected="true"><span>01</span><strong>Flow Auto</strong><small>Chrome &amp; Edge extension</small></button>
+            <button class="studio-tab" type="button" role="tab" id="tabHealth" aria-controls="panelHealth" aria-selected="false"><span>02</span><strong>HealthNest</strong><small>Windows desktop app</small></button>
+            <button class="studio-tab" type="button" role="tab" id="tabIntro" aria-controls="panelIntro" aria-selected="false"><span>03</span><strong>Meet Carl</strong><small>Intro video</small></button>
+          </div>
+          <div class="studio-details">
+            <div class="studio-detail" role="tabpanel" id="panelFlow" aria-labelledby="tabFlow">
+              <p>A production line for AI video, with its own MCP server.</p>
+              <ul class="tags" aria-label="Built with"><li>React</li><li>TypeScript</li><li>Chrome MV3</li><li>MCP</li></ul>
+              <a class="button" href="flow-auto.html" data-studio-open>Open the case study<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             </div>
-            <div class="project-media">
-              <div class="video-frame">
-                <button class="video-play" type="button" aria-label="Play video: Meet Carl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg><span>Play</span></button>
-              </div>
+            <div class="studio-detail" role="tabpanel" id="panelHealth" aria-labelledby="tabHealth">
+              <p>Maternal and child health monitoring, in one clear workflow.</p>
+              <ul class="tags" aria-label="Built with"><li>WinUI 3</li><li>C#</li><li>SQLite</li><li>.NET</li></ul>
+              <a class="button" href="healthnest.html" data-studio-open>Open the case study<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            </div>
+            <div class="studio-detail" role="tabpanel" id="panelIntro" aria-labelledby="tabIntro">
+              <p>Who I am, what I build, and how I can help your team or business.</p>
+              <ul class="tags" aria-label="Made with"><li>Remotion</li><li>Narrated</li><li>1:13</li></ul>
+              <button class="button" type="button" data-theater-open>Play the intro<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg></button>
             </div>
           </div>
         </div>
-      </article>
+      </div>
     </section>
 
-    <section class="strip" aria-labelledby="stripTitle">
+    <section class="strip sheet" aria-labelledby="stripTitle">
+      <span class="sheet-cap" aria-hidden="true"></span>
       <div class="strip-head">
         <h2 class="display" id="stripTitle" data-blur>Tools I use to turn <em>ideas into systems.</em></h2>
         <p class="strip-lead" data-blur-lines>C# and .NET for desktop apps, TypeScript and React for the web, SQLite for data, and MCP so AI assistants can drive the tools I build.</p>
@@ -171,7 +191,8 @@
       <button class="marquee-toggle" id="marqueeToggle" type="button">Pause the moving strip</button>
     </section>
 
-    <section class="about" id="about" aria-labelledby="aboutTitle">
+    <section class="about sheet" id="about" aria-labelledby="aboutTitle">
+      <span class="sheet-cap" aria-hidden="true"></span>
       <div class="about-grid">
         <figure class="window about-photo" data-reveal>
           <div class="window-bar" aria-hidden="true"><span class="window-dots"><i></i><i></i><i></i></span><b>carl@portfolio</b></div>
@@ -184,10 +205,10 @@
         <div class="about-copy">
           <h2 class="eyebrow" id="aboutTitle">About</h2>
           <p class="statement" data-blur-scrub>Engineering mindset, <em>human-centered output.</em> I like projects where software has a clear job: organize messy information, reduce repetitive work, and make a process easier for the person using it.</p>
-          <ol class="principles">
-            <li data-reveal><span>01</span><div><h3>Build for the workflow</h3><p>I start with what the user actually needs to accomplish, then shape the interface around that sequence.</p></div></li>
-            <li data-reveal><span>02</span><div><h3>Make complexity legible</h3><p>Good software can be technically deep without feeling complicated. Structure, hierarchy, and feedback matter.</p></div></li>
-            <li data-reveal><span>03</span><div><h3>Iterate in public</h3><p>I learn by building, testing, breaking, and refining, turning classroom concepts into working systems.</p></div></li>
+          <ol class="principles" data-stack>
+            <li><span>01</span><div><h3>Build for the workflow</h3><p>I start with what the user actually needs to accomplish, then shape the interface around that sequence.</p></div></li>
+            <li><span>02</span><div><h3>Make complexity legible</h3><p>Good software can be technically deep without feeling complicated. Structure, hierarchy, and feedback matter.</p></div></li>
+            <li><span>03</span><div><h3>Iterate in public</h3><p>I learn by building, testing, breaking, and refining, turning classroom concepts into working systems.</p></div></li>
           </ol>
           <dl class="facts" data-reveal>
             <div><dt>Degree</dt><dd>B.S. Computer Engineering</dd></div>
@@ -202,6 +223,7 @@
       <div class="contact-grid">
         <div class="contact-copy">
           <h2 class="display" id="contactTitle" data-blur>Have something worth <em>building?</em></h2>
+          <svg class="contact-line" viewBox="0 0 600 72" aria-hidden="true" focusable="false" data-draw><path d="M4 58C80 52 150 42 230 46C300 50 350 60 392 48C432 36 442 10 416 9C390 8 394 42 436 52C490 64 552 46 596 32"/></svg>
           <p class="contact-lead" data-blur-lines>I'm open to internships, freelance work, and interesting collaborations.</p>
           <p class="aside-label">Currently open to collaborations</p>
           <div class="contact-actions">
@@ -243,6 +265,13 @@
       <p class="footer-note">© <span data-year></span> Carl Tampus. Designed and built in Cebu, Philippines.</p>
     </div>
   </footer>
+
+  <dialog class="theater" id="theater" aria-labelledby="theaterTitle" data-video="videos/intro.mp4">
+    <h2 class="sr-only" id="theaterTitle">Meet Carl, intro video</h2>
+    <p class="theater-words" aria-hidden="true"><span>Meet</span><span>Carl</span></p>
+    <div class="theater-screen"><div class="video-frame"></div></div>
+    <button class="theater-close" type="button" aria-label="Close the video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"><p>Email copied to clipboard</p></div>
 

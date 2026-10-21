@@ -128,3 +128,15 @@ test('every page has the light/dark switch, defaults to navy and picks a theme b
   assert.match(css, /:root\[data-theme="light"\] \{[\s\S]*?--bg: #f5f4f0;/, 'light tokens');
 });
 
+test('the work studio lists each project as a tab with its own panel, and keeps the 3D stage out of the reading order', () => {
+  const page = html['index.html'];
+  const tabs = [...page.matchAll(/<button class="studio-tab"[^>]*role="tab" id="([^"]+)" aria-controls="([^"]+)"/g)];
+  assert.equal(tabs.length, 3, 'three projects in the studio');
+  for (const [, tab, panel] of tabs) {
+    assert.match(page, new RegExp(`role="tabpanel" id="${panel}" aria-labelledby="${tab}"`), `${tab} -> ${panel}`);
+  }
+  assert.equal((page.match(/class="orbit-item[ "]/g) || []).length, tabs.length, 'one window per project on the turntable');
+  assert.match(page, /<div class="studio-stage" aria-hidden="true">/, 'the 3D stage is decorative');
+  for (const target of ['flow-auto.html', 'healthnest.html']) assert.match(page, new RegExp(`<a class="button" href="${target}" data-studio-open>`), target);
+  assert.match(page, /<dialog class="theater" id="theater"[^>]*data-video="videos\/intro.mp4"/, 'the intro plays in the theater');
+});
