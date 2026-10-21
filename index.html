@@ -47,6 +47,7 @@
     </a>
     <nav class="nav-pill" aria-label="Primary">
       <span class="nav-glow" aria-hidden="true"></span>
+      <a href="#top" data-nav="top">Home</a>
       <a href="#work" data-nav="work">Work</a>
       <a href="#about" data-nav="about">About</a>
       <a href="#contact" data-nav="contact">Contact</a>
@@ -66,33 +67,16 @@
   </header>
 
   <main id="main">
-    <section class="hero" id="top" aria-labelledby="heroTitle">
-      <div class="window hero-window" data-hero>
-        <div class="window-bar" aria-hidden="true"><span class="window-dots"><i></i><i></i><i></i></span><span class="window-plus">+</span></div>
-        <div class="hero-body">
-          <p class="status"><span class="status-dot" aria-hidden="true"></span>Available for internships &amp; freelance</p>
-          <h1 class="hero-title" id="heroTitle" data-blur>I build software<br /> that feels <em>alive.</em></h1>
-          <div class="hero-sub" data-blur-lines>
-            <p>Computer Engineering student. Based in Cebu, Philippines.</p>
-            <p>I make desktop systems, automation tools and polished digital experiences.</p>
-          </div>
-          <a class="hero-cue" href="#work" aria-label="Scroll to my work"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M6 14l6 6 6-6"/></svg></a>
-        </div>
-      </div>
-    </section>
-
-    <section class="studio" id="work" aria-labelledby="workTitle" data-studio>
+    <!-- Home: a 3D studio. Project windows stand on a turntable; scrolling (or Home / Work in the header) flies the camera between them. -->
+    <section class="studio" id="top" aria-labelledby="heroTitle" data-studio>
       <div class="studio-frame">
-        <p class="studio-word" aria-hidden="true">Selected <em>work</em></p>
-
-        <!-- The 3D studio: project windows stand on a turntable and the camera flies between them. Decorative; the list beside it carries the content. -->
         <div class="studio-stage" aria-hidden="true">
-          <div class="studio-room"><span class="studio-wall"></span><span class="studio-floor"></span><span class="studio-beam"></span></div>
+          <div class="studio-room"><span class="studio-wall"></span><span class="studio-floor"></span><span class="studio-cone"></span><span class="studio-beam"></span></div>
           <div class="studio-dolly">
             <div class="studio-camera">
               <div class="studio-ring">
                 <span class="studio-orbit"></span>
-                <div class="orbit-item is-front" data-orbit="0">
+                <div class="orbit-item is-front" data-orbit="0" data-preview="videos/flow-auto-preview.mp4">
                   <div class="orbit-tilt">
                     <div class="window orbit-window">
                       <div class="window-bar"><span class="window-dots"><i></i><i></i><i></i></span><b>Flow Auto · Story workspace</b></div>
@@ -121,7 +105,7 @@
                   </div>
                   <span class="orbit-pool"></span>
                 </div>
-                <div class="orbit-item" data-orbit="2">
+                <div class="orbit-item" data-orbit="2" data-preview="videos/intro-preview.mp4">
                   <div class="orbit-tilt">
                     <div class="window orbit-window">
                       <div class="window-bar"><span class="window-dots"><i></i><i></i><i></i></span><b>Meet Carl · intro.mp4</b></div>
@@ -133,11 +117,20 @@
               </div>
             </div>
           </div>
-          <p class="studio-hint"><span>Scroll to step inside</span></p>
         </div>
+
+        <div class="studio-intro">
+          <div class="studio-intro-inner" data-hero>
+            <p class="status"><span class="status-dot" aria-hidden="true"></span>Available for internships &amp; freelance</p>
+            <h1 class="studio-title" id="heroTitle" data-blur>I build software that feels <em>alive.</em></h1>
+            <p class="studio-sub">Computer Engineering student based in Cebu, Philippines. I make desktop systems, automation tools and polished digital experiences.</p>
+          </div>
+        </div>
+        <p class="studio-hint" aria-hidden="true"><span>Scroll to step inside</span></p>
+        <p class="studio-finale" aria-hidden="true"><span>Meet</span><span>Carl</span></p>
         <span class="studio-shade" aria-hidden="true"></span>
 
-        <div class="studio-panel">
+        <div class="studio-panel" id="work">
           <div class="studio-panel-head">
             <h2 class="eyebrow" id="workTitle">Selected work</h2>
             <p class="studio-count" aria-hidden="true"><span class="count-roll"><i>01</i><i>02</i><i>03</i></span> / 03</p>
@@ -168,7 +161,7 @@
       </div>
     </section>
 
-    <section class="strip sheet" aria-labelledby="stripTitle">
+    <section class="strip sheet invert" aria-labelledby="stripTitle">
       <span class="sheet-cap" aria-hidden="true"></span>
       <div class="strip-head">
         <h2 class="display" id="stripTitle" data-blur>Tools I use to turn <em>ideas into systems.</em></h2>
@@ -219,7 +212,8 @@
       </div>
     </section>
 
-    <section class="contact" id="contact" aria-labelledby="contactTitle">
+    <section class="contact sheet invert" id="contact" aria-labelledby="contactTitle">
+      <span class="sheet-cap" aria-hidden="true"></span>
       <div class="contact-grid">
         <div class="contact-copy">
           <h2 class="display" id="contactTitle" data-blur>Have something worth <em>building?</em></h2>
@@ -258,7 +252,7 @@
     </section>
   </main>
 
-  <footer class="footer">
+  <footer class="footer invert">
     <div class="footer-grid">
       <div class="footer-col"><p class="footer-label">Main</p><a href="#work">Work</a><a href="#about">About</a><a href="#contact">Contact</a></div>
       <div class="footer-col"><p class="footer-label">Elsewhere</p><a href="https://github.com/Rouge999xx" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a><a href="https://linkedin.com/in/carl-marvic-tampus-478a932b8" target="_blank" rel="noreferrer">LinkedIn <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a><a href="mailto:carltampus5@gmail.com">Email</a></div>
@@ -272,6 +266,8 @@
     <div class="theater-screen"><div class="video-frame"></div></div>
     <button class="theater-close" type="button" aria-label="Close the video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </dialog>
+
+  <div class="curtain invert" aria-hidden="true"><p class="curtain-word"></p></div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"><p>Email copied to clipboard</p></div>
 

@@ -125,7 +125,7 @@ test('every page has the light/dark switch, defaults to navy and picks a theme b
     assert.match(source, /<button class="theme-toggle" id="themeToggle" type="button" aria-label="[^"]+">/, `${page}: theme switch`);
   }
   const css = read('style.css');
-  assert.match(css, /:root\[data-theme="light"\] \{[\s\S]*?--bg: #f5f4f0;/, 'light tokens');
+  assert.match(css, /:root\[data-theme="light"\][^{]*\{[\s\S]*?--bg: #f5f4f0;/, 'light tokens');
 });
 
 test('the work studio lists each project as a tab with its own panel, and keeps the 3D stage out of the reading order', () => {
@@ -139,4 +139,8 @@ test('the work studio lists each project as a tab with its own panel, and keeps 
   assert.match(page, /<div class="studio-stage" aria-hidden="true">/, 'the 3D stage is decorative');
   for (const target of ['flow-auto.html', 'healthnest.html']) assert.match(page, new RegExp(`<a class="button" href="${target}" data-studio-open>`), target);
   assert.match(page, /<dialog class="theater" id="theater"[^>]*data-video="videos\/intro.mp4"/, 'the intro plays in the theater');
+  // Each preview clip ships as MP4 with a WebM twin.
+  for (const [, clip] of page.matchAll(/data-preview="([^"]+)"/g)) {
+    for (const file of [clip, clip.replace(/\.mp4$/, '.webm')]) assert.ok(fs.existsSync(path.join(ROOT, file)), `${file} is missing`);
+  }
 });

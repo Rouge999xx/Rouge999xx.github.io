@@ -7,6 +7,15 @@ The site plays these files from its video cards and the intro theater:
 | Meet Carl (intro, opens in the theater from the work studio) | `index.html` | `intro.mp4` | `intro.jpg` |
 | Flow Auto demo | `flow-auto.html` | `flow-auto.mp4` | `flow-auto.jpg` |
 
+The studio on the home page plays short muted loops on the windows facing you, each as MP4 with a WebM twin:
+
+| Window | Clip | Cut from |
+| --- | --- | --- |
+| Flow Auto | `flow-auto-preview.mp4` / `.webm` | `flow-auto.mp4`, 32.3s to 39.7s |
+| Meet Carl | `intro-preview.mp4` / `.webm` | `intro.mp4`, 4s to 12s |
+
+To recut one (here the intro): `ffmpeg -ss 4 -t 8 -i intro.mp4 -an -vf scale=960:-2,fps=30 -c:v libx264 -profile:v main -pix_fmt yuv420p -crf 30 -preset slow -movflags +faststart intro-preview.mp4`, then `ffmpeg -i intro-preview.mp4 -c:v libvpx-vp9 -b:v 0 -crf 40 intro-preview.webm`.
+
 To add a HealthNest walkthrough, put `healthnest.mp4` (and optionally `healthnest.jpg`) here, then copy the "See it in motion" section from `flow-auto.html` into `healthnest.html` before the "Next project" card and point its `data-video` and `data-poster` at the new files.
 
 Tips

@@ -1,9 +1,9 @@
 /* =========================================================
    Carl Tampus — Portfolio motion (GSAP + ScrollTrigger + SplitText)
-   Quiet, continuous scrolling: the page opens inside a window, the work
-   lives in a 3D studio the camera flies through, sections slide up over
-   each other on curved edges, text arrives blurred and slowly sharpens,
-   and a strip of cards drifts sideways.
+   The home page is a 3D studio the camera flies through as you scroll (case
+   pages open inside a window), sections slide up over each other on curved
+   edges, long jumps pass behind a curtain, text arrives blurred and slowly
+   sharpens, and a strip of cards drifts sideways.
    Reduced motion keeps the fades and the sharpening and moves nothing.
    ========================================================= */
 (() => {
@@ -11,6 +11,7 @@
   if (!gsap || !ScrollTrigger) return; // main.js shows the page without GSAP
 
   gsap.registerPlugin(ScrollTrigger);
+  window.site ||= {};
   if (SplitText) gsap.registerPlugin(SplitText);
   ScrollTrigger.config({ ignoreMobileResize: true });
 
@@ -107,18 +108,24 @@
       if (nav) gsap.to(nav, { opacity: 1, duration: .6 });
       return;
     }
-    const body = qs('.hero-body', win);
+    // Case pages open inside a window; the home page's headline hangs over the studio and arrives word by word.
+    const framed = win.matches('.window');
+    const body = qs('.hero-body', win) || win;
     const status = qs('.status', body);
-    const extras = qsa('.case-meta, .tags, .hero-actions, .hero-cue', body);
+    const extras = qsa('.case-meta, .tags, .hero-actions, .hero-cue, .studio-sub', body);
     gsap.set([status, ...extras].filter(Boolean), { opacity: 0 });
 
     const start = performance.now();
     if (full) {
-      gsap.timeline()
-        .fromTo(win, { opacity: 0, y: 70, scale: .94, filter: 'blur(12px)' }, { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 1.7, ease: 'expo.out', clearProps: 'filter' })
-        .from(qsa('.window-dots i', win), { scale: 0, duration: .55, stagger: .09, ease: 'back.out(3)' }, .5)
-        // Opacity only: a transform on the header would carry the phone dock (fixed inside it) to the top.
-        .to(nav, { opacity: 1, duration: 1.1, ease: 'power2.out' }, .8);
+      const tl = gsap.timeline();
+      if (framed) {
+        tl.fromTo(win, { opacity: 0, y: 70, scale: .94, filter: 'blur(12px)' }, { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 1.7, ease: 'expo.out', clearProps: 'filter' })
+          .from(qsa('.window-dots i', win), { scale: 0, duration: .55, stagger: .09, ease: 'back.out(3)' }, .5);
+      } else {
+        tl.set(win, { opacity: 1 });
+      }
+      // Opacity only: a transform on the header would carry the phone dock (fixed inside it) to the top.
+      tl.to(nav, { opacity: 1, duration: 1.1, ease: 'power2.out' }, .8);
     } else {
       gsap.fromTo(win, { opacity: 0 }, { opacity: 1, duration: .6, ease: 'power1.out' });
     }
@@ -137,7 +144,7 @@
     });
 
     // Scrolling on, the hero window settles back and dims while the work comes forward.
-    if (full) {
+    if (full && qs('.hero')) {
       gsap.to('.hero', {
         scale: .92, opacity: .25, transformOrigin: '50% 100%', ease: 'none',
         scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true }
@@ -167,10 +174,12 @@
     });
   }
 
-  /* ---------- Work: the studio ----------
-     Large screens with full motion: the studio holds still while scrolling flies the camera in from a
-     wide shot, turns the turntable to each project, then pulls back as the next section slides over.
-     Elsewhere the camera glides in once and the list turns the turntable (style.css does the turning). */
+  /* ---------- Home: the studio ----------
+     With full motion the studio holds the screen while scrolling flies the camera: from the wide shot
+     under the headline, in to each project as the turntable turns, to a finale where "Meet" and "Carl"
+     close in on the intro window, then back out as the next section slides over. Large screens keep the
+     list beside the window, phones keep it underneath. With reduced motion style.css does it all: the
+     list turns the turntable in place and nothing flies. */
   const THETA = 48, RADIUS = 1.4; // the same turn and radius as --theta and --r in style.css
   function studio() {
     const section = qs('[data-studio]');
@@ -201,46 +210,63 @@
       stage.addEventListener('pointerleave', () => { box = null; tilts.forEach(tilt => { tilt.x(0); tilt.y(0); }); });
       addEventListener('scroll', () => { box = null; }, { passive: true });
     }
-    if (!full) return; // reduced motion: the list switches projects in place and nothing flies
+    if (!full) return;
+
+    root.classList.add('has-studio-pin');
+    const frame = qs('.studio-frame', section);
+    const dolly = qs('.studio-dolly', section);
+    const camera = qs('.studio-camera', section);
+    const ring = qs('.studio-ring', section);
+    const wall = qs('.studio-wall', section);
+    const beam = qs('.studio-beam', section);
+    const cone = qs('.studio-cone', section);
+    const intro = qs('.studio-intro', section);
+    const hint = qs('.studio-hint', section);
+    const words = qsa('.studio-finale span', section);
+    const shade = qs('.studio-shade', section);
+    const panel = qs('.studio-panel', section);
+
+    // On arrival the light comes down, spreads over the turntable, and the windows rise into place.
+    gsap.timeline({ delay: .15 })
+      .fromTo(beam, { scaleY: 0 }, { scaleY: 1, duration: 1.3, ease: 'expo.inOut' })
+      .fromTo(cone, { scaleX: .15, transformOrigin: '50% 0' }, { scaleX: 1, duration: 1.4, ease: 'expo.out' }, .8)
+      .fromTo(qsa('.orbit-tilt', section), { y: () => innerHeight * .3 }, { y: 0, duration: 1.8, stagger: .12, ease: 'expo.out' }, .55);
+
+    // Tell the page which part of the studio is showing: home (the wide shot), work, or out (leaving).
+    let phase = '';
+    const setPhase = next => {
+      if (next === phase) return;
+      phase = next;
+      section.dataset.phase = next;
+      section.dispatchEvent(new CustomEvent('studio:phase', { detail: next }));
+    };
 
     const mm = gsap.matchMedia();
-    mm.add('(max-width: 900px)', () => {
-      ScrollTrigger.create({ trigger: stage, start: 'top 78%', once: true, onEnter: () => stage.classList.add('is-in') });
-    });
-    mm.add('(min-width: 901px)', () => {
-      root.classList.add('has-studio-pin');
-      const frame = qs('.studio-frame', section);
-      const dolly = qs('.studio-dolly', section);
-      const camera = qs('.studio-camera', section);
-      const ring = qs('.studio-ring', section);
-      const wall = qs('.studio-wall', section);
-      const word = qs('.studio-word', section);
-      const beam = qs('.studio-beam', section);
-      const hint = qs('.studio-hint', section);
-      const panel = qs('.studio-panel', section);
-      const shade = qs('.studio-shade', section);
-
-      // Sizes come from the CSS (window width) and are measured again whenever ScrollTrigger refreshes.
+    mm.add({ desk: '(min-width: 901px)', phone: '(max-width: 900px)' }, context => {
+      const { desk } = context.conditions;
+      // Sizes come from the CSS and are measured again whenever ScrollTrigger refreshes.
       const w = () => items[0].offsetWidth;
       const r = () => w() * RADIUS;
-      // The window facing you sits in the space left of the list.
-      const shift = () => -(panel.offsetWidth + parseFloat(getComputedStyle(panel).right)) / 2;
+      const screen = () => frame.offsetHeight;
+      // Where the window facing you sits: left of the list on large screens, above it on phones.
+      const shiftX = () => desk ? -(panel.offsetWidth + parseFloat(getComputedStyle(panel).right)) / 2 : 0;
+      const shiftY = () => desk ? 0 : ((qs('#nav')?.offsetHeight || 64) + panel.offsetTop) / 2 - screen() / 2;
       // The wall slides a little the other way as the turntable turns, so the room seems to turn around you.
       const wallX = angle => -(angle + THETA) * 2.4;
 
       // Timeline time is measured in screens of scrolling.
-      const FLY = 1, HOLD = .55, TURN = .85, EXIT = 1;
+      const FLY = 1, HOLD = .55, TURN = .85, FINALE = 1, EXIT = 1;
       const holds = [], switches = [];
       const tl = gsap.timeline({ defaults: { ease: 'none' } });
-      tl.fromTo(camera, { z: () => -(r() + w() * 2.2), y: () => w() * .05, rotationX: -15 }, { z: () => -r(), y: 0, rotationX: -2, duration: FLY, ease: 'power2.inOut' }, 0)
+      tl.fromTo(camera, { z: () => -(r() + w() * (desk ? 2.4 : 2)), y: () => screen() * (desk ? .3 : .22), rotationX: -14 }, { z: () => -r(), y: 0, rotationX: -2, duration: FLY, ease: 'power2.inOut' }, 0)
         .fromTo(ring, { rotationY: -THETA }, { rotationY: 0, duration: FLY, ease: 'power2.inOut' }, 0)
         .fromTo(wall, { x: wallX(-THETA) }, { x: wallX(0), duration: FLY, ease: 'power2.inOut' }, 0)
         // Up close the window stands at a slight angle, its far edge turned toward the list.
-        .fromTo(dolly, { x: 0, rotationY: 0 }, { x: shift, rotationY: 12, duration: FLY, ease: 'power2.inOut' }, 0)
-        .fromTo(word, { y: 0, scale: 1, opacity: 1 }, { y: () => -innerHeight * .16, scale: 1.06, opacity: 0, duration: FLY * .5, ease: 'power1.in' }, 0)
+        .fromTo(dolly, { x: 0, y: 0, rotationY: 0 }, { x: shiftX, y: shiftY, rotationY: desk ? 12 : 0, duration: FLY, ease: 'power2.inOut' }, 0)
+        .fromTo(intro, { y: 0, opacity: 1 }, { y: () => -screen() * .2, opacity: 0, duration: FLY * .5, ease: 'power1.in' }, 0)
         .fromTo(hint, { opacity: 1 }, { opacity: 0, duration: .2 }, 0)
-        .fromTo(beam, { opacity: 1 }, { opacity: 0, duration: .45 }, .3)
-        .fromTo(panel, { opacity: 0, x: 48 }, { opacity: 1, x: 0, duration: .45, ease: 'power2.out' }, FLY - .45);
+        .fromTo([beam, cone], { opacity: 1 }, { opacity: 0, duration: .45 }, .3)
+        .fromTo(panel, { opacity: 0, x: desk ? 48 : 0, y: desk ? 0 : 48 }, { opacity: 1, x: 0, y: 0, duration: .45, ease: 'power2.out' }, FLY - .45);
       let at = FLY;
       items.forEach((item, index) => {
         holds.push(at + HOLD / 2);
@@ -257,9 +283,15 @@
         switches.push(at + TURN / 2);
         at += TURN;
       });
+      // Finale: the intro window comes to the middle and "Meet" and "Carl" close in around it.
+      tl.to(dolly, { x: 0, y: 0, rotationY: 0, duration: FINALE, ease: 'power2.inOut' }, at)
+        .to(camera, { z: () => -r() + w() * (desk ? .14 : .04), duration: FINALE, ease: 'power2.inOut' }, at)
+        .to(panel, { opacity: 0, x: desk ? 40 : 0, y: desk ? 0 : 40, duration: FINALE * .35, ease: 'power1.in' }, at)
+        .fromTo(words[0], { xPercent: -115, opacity: 0 }, { xPercent: 0, opacity: 1, duration: FINALE * .75, ease: 'power3.out' }, at + FINALE * .2)
+        .fromTo(words[1], { xPercent: 115, opacity: 0 }, { xPercent: 0, opacity: 1, duration: FINALE * .75, ease: 'power3.out' }, at + FINALE * .2);
+      at += FINALE;
       // On the way out the camera pulls back and the room dims while the next section slides over it.
-      tl.to(camera, { z: () => -r() - w() * .9, rotationX: -9, duration: EXIT, ease: 'power1.in' }, at)
-        .to(panel, { opacity: 0, x: 32, duration: EXIT * .4, ease: 'power1.in' }, at)
+      tl.to(camera, { z: () => -r() - w() * .6, rotationX: -8, duration: EXIT, ease: 'power1.in' }, at)
         .to(shade, { opacity: .7, duration: EXIT, ease: 'power1.in' }, at);
       const total = at + EXIT;
 
@@ -267,38 +299,67 @@
         const time = tl.time();
         show(switches.filter(point => time >= point).length);
         stage.classList.toggle('is-wide', time < FLY * .45);
+        setPhase(time < FLY * .5 ? 'home' : time > total - EXIT * .5 ? 'out' : 'work');
       });
 
       const st = ScrollTrigger.create({
-        trigger: section, start: 'top top', end: () => `+=${innerHeight * total}`,
+        trigger: section, start: 'top top', end: () => `+=${screen() * total}`,
         pin: frame, scrub: .6, animation: tl, invalidateOnRefresh: true, anticipatePin: 1
       });
 
-      // The light comes down onto the turntable while the studio rises into view.
-      gsap.fromTo(beam, { scaleY: 0 }, { scaleY: 1, ease: 'none', scrollTrigger: { trigger: section, start: 'top 85%', end: 'top 10%', scrub: true } });
-
-      // Picking from the list (or a side window) glides the page to that project's stop.
+      // The header's Home and Work, the list and the windows all fly the camera by moving the page.
       const toHold = index => st.start + (st.end - st.start) * holds[index] / total;
+      window.site.studioY = toHold;
+      // Where the camera is still in the room (until the finale ends and the next section slides over).
+      window.site.studioRange = () => [st.start, st.end - screen() * EXIT];
       const onPick = event => {
         event.preventDefault();
-        window.site?.glideTo(toHold(event.detail.index), 1.4);
+        window.site.glideTo(toHold(event.detail.index), 1.4);
       };
-      // Tabbing into the list while the camera is out (before the fly-in, or after the exit) flies it to that project.
+      // Tabbing into the list while the camera is out (before the fly-in, or after the finale) flies it to that project.
       const tabs = qsa('[role="tab"]', section);
       const onFocus = event => {
-        if (scrollY >= toHold(0) - 4 && scrollY <= st.end - innerHeight * EXIT) return;
+        if (scrollY >= toHold(0) - 4 && scrollY <= toHold(items.length - 1) + 4) return;
         const host = event.target.closest('[role="tab"], [role="tabpanel"]');
         const index = host ? tabs.findIndex(tab => tab === host || tab.getAttribute('aria-controls') === host.id) : 0;
-        window.site?.glideTo(toHold(Math.max(0, index)), 1.4);
+        window.site.glideTo(toHold(Math.max(0, index)), 1.4);
       };
+      // Arriving from another page at index.html#work starts with the camera already in.
+      let arrived = location.hash !== '#work';
+      const arrive = () => { if (!arrived) window.site.lenis ? window.site.lenis.scrollTo(toHold(0), { immediate: true, force: true }) : scrollTo(0, toHold(0)); };
+      const settle = () => { arrived = true; };
+      ScrollTrigger.addEventListener('refresh', arrive);
+      ['wheel', 'touchstart', 'keydown'].forEach(type => addEventListener(type, settle, { once: true, passive: true }));
       section.addEventListener('studio:pick', onPick);
       panel.addEventListener('focusin', onFocus);
       return () => {
-        root.classList.remove('has-studio-pin');
+        delete window.site.studioY;
+        delete window.site.studioRange;
+        ScrollTrigger.removeEventListener('refresh', arrive);
         section.removeEventListener('studio:pick', onPick);
         panel.removeEventListener('focusin', onFocus);
       };
     });
+  }
+
+  /* ---------- Curtain: a long jump from the header passes behind a sheet with the destination's name ---------- */
+  function curtain() {
+    const sheet = qs('.curtain');
+    if (!sheet || !full) return;
+    const word = qs('.curtain-word', sheet);
+    let busy = false;
+    window.site.curtain = (label, jump) => {
+      if (busy) return;
+      busy = true;
+      word.textContent = label;
+      gsap.timeline({ onComplete: () => { busy = false; gsap.set(sheet, { visibility: 'hidden' }); } })
+        .set(sheet, { visibility: 'visible', yPercent: 110 })
+        .to(sheet, { yPercent: 0, duration: .6, ease: 'power3.inOut' })
+        .fromTo(word, { yPercent: 70, opacity: 0 }, { yPercent: 0, opacity: 1, duration: .5, ease: 'power3.out' }, .3)
+        .add(() => { jump(); ScrollTrigger.update(); }, '+=.05')
+        .to(word, { yPercent: -70, opacity: 0, duration: .4, ease: 'power2.in' }, '+=.2')
+        .to(sheet, { yPercent: -110, duration: .7, ease: 'power3.inOut' }, '<.05');
+    };
   }
 
   /* ---------- Case-page showcases: the screen inside lifts out of its frame as you scroll ---------- */
@@ -540,6 +601,7 @@
   // Pinned scenes first, so everything measured after them accounts for the space they take.
   gallery();
   studio();
+  curtain();
   sheets();
   hero();
   parallax();

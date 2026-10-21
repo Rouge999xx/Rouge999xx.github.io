@@ -169,9 +169,27 @@ document.addEventListener('click', event => {
   const target = url.hash === '#top' ? qs('#top') : document.getElementById(decodeURIComponent(url.hash.slice(1)));
   if (!target) return;
   event.preventDefault();
-  if (url.hash === '#top') lenis.scrollTo(0, { duration: 1, easing: glide });
-  else scrollToTarget(target);
+  goTo(url.hash, target, url.hash === '#top' ? 'Home' : link.dataset.label || link.textContent.trim());
 });
+
+// Home and Work fly the studio's camera (the page glides through it). A jump further than a couple of
+// screens passes behind the curtain (motion.js) instead of racing through everything in between.
+function goTo(hash, target, label) {
+  let y;
+  if (hash === '#top') y = 0;
+  else if (hash === '#work' && window.site?.studioY) y = window.site.studioY(0);
+  else y = target.getBoundingClientRect().top + scrollY - navOffset();
+  y = Math.max(0, Math.min(lenis.limit, y));
+  const screens = Math.abs(y - scrollY) / innerHeight;
+  // Within the studio the camera always flies, rewinding through the turntable if it has to.
+  const range = window.site?.studioRange?.();
+  const inStudio = at => range && at >= range[0] && at <= range[1];
+  if (screens > 2.2 && !(inStudio(scrollY) && inStudio(y)) && window.site?.curtain) {
+    window.site.curtain(label, () => lenis.scrollTo(y, { immediate: true, force: true }));
+  } else {
+    glideTo(y, Math.min(2.4, 1.1 + screens * .25));
+  }
+}
 
 /* ---------- Navigation: a lit tab follows the current section ---------- */
 const nav = qs('#nav');
@@ -205,15 +223,19 @@ addEventListener('resize', () => placeGlow(hovered || activeLink(), false), { pa
 document.fonts?.ready.then(() => placeGlow(hovered || activeLink(), false));
 placeGlow(activeLink(), false);
 
-// Home page: the section passing 40% down the screen lights its link (none while the hero is up).
+// Home page: the section passing 40% down the screen lights its link. Inside the studio, motion.js says
+// whether the camera is out on the wide shot (Home) or in with the projects (Work).
 const spyLinks = qsa('a[data-nav]');
 const spySections = spyLinks.map(link => document.getElementById(link.dataset.nav)).filter(Boolean);
+const studioSection = qs('[data-studio]');
 if (spySections.length) {
   let current;
   const spy = () => {
     const line = innerHeight * .4;
     let id = null;
     spySections.forEach(section => { if (section.getBoundingClientRect().top <= line) id = section.id; });
+    const phase = studioSection?.dataset.phase;
+    if (phase && (id === 'top' || id === 'work')) id = phase === 'home' ? 'top' : 'work';
     if (id === current) return;
     current = id;
     spyLinks.forEach(link => {
@@ -226,6 +248,7 @@ if (spySections.length) {
   };
   addEventListener('scroll', spy, { passive: true });
   addEventListener('resize', spy, { passive: true });
+  studioSection?.addEventListener('studio:phase', spy);
   spy();
 }
 
@@ -396,7 +419,52 @@ if (studio) {
       details[i]?.classList.toggle('is-on', on);
       items[i]?.classList.toggle('is-front', on);
     });
+    preview();
   };
+
+  // The window facing you (or under the mouse) plays a short muted preview while the studio is on screen.
+  // Not with reduced motion or when the browser asks to save data.
+  const quiet = motion === 'reduced' || navigator.connection?.saveData;
+  let onScreen = false;
+  let hoverIndex = -1;
+  function preview() {
+    items.forEach((item, i) => {
+      const on = !quiet && onScreen && studio.dataset.phase !== 'out' && (i === active || i === hoverIndex);
+      if (item.classList.contains('is-playing') === on) return;
+      item.classList.toggle('is-playing', on);
+      const src = item.dataset.preview;
+      let video = src && qs('video', item);
+      if (on && src && !video) {
+        video = document.createElement('video');
+        video.className = 'orbit-preview';
+        video.muted = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.setAttribute('muted', '');
+        video.setAttribute('playsinline', '');
+        video.preload = 'auto';
+        // MP4 for Safari and most browsers, WebM (same clip, next to it) for the rest.
+        [[src, 'video/mp4'], [src.replace(/\.mp4$/, '.webm'), 'video/webm']].forEach(([url, type]) => {
+          const source = document.createElement('source');
+          source.src = url;
+          source.type = type;
+          video.appendChild(source);
+        });
+        qs('.orbit-body', item)?.appendChild(video);
+      }
+      if (!video) return;
+      if (on) video.play()?.catch(() => {});
+      else video.pause();
+    });
+  }
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(([entry]) => { onScreen = entry.isIntersecting; preview(); }).observe(qs('.studio-stage', studio));
+  }
+  studio.addEventListener('studio:phase', preview);
+  items.forEach((item, i) => {
+    item.addEventListener('pointerenter', event => { if (event.pointerType === 'mouse') { hoverIndex = i; preview(); } });
+    item.addEventListener('pointerleave', () => { hoverIndex = -1; preview(); });
+  });
   // motion.js gets the first say: while scrolling drives the camera, it glides there and the scroll calls showProject.
   const pick = index => {
     index = Math.max(0, Math.min(tabs.length - 1, index));
