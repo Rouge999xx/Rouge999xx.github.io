@@ -346,11 +346,18 @@ html[data-motion="reduced"] .motion-toggle .motion-on, html[data-motion="full"] 
 }
 .is-lit > .spot { opacity: 1; }
 
-/* Reading progress: a hairline of the accent across the top of the screen. */
-.scroll-progress {
-  position: fixed; left: 0; top: 0; z-index: 101; width: 100%; height: 2px;
-  background: var(--accent-text); transform: scaleX(0); transform-origin: 0 50%; pointer-events: none;
+/* Reading progress: a hairline of the accent across the top of the screen. It runs on the scroll
+   position itself, off the main thread; browsers without scroll timelines simply leave it out. */
+.scroll-progress { display: none; }
+@supports (animation-timeline: scroll()) {
+  .scroll-progress {
+    position: fixed; left: 0; top: 0; z-index: 101; display: block; width: 100%; height: 2px;
+    background: var(--accent-text); transform-origin: 0 50%; pointer-events: none;
+    animation: read-progress linear both;
+    animation-timeline: scroll(root block);
+  }
 }
+@keyframes read-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 /* ---------- Buttons ---------- */
 .button {
@@ -388,6 +395,8 @@ html[data-motion="reduced"] .motion-toggle .motion-on, html[data-motion="full"] 
 .project + .project { margin-top: clamp(24px, 3.5vw, 48px); }
 /* Cards get their own layer ahead of time, so the first frame of their entrance doesn't stall. */
 .motion-ready[data-motion="full"] :is([data-project], [data-reveal]:is(.window, .contact-form, .next-card, .project-card)) { will-change: transform, opacity; }
+/* The hero shrinks and dims on every scrolled frame; on its own layer it is scaled, not repainted. */
+.motion-ready[data-motion="full"] .hero { will-change: transform, opacity; }
 /* Each project sits in a framed card: a dark rim around a lit inner panel, like perryw's. */
 .project-card {
   position: relative; display: block; padding: 12px;

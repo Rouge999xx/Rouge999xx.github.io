@@ -200,16 +200,15 @@ const pillLinks = pill ? qsa('a', pill) : [];
 const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
 let hovered = null;
 
-// A hairline across the top of the screen shows how far down the page you are.
-const progress = document.createElement('span');
-progress.className = 'scroll-progress';
-progress.setAttribute('aria-hidden', 'true');
-document.body.appendChild(progress);
-const onScroll = () => {
-  nav?.classList.toggle('is-scrolled', scrollY > 24);
-  const max = root.scrollHeight - innerHeight;
-  progress.style.transform = `scaleX(${max > 0 ? Math.min(1, scrollY / max) : 0})`;
-};
+// A hairline across the top of the screen shows how far down the page you are. The browser runs it
+// from the scroll position itself (see style.css), so scrolling does no extra work for it here.
+if (window.CSS?.supports?.('animation-timeline: scroll()')) {
+  const progress = document.createElement('span');
+  progress.className = 'scroll-progress';
+  progress.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(progress);
+}
+const onScroll = () => nav?.classList.toggle('is-scrolled', scrollY > 24);
 addEventListener('scroll', onScroll, { passive: true });
 onScroll();
 
@@ -264,16 +263,24 @@ if (motion === 'full' && finePointer.matches) {
     spot.className = 'spot';
     spot.setAttribute('aria-hidden', 'true');
     el.prepend(spot);
-    let frame = 0, x = 0, y = 0;
+    let frame = 0, pointerX = 0, pointerY = 0;
     el.addEventListener('pointermove', event => {
       if (event.pointerType !== 'mouse') return;
-      const box = el.getBoundingClientRect();
-      x = event.clientX - box.left;
-      y = event.clientY - box.top;
-      el.classList.add('is-lit');
-      if (!frame) frame = requestAnimationFrame(() => { frame = 0; spot.style.transform = `translate(${x}px, ${y}px)`; });
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      // Measured inside the frame, where the page is laid out anyway, never in the event itself.
+      if (!frame) frame = requestAnimationFrame(() => {
+        frame = 0;
+        const box = el.getBoundingClientRect();
+        spot.style.transform = `translate(${pointerX - box.left}px, ${pointerY - box.top}px)`;
+        el.classList.add('is-lit');
+      });
     });
-    el.addEventListener('pointerleave', () => el.classList.remove('is-lit'));
+    el.addEventListener('pointerleave', () => {
+      cancelAnimationFrame(frame);
+      frame = 0;
+      el.classList.remove('is-lit');
+    });
   });
 }
 

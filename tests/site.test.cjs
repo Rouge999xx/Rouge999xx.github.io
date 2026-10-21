@@ -36,7 +36,7 @@ test('in-page and cross-page anchors point at real targets', () => {
     for (const href of attrs(source, 'href')) {
       if (/^(https?:|mailto:|tel:)/.test(href)) continue;
       const [file, hash] = href.split('#');
-      const targetPage = file || page;
+      const targetPage = file.split('?')[0] || page; // ?v= cache-busting queries are not part of the file name
       assert.ok(PAGES.includes(targetPage) || fs.existsSync(path.join(ROOT, targetPage)), `${page}: ${href} (missing file)`);
       if (hash && PAGES.includes(targetPage)) {
         assert.ok(ids(html[targetPage]).includes(hash), `${page}: ${href} (no #${hash} in ${targetPage})`);
