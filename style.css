@@ -418,6 +418,20 @@ html[data-motion="reduced"] .motion-toggle .motion-on, html[data-motion="full"] 
 .orbit-body { position: relative; flex: 1; overflow: hidden; background: var(--surface-2); }
 .orbit-body img { width: 100%; height: 100%; object-fit: cover; object-position: top left; }
 .orbit-body--mock .mock { width: 100%; height: 100%; border-radius: 0; box-shadow: none; }
+/* Inside a window the dashboard scales with the window, not the screen, so its chart shows on phones too. */
+.orbit-body--mock { container-type: size; }
+.orbit-body--mock .mock-main {
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); grid-template-areas: "head head" "stats stats" "chart list" "rows list";
+  gap: 2cqw; padding: 3cqw;
+}
+.orbit-body--mock .mock-list { display: grid; gap: 1.4cqw; padding: 2cqw; }
+.orbit-body--mock .mock-list i { height: 5cqw; }
+.orbit-body--mock .mock-stats { gap: 2cqw; }
+.orbit-body--mock .mock-stats i { height: 9cqw; }
+.orbit-body--mock .mock-chart { gap: 1.2cqw; padding: 2.2cqw; }
+.orbit-body--mock .mock-rows { gap: 1.2cqw; padding: 2cqw; }
+.orbit-body--mock .mock-rows i { height: 1cqw; }
+.orbit-body--mock .mock-side { gap: 2cqw; padding: 2.6cqw 2cqw; }
 .orbit-play {
   position: absolute; right: 4%; bottom: 6%; z-index: 1; display: inline-flex; align-items: center; gap: 8px;
   padding: 8px 16px 8px 12px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .22);
