@@ -15,6 +15,7 @@
 
   const root = document.documentElement;
   const full = root.dataset.motion !== 'reduced';
+  const journey = root.classList.contains('journey'); // the 3D world of journey.js is behind this page
   const qs = (selector, scope = document) => scope.querySelector(selector);
   const qsa = (selector, scope = document) => [...scope.querySelectorAll(selector)];
   const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -70,11 +71,14 @@
   }
 
   // Every revealable text gets its trigger now; splitting happens in idle time, or on the spot if the reader gets there first.
+  // Text inside a chapter is triggered by the chapter itself: the chapter never moves, while its held frame does.
   const entries = [];
+  const held = el => el.closest('.chapter');
   function reveal(el, kind, start = 'top 88%') {
     const entry = { ready: null, get() { return this.ready || (this.ready = prepare(el, kind)); } };
     entries.push(entry);
-    ScrollTrigger.create({ trigger: el, start, once: true, onEnter: () => entry.get().play() });
+    const chapter = held(el);
+    ScrollTrigger.create({ trigger: chapter || el, start: chapter ? 'top 66%' : start, once: true, onEnter: () => entry.get().play() });
   }
   const idle = window.requestIdleCallback
     ? callback => requestIdleCallback(callback, { timeout: 1500 })
@@ -137,13 +141,50 @@
       if (cue && full) tl.to(cue, { y: 7, duration: .9, ease: 'sine.inOut', repeat: 5, yoyo: true }, '>');
     });
 
-    // Scrolling on, the hero window settles back and dims while the work comes forward.
-    if (full) {
-      gsap.to('.hero', {
-        scale: .92, opacity: .25, transformOrigin: '50% 100%', ease: 'none',
-        scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true }
-      });
+    // Scrolling on, the hero window settles back and dims while the work comes forward. In the journey it
+    // holds the screen instead, grows past its edges and fades, so the camera flies through it into the world.
+    if (!full) return;
+    const settle = () => gsap.to('.hero', {
+      scale: .92, opacity: .25, transformOrigin: '50% 100%', ease: 'none',
+      scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true }
+    });
+    if (!journey || !qs('.hero-stage')) {
+      settle();
+      return;
     }
+    gsap.matchMedia().add({ wide: '(min-width: 901px)', narrow: '(max-width: 900px)' }, context => {
+      if (context.conditions.narrow) {
+        settle();
+        return;
+      }
+      gsap.timeline({ scrollTrigger: { trigger: '.hero-stage', start: 'top top', end: 'bottom bottom', scrub: true } })
+        .to('.hero', { scale: 1.4, transformOrigin: '50% 50%', ease: 'power2.in', duration: 1 }, 0)
+        .to('.hero', { opacity: 0, ease: 'power1.in', duration: .62 }, .38);
+    });
+  }
+
+  /* ---------- Chapters: while a chapter holds the screen, its steps light up one after another ---------- */
+  function chapters() {
+    if (!full || !journey) return; // otherwise every step stays lit
+    qsa('.chapter').forEach(chapter => {
+      const steps = qsa('[data-steps] > li', chapter);
+      if (!steps.length) return;
+      gsap.matchMedia().add('(min-width: 901px)', () => {
+        let now = -1;
+        const light = progress => {
+          const next = Math.min(steps.length - 1, Math.floor(progress * steps.length * 1.08));
+          if (next === now) return;
+          now = next;
+          steps.forEach((step, index) => {
+            step.classList.toggle('is-on', index <= now);
+            step.classList.toggle('is-now', index === now);
+          });
+        };
+        light(0);
+        ScrollTrigger.create({ trigger: chapter, start: 'top top', end: 'bottom bottom', onUpdate: self => light(self.progress), onRefresh: self => light(self.progress) });
+        return () => steps.forEach(step => step.classList.remove('is-on', 'is-now'));
+      });
+    });
   }
 
   /* ---------- Horizontal gallery (case pages): pinned while the screens slide past ---------- */
@@ -298,13 +339,13 @@
       const large = el.matches('.window, .contact-form, .project-card, .next-card');
       gsap.set(el, { opacity: 0, y: full ? (large ? 80 : 40) : 0, filter: large ? 'none' : `blur(${BLUR / 2}px)` });
     });
-    ScrollTrigger.batch(items, {
-      start: 'top 90%', once: true,
-      onEnter: batch => {
-        gsap.to(batch, { opacity: 1, y: 0, filter: 'blur(0px)', duration: full ? 1.4 : .9, stagger: .1, ease: 'expo.out', clearProps: 'filter,transform' });
-        batch.forEach(el => qsa('[data-count]', el).forEach(countUp));
-      }
-    });
+    const show = batch => {
+      gsap.to(batch, { opacity: 1, y: 0, filter: 'blur(0px)', duration: full ? 1.4 : .9, stagger: .1, ease: 'expo.out', clearProps: 'filter,transform' });
+      batch.forEach(el => qsa('[data-count]', el).forEach(countUp));
+    };
+    const inChapters = items.filter(held);
+    inChapters.forEach(el => onEnter(held(el), () => show([el]), 'top 60%'));
+    ScrollTrigger.batch(items.filter(el => !held(el)), { start: 'top 90%', once: true, onEnter: show });
   }
 
   /* ---------- Text ---------- */
@@ -349,6 +390,7 @@
   // Pinned scenes first, so everything measured after them accounts for the space they take.
   gallery();
   hero();
+  chapters();
   projects();
   marquee();
   pipeline();

@@ -99,8 +99,28 @@ test('pages load the shared styles and scripts, with pinned CDN versions', () =>
   }
 });
 
+test('the 3D journey loads a pinned three.js and places every station on the home page', () => {
+  const journey = read('journey.js');
+  assert.match(journey, /from 'https:\/\/cdn\.jsdelivr\.net\/npm\/three@\d+\.\d+\.\d+\/build\/three\.module\.min\.js'/, 'three.js should pin an exact version');
+  assert.match(html['index.html'], /<script type="module" src="journey\.js"><\/script>/, 'index.html loads journey.js');
+  const stations = attrs(html['index.html'], 'data-station');
+  assert.deepEqual(stations, ['core', 'line', 'pulse', 'reel', 'orbit', 'globe', 'portal'], 'stations appear in page order');
+  for (const name of stations) {
+    assert.match(journey, new RegExp(`\\b${name}: \\d+`), `journey.js has a distance for ${name}`);
+    assert.match(journey, new RegExp(`\\b${name}: \\{ x:`), `journey.js has a place for ${name}`);
+  }
+});
+
+test('every showreel sits in a slot and can be closed once opened', () => {
+  for (const [page, source] of Object.entries(html)) {
+    const reels = (source.match(/\sdata-video="/g) || []).length;
+    assert.equal((source.match(/class="video-slot"/g) || []).length, reels, `${page}: a slot for every reel`);
+    assert.equal((source.match(/class="video-close"/g) || []).length, reels, `${page}: a close button for every reel`);
+  }
+});
+
 test('only Carl’s own projects are listed', () => {
-  const files = [...PAGES, 'main.js', 'motion.js', 'style.css', 'videos/README.md'];
+  const files = [...PAGES, 'main.js', 'motion.js', 'journey.js', 'style.css', 'videos/README.md'];
   for (const file of files) {
     assert.doesNotMatch(read(file), /NurseDesk|Barangay/i, `${file} mentions a project that is not Carl's`);
   }

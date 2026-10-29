@@ -10,6 +10,20 @@ const hasGsap = Boolean(window.gsap && window.ScrollTrigger);
 const qs = (selector, scope = document) => scope.querySelector(selector);
 const qsa = (selector, scope = document) => [...scope.querySelectorAll(selector)];
 
+/* ---------- The 3D journey ----------
+   The home page becomes a journey through a 3D world (journey.js) with full motion on a device that draws
+   WebGL 2 in hardware. Marked here, before motion.js lays out the scroll, so the layout never jumps. */
+function canDrawWorld() {
+  try {
+    const gl = document.createElement('canvas').getContext('webgl2', { failIfMajorPerformanceCaveat: true });
+    gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    return Boolean(gl);
+  } catch {
+    return false;
+  }
+}
+if (motion === 'full' && qs('[data-station]') && !navigator.connection?.saveData && canDrawWorld()) root.classList.add('journey');
+
 /* ---------- Motion switch: full motion by default; the visitor can turn it down (saved per browser) ---------- */
 const motionToggle = qs('#motionToggle');
 if (motionToggle) {
@@ -223,6 +237,31 @@ if (spySections.length) {
   spy();
 }
 
+/* ---------- Chapter rail: shows once the journey starts and lights the chapter crossing the middle of the screen ---------- */
+const chapterMap = qs('.journey-map');
+if (chapterMap && root.classList.contains('journey') && 'IntersectionObserver' in window) {
+  const links = qsa('a[data-chapter-link]', chapterMap);
+  const targets = links.map(link => document.getElementById(link.dataset.chapterLink));
+  let current = -1;
+  const light = index => {
+    current = index;
+    links.forEach((link, i) => {
+      link.classList.toggle('is-active', i === index);
+      if (i === index) link.setAttribute('aria-current', 'step');
+      else link.removeAttribute('aria-current');
+    });
+  };
+  const middle = new IntersectionObserver(entries => entries.forEach(entry => {
+    const index = targets.indexOf(entry.target);
+    if (entry.isIntersecting) light(index);
+    else if (index === current && entry.boundingClientRect.top > 0) light(index - 1);
+  }), { rootMargin: '-50% 0px -50% 0px' });
+  targets.forEach(target => target && middle.observe(target));
+  const reveal = () => chapterMap.classList.toggle('is-shown', scrollY > innerHeight * .7);
+  addEventListener('scroll', reveal, { passive: true });
+  reveal();
+}
+
 /* ---------- Rows you scroll sideways yourself get a keyboard stop ---------- */
 function scrollRegion(el, label, when) {
   if (!el) return;
@@ -317,7 +356,11 @@ if (contactForm) {
   });
 }
 
-/* ---------- Videos: a card plays the file named in data-video ---------- */
+/* ---------- Showreels: a card plays the file named in data-video ----------
+   The film sits on the page with no frame. Resting the mouse on it for 1.5s plays a muted preview: the rest
+   of the page dims and the film grows a little. Moving off it, scrolling or Escape puts it back. A click, a
+   tap or Enter on Play opens it as large as the screen allows, with sound and controls, until it is closed.
+   A playing film is lifted into the top layer, so nothing on the page can sit above it. */
 async function videoExists(src) {
   if (location.protocol === 'file:') return true;
   try {
@@ -328,47 +371,261 @@ async function videoExists(src) {
   }
 }
 
-const videoCards = qsa('[data-video]');
-videoCards.forEach(card => {
-  const frame = qs('.video-frame', card);
-  const button = qs('.video-play', card);
-  const src = card.dataset.video;
-  const ready = videoExists(src);
+const HOVER_DELAY = 1500;
+const topLayer = typeof HTMLElement.prototype.showPopover === 'function';
+const FLIGHT = 'cubic-bezier(.22, 1, .36, 1)';
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+const onScreen = box => box.width > 0 && box.bottom > 0 && box.top < innerHeight;
+// A film that is off screen appears from (and leaves to) where it is instead of flying the whole way.
+const shrink = box => ({ left: box.left + box.width * .04, top: box.top + box.height * .04, width: box.width * .92, height: box.height * .92 });
+const flip = (box, at) => `translate(${box.left - at.left}px, ${box.top - at.top}px) scale(${box.width / at.width})`;
+let veil = null;
 
-  ready.then(available => {
-    card.classList.toggle('is-ready', available);
-    if (available && card.dataset.poster) {
+// The page behind an open film dims: a little for a preview, more once it is opened.
+function dim(level) {
+  if (!topLayer) return;
+  if (!veil) {
+    veil = document.createElement('div');
+    veil.className = 'reel-veil';
+    veil.setAttribute('popover', 'manual');
+    veil.setAttribute('aria-hidden', 'true');
+    veil.addEventListener('click', () => reels.forEach(reel => reel.close({ rest: true })));
+    document.body.appendChild(veil);
+  }
+  const shown = veil.matches(':popover-open');
+  const from = shown ? Number(getComputedStyle(veil).opacity) : 0;
+  const to = level ? parseFloat(getComputedStyle(root).getPropertyValue(level === 'theater' ? '--veil-deep' : '--veil-soft')) || .7 : 0;
+  if (!shown && !to) return;
+  if (!shown) veil.showPopover();
+  veil.getAnimations().forEach(animation => animation.cancel());
+  const fade = veil.animate([{ opacity: from }, { opacity: to }], { duration: motion === 'reduced' ? 160 : to ? 650 : 450, easing: 'ease', fill: 'forwards' });
+  fade.onfinish = () => {
+    veil.style.opacity = to;
+    fade.cancel();
+    if (!to) veil.hidePopover();
+  };
+}
+
+// While a film is open with sound, the page holds still and only the film can take focus.
+function lockPage(frame, on) {
+  if (lenis) on ? lenis.stop() : lenis.start();
+  root.classList.toggle('reel-lock', on);
+  for (let node = frame; node && node !== document.body; node = node.parentElement) {
+    for (const sibling of node.parentElement.children) {
+      if (sibling === node || sibling === veil) continue;
+      if (on && !sibling.inert) { sibling.inert = true; sibling.dataset.reelInert = ''; }
+      if (!on && 'reelInert' in sibling.dataset) { sibling.inert = false; delete sibling.dataset.reelInert; }
+    }
+  }
+}
+
+const reels = qsa('[data-video]').map(card => {
+  const frame = qs('.video-frame', card);
+  const slot = frame.parentElement;
+  const play = qs('.video-play', card);
+  const bar = qs('.video-progress i', card);
+  const src = card.dataset.video;
+  let available = false;
+  let player = null, mode = '', timer = 0, flight = null, rested = false;
+
+  const ready = videoExists(src).then(ok => {
+    available = ok;
+    card.classList.toggle('is-ready', ok);
+    if (ok && card.dataset.poster) {
       const poster = new Image();
       poster.onload = () => frame.style.setProperty('--poster', `url("${card.dataset.poster}")`);
       poster.src = card.dataset.poster;
     }
+    return ok;
   });
 
-  button?.addEventListener('click', async () => {
-    if (!(await ready)) {
-      showToast('This video is coming soon.');
+  function film() {
+    if (player) return player;
+    player = document.createElement('video');
+    player.src = src;
+    player.playsInline = true;
+    player.preload = 'auto';
+    player.muted = true;
+    player.setAttribute('aria-label', play.getAttribute('aria-label').replace('Play video: ', ''));
+    player.controlsList?.add('nodownload');
+    player.addEventListener('playing', () => frame.classList.add('has-film'));
+    player.addEventListener('timeupdate', () => { bar.style.transform = `scaleX(${player.duration ? player.currentTime / player.duration : 0})`; });
+    player.addEventListener('ended', () => {
+      close({ rest: true });
+      player.currentTime = 0;
+      frame.classList.remove('has-film');
+    });
+    frame.prepend(player);
+    return player;
+  }
+
+  // Where the film goes: a little larger where it is for a preview, as large as the screen allows when opened.
+  function target(next) {
+    const box = slot.getBoundingClientRect();
+    const width0 = box.width || 640;
+    const ratio = width0 / (box.height || width0 * 9 / 16);
+    const vw = root.clientWidth, vh = innerHeight;
+    const pad = vw <= 720 ? 12 : 32;
+    const fit = Math.min(vw - pad * 2, (vh - pad * 2) * ratio);
+    const width = next === 'theater' ? fit : Math.min(fit, width0 * 1.16);
+    const height = width / ratio;
+    if (next === 'theater' || !onScreen(box)) return { left: (vw - width) / 2, top: (vh - height) / 2, width, height };
+    return {
+      left: clamp(box.left + (width0 - width) / 2, pad, vw - pad - width),
+      top: clamp(box.top + (box.height - height) / 2, pad, vh - pad - height),
+      width, height
+    };
+  }
+  const place = box => ['left', 'top', 'width', 'height'].forEach(key => { frame.style[key] = `${box[key]}px`; });
+  const placed = () => ({ left: parseFloat(frame.style.left), top: parseFloat(frame.style.top), width: parseFloat(frame.style.width), height: parseFloat(frame.style.height) });
+
+  // Moves the film between two boxes on screen while it stays laid out at `at` (only its transform animates).
+  function fly(from, to, at, { duration, fadeIn = false, fadeOut = false }) {
+    flight?.cancel();
+    const animation = frame.animate([
+      { transform: flip(from, at), opacity: fadeIn ? 0 : 1 },
+      { transform: flip(to, at), opacity: fadeOut ? 0 : 1 }
+    ], { duration: motion === 'reduced' ? 0 : duration, easing: FLIGHT, fill: 'forwards' });
+    flight = animation;
+    return animation;
+  }
+
+  function open(next) {
+    if (!available) {
+      if (next === 'theater') ready.then(ok => ok ? open(next) : showToast('This video is coming soon.'));
       return;
     }
-    let player = qs('video', frame);
-    if (!player) {
-      player = document.createElement('video');
-      player.src = src;
-      player.controls = true;
-      player.playsInline = true;
-      player.preload = 'auto';
-      player.setAttribute('aria-label', button.getAttribute('aria-label').replace('Play video: ', ''));
-      frame.appendChild(player);
+    if (mode === next || mode === 'theater') return;
+    reels.forEach(reel => { if (reel !== api) reel.close({ instant: true }); });
+    disarm();
+    const video = film();
+    const was = mode;
+    mode = next;
+    card.dataset.mode = next;
+    video.muted = next !== 'theater';
+    video.controls = next === 'theater';
+    if (video.ended) video.currentTime = 0;
+    // Sound needs a click first; if the browser still says no, the film plays muted rather than not at all.
+    video.play()?.catch(() => { if (!video.muted) { video.muted = true; video.play()?.catch(() => {}); } });
+    if (topLayer) {
+      dim(next);
+      const to = target(next);
+      let from, fadeIn = false;
+      if (was) {
+        from = frame.getBoundingClientRect();
+      } else {
+        const home = slot.getBoundingClientRect();
+        frame.setAttribute('popover', 'manual');
+        frame.showPopover();
+        fadeIn = !onScreen(home);
+        from = fadeIn ? shrink(to) : home;
+      }
+      place(to);
+      const animation = fly(from, to, to, { duration: was ? 700 : 850, fadeIn });
+      animation.onfinish = () => { if (flight === animation) { animation.cancel(); flight = null; } };
     }
-    card.classList.add('is-playing');
-    player.play()?.catch(() => {});
-    player.focus({ preventScroll: true });
+    if (next === 'theater') {
+      lockPage(frame, true);
+      video.focus({ preventScroll: true });
+    }
+    document.dispatchEvent(new CustomEvent('reel:toggle', { detail: { open: true } }));
+  }
+
+  // rest: the visitor closed it on purpose, so a mouse still on it has to leave before resting counts again.
+  function close({ instant = false, rest = false } = {}) {
+    disarm();
+    if (!mode) return;
+    const was = mode;
+    mode = '';
+    rested = rest && frame.matches(':hover');
+    card.removeAttribute('data-mode');
+    player.pause();
+    player.controls = false;
+    if (was === 'theater') lockPage(frame, false);
+    if (topLayer && frame.matches(':popover-open')) {
+      if (!reels.some(reel => reel.mode)) dim('');
+      const from = frame.getBoundingClientRect(), home = slot.getBoundingClientRect();
+      const back = onScreen(home);
+      const animation = fly(from, back ? home : shrink(from), placed(), { duration: instant ? 0 : 600, fadeOut: !back });
+      animation.onfinish = () => {
+        if (flight !== animation) return;
+        animation.cancel();
+        flight = null;
+        frame.hidePopover();
+        frame.removeAttribute('popover');
+        ['left', 'top', 'width', 'height'].forEach(key => frame.style.removeProperty(key));
+      };
+    }
+    if (frame.contains(document.activeElement)) play.focus({ preventScroll: true });
+    document.dispatchEvent(new CustomEvent('reel:toggle', { detail: { open: false } }));
+  }
+
+  // The preview waits for a resting mouse: the ring on Play fills for 1.5s, then the film starts.
+  function arm() {
+    if (mode || timer || rested || !available || motion === 'reduced' || document.hidden) return;
+    film();
+    card.classList.add('is-arming');
+    timer = setTimeout(() => {
+      timer = 0;
+      card.classList.remove('is-arming');
+      open('preview');
+    }, HOVER_DELAY);
+  }
+  function disarm() {
+    clearTimeout(timer);
+    timer = 0;
+    card.classList.remove('is-arming');
+  }
+
+  frame.addEventListener('pointerenter', event => { if (event.pointerType === 'mouse') arm(); });
+  frame.addEventListener('pointermove', event => { if (event.pointerType === 'mouse') arm(); });
+  frame.addEventListener('pointerleave', () => {
+    rested = false;
+    disarm();
+    if (mode === 'preview') close();
   });
+  frame.addEventListener('click', event => {
+    if (event.target.closest('.video-close')) close({ rest: true });
+    else if (mode !== 'theater') open('theater');
+  });
+
+  const api = {
+    card, frame, src, open, close, arm, disarm,
+    get mode() { return mode; },
+    refit() { if (mode && topLayer && frame.matches(':popover-open')) { flight?.cancel(); flight = null; place(target(mode)); } }
+  };
+  return api;
 });
 
-// "Watch the demo" starts the video inside the same click (so sound is allowed) while the page glides to it.
-qsa('[data-play-video]').forEach(link => link.addEventListener('click', () => {
-  const card = videoCards.find(item => item.dataset.video === link.dataset.playVideo);
-  if (card && !card.classList.contains('is-playing')) qs('.video-play', card)?.click();
+if (reels.length) {
+  // Scrolling ends a preview and restarts the wait; a film that comes to rest under a still mouse starts counting.
+  let mouse = null, settle = 0;
+  addEventListener('pointermove', event => { if (event.pointerType === 'mouse') mouse = { x: event.clientX, y: event.clientY }; }, { passive: true });
+  addEventListener('scroll', () => {
+    reels.forEach(reel => { reel.disarm(); if (reel.mode === 'preview') reel.close(); });
+    clearTimeout(settle);
+    settle = setTimeout(() => {
+      const under = mouse && document.elementFromPoint(mouse.x, mouse.y);
+      if (under) reels.find(reel => reel.frame.contains(under))?.arm();
+    }, 180);
+  }, { passive: true });
+  addEventListener('resize', () => reels.forEach(reel => reel.refit()), { passive: true });
+  addEventListener('keydown', event => {
+    const open = reels.find(reel => reel.mode);
+    if (event.key === 'Escape' && open) {
+      event.preventDefault();
+      open.close({ rest: true });
+    }
+  });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) reels.forEach(reel => reel.mode === 'preview' && reel.close()); });
+}
+
+// "Watch the demo" opens the film right away, with sound, wherever the page is.
+qsa('[data-play-video]').forEach(link => link.addEventListener('click', event => {
+  const reel = reels.find(item => item.src === link.dataset.playVideo);
+  if (!reel) return;
+  event.preventDefault();
+  reel.open('theater');
 }));
 
 /* ---------- Without GSAP: things fade and sharpen in as they arrive ---------- */

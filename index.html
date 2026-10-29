@@ -65,7 +65,19 @@
     </div>
   </header>
 
+  <nav class="journey-map" aria-label="Chapters">
+    <ol>
+      <li><a href="#ch-flow" data-chapter-link="ch-flow"><span>01</span><b>Flow Auto</b></a></li>
+      <li><a href="#ch-healthnest" data-chapter-link="ch-healthnest"><span>02</span><b>HealthNest</b></a></li>
+      <li><a href="#ch-meet" data-chapter-link="ch-meet"><span>03</span><b>Meet Carl</b></a></li>
+      <li><a href="#toolkit" data-chapter-link="toolkit"><span>04</span><b>Toolkit</b></a></li>
+      <li><a href="#about" data-chapter-link="about"><span>05</span><b>About</b></a></li>
+      <li><a href="#contact" data-chapter-link="contact"><span>06</span><b>Contact</b></a></li>
+    </ol>
+  </nav>
+
   <main id="main">
+    <div class="hero-stage" data-station="core">
     <section class="hero" id="top" aria-labelledby="heroTitle">
       <div class="window hero-window" data-hero>
         <div class="window-bar" aria-hidden="true"><span class="window-dots"><i></i><i></i><i></i></span><span class="window-plus">+</span></div>
@@ -80,9 +92,27 @@
         </div>
       </div>
     </section>
+    </div>
 
     <section class="work" id="work" aria-labelledby="workTitle">
       <h2 class="eyebrow" id="workTitle">Selected work</h2>
+
+      <div class="chapter" id="ch-flow" data-station="line" aria-labelledby="chFlowTitle">
+        <div class="chapter-frame">
+          <div class="chapter-copy">
+            <p class="chapter-kicker"><span>01</span>Flow Auto</p>
+            <h3 class="chapter-title" id="chFlowTitle" data-blur>A production line for <em>AI video.</em></h3>
+            <p class="chapter-lead" data-blur-lines>A Chrome and Edge extension that turns a scene-by-scene script into finished, numbered 1080p videos on Google Flow.</p>
+            <ol class="chapter-steps" data-steps data-reveal>
+              <li><span>01</span><strong>Import</strong><p>A ChatGPT script or JSON becomes scenes, batches and global rules.</p></li>
+              <li><span>02</span><strong>Reference</strong><p>Storyboards and character sheets from Flow, ChatGPT, Grok or Meta AI.</p></li>
+              <li><span>03</span><strong>Generate</strong><p>Each scene goes to Flow or Grok Imagine with its rules and references.</p></li>
+              <li><span>04</span><strong>Upscale</strong><p>Flow’s own 1080p upscale, with nothing re-encoded on your machine.</p></li>
+              <li><span>05</span><strong>Download</strong><p>Files land as story/1.mp4, 2.mp4 and on, checked for name and resolution.</p></li>
+            </ol>
+          </div>
+        </div>
+      </div>
 
       <article class="project" data-project>
         <a class="project-card" href="flow-auto.html">
@@ -103,6 +133,21 @@
           </div>
         </a>
       </article>
+
+      <div class="chapter" id="ch-healthnest" data-station="pulse" aria-labelledby="chHealthTitle">
+        <div class="chapter-frame">
+          <div class="chapter-copy">
+            <p class="chapter-kicker"><span>02</span>HealthNest</p>
+            <h3 class="chapter-title" id="chHealthTitle" data-blur>One clear workflow for <em>maternal and child health.</em></h3>
+            <p class="chapter-lead" data-blur-lines>A Windows desktop app, built with WinUI 3, C# and SQLite, that keeps patient cases, appointments and status changes in one place.</p>
+            <ol class="chapter-steps" data-steps data-reveal>
+              <li><span>01</span><strong>Patient cases</strong><p>Profiles and case notes for each mother and child, with their status always visible.</p></li>
+              <li><span>02</span><strong>Appointments</strong><p>A calendar for check-ups and follow-ups, so nothing slips between visits.</p></li>
+              <li><span>03</span><strong>Status over time</strong><p>Changes recorded as they happen, so health workers see how each case is going.</p></li>
+            </ol>
+          </div>
+        </div>
+      </div>
 
       <article class="project" data-project>
         <a class="project-card" href="healthnest.html">
@@ -130,18 +175,28 @@
         </a>
       </article>
 
+      <div class="chapter chapter--brief" id="ch-meet" data-station="reel" aria-labelledby="chMeetTitle">
+        <div class="chapter-frame">
+          <div class="chapter-copy">
+            <p class="chapter-kicker"><span>03</span>Meet Carl</p>
+            <h3 class="chapter-title" id="chMeetTitle" data-blur>The person behind <em>the work.</em></h3>
+            <p class="chapter-lead" data-blur-lines>A short intro film: who I am, what I build, and how I can help your team or business.</p>
+            <p class="chapter-hint">Rest your cursor on the film to preview it, or press Play to watch with sound.</p>
+          </div>
+        </div>
+      </div>
+
       <article class="project" data-project id="intro-video">
         <div class="project-card project-card--video" data-video="videos/intro.mp4" data-poster="videos/intro.jpg">
           <div class="project-panel">
-            <div class="project-head">
-              <div>
-                <h3 class="project-title">Meet Carl</h3>
-                <p class="project-meta"><strong>Intro video</strong> — Who I am, what I build, and how I can help your team or business.</p>
-              </div>
-            </div>
             <div class="project-media">
-              <div class="video-frame">
-                <button class="video-play" type="button" aria-label="Play video: Meet Carl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg><span>Play</span></button>
+              <div class="video-slot">
+                <div class="video-frame">
+                  <button class="video-play" type="button" aria-label="Play video: Meet Carl"><span class="video-play-icon" aria-hidden="true"><svg class="video-ring" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18"/></svg><svg viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg></span><span>Play</span></button>
+                  <span class="video-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4Z"/><path d="m22 9-6 6M16 9l6 6"/></svg>Preview · click for sound</span>
+                  <span class="video-progress" aria-hidden="true"><i></i></span>
+                  <button class="video-close" type="button" aria-label="Close video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+                </div>
               </div>
             </div>
           </div>
@@ -150,9 +205,20 @@
     </section>
 
     <section class="strip" aria-labelledby="stripTitle">
-      <div class="strip-head">
-        <h2 class="display" id="stripTitle" data-blur>Tools I use to turn <em>ideas into systems.</em></h2>
-        <p class="strip-lead" data-blur-lines>C# and .NET for desktop apps, TypeScript and React for the web, SQLite for data, and MCP so AI assistants can drive the tools I build.</p>
+      <div class="chapter chapter--wide" id="toolkit" data-station="orbit">
+        <div class="chapter-frame">
+          <div class="chapter-copy">
+            <p class="chapter-kicker"><span>04</span>Toolkit</p>
+            <h2 class="chapter-title" id="stripTitle" data-blur>Tools I use to turn <em>ideas into systems.</em></h2>
+            <p class="chapter-lead" data-blur-lines>C# and .NET for desktop apps, TypeScript and React for the web, SQLite for data, and MCP so AI assistants can drive the tools I build.</p>
+            <ol class="chapter-steps" data-steps data-reveal>
+              <li><span>01</span><strong>Languages</strong><p>C# · C · JavaScript · TypeScript · HTML · CSS</p></li>
+              <li><span>02</span><strong>Desktop &amp; UI</strong><p>WinUI 3 · WinForms · .NET · XAML · React</p></li>
+              <li><span>03</span><strong>Data</strong><p>SQLite · MySQL · MS Access · SQL · Data modeling</p></li>
+              <li><span>04</span><strong>Foundations</strong><p>Data structures · Algorithms · Numerical methods · Linear algebra</p></li>
+            </ol>
+          </div>
+        </div>
       </div>
       <div class="marquee" data-marquee>
         <div class="marquee-track">
@@ -172,6 +238,16 @@
     </section>
 
     <section class="about" id="about" aria-labelledby="aboutTitle">
+      <div class="chapter chapter--wide" data-station="globe">
+        <div class="chapter-frame">
+          <div class="chapter-copy">
+            <h2 class="chapter-kicker" id="aboutTitle"><span>05</span>About</h2>
+            <p class="chapter-title" data-blur>Built in Cebu, <em>Philippines.</em></p>
+            <p class="chapter-lead" data-blur-lines>A Computer Engineering student who learns by building, turning classroom concepts into working systems.</p>
+            <p class="chapter-coords" data-reveal><span>10.32° N</span><span>123.89° E</span><span>Cebu City</span></p>
+          </div>
+        </div>
+      </div>
       <div class="about-grid">
         <figure class="window about-photo" data-reveal>
           <div class="window-bar" aria-hidden="true"><span class="window-dots"><i></i><i></i><i></i></span><b>carl@portfolio</b></div>
@@ -182,7 +258,6 @@
           <figcaption><span>~$ whoami</span><strong>builder · problem solver · student</strong></figcaption>
         </figure>
         <div class="about-copy">
-          <h2 class="eyebrow" id="aboutTitle">About</h2>
           <p class="statement" data-blur-scrub>Engineering mindset, <em>human-centered output.</em> I like projects where software has a clear job: organize messy information, reduce repetitive work, and make a process easier for the person using it.</p>
           <ol class="principles">
             <li data-reveal><span>01</span><div><h3>Build for the workflow</h3><p>I start with what the user actually needs to accomplish, then shape the interface around that sequence.</p></div></li>
@@ -198,9 +273,10 @@
       </div>
     </section>
 
-    <section class="contact" id="contact" aria-labelledby="contactTitle">
+    <section class="contact" id="contact" aria-labelledby="contactTitle" data-station="portal">
       <div class="contact-grid">
         <div class="contact-copy">
+          <p class="chapter-kicker"><span>06</span>Contact</p>
           <h2 class="display" id="contactTitle" data-blur>Have something worth <em>building?</em></h2>
           <p class="contact-lead" data-blur-lines>I'm open to internships, freelance work, and interesting collaborations.</p>
           <p class="aside-label">Currently open to collaborations</p>
@@ -252,5 +328,6 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/SplitText.min.js" defer></script>
   <script src="main.js" defer></script>
   <script src="motion.js" defer></script>
+  <script type="module" src="journey.js"></script>
 </body>
 </html>

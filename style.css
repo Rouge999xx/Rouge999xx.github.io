@@ -51,6 +51,10 @@
   --title-glow: rgba(140, 180, 255, .18);
   --glow: #8cb4ff;
   --glow-halo: rgba(90, 140, 255, .7);
+  /* The page dims behind a playing showreel: a little for a preview, more once it is opened. */
+  --veil: #01040a;
+  --veil-soft: .62;
+  --veil-deep: .88;
 
   --sans: "Inter Tight", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --serif: "Instrument Serif", Georgia, "Times New Roman", serif;
@@ -104,6 +108,9 @@
   --title-glow: transparent;
   --glow: #1d4ed8;
   --glow-halo: rgba(29, 78, 216, .45);
+  --veil: #0b0e16;
+  --veil-soft: .42;
+  --veil-deep: .76;
 }
 
 /* Switching themes eases the colors instead of flashing. */
@@ -326,6 +333,79 @@ html[data-motion="reduced"] .motion-toggle .motion-on, html[data-motion="full"] 
 .display em { font-size: 1.07em; }
 .aside-label { margin-top: 30px; color: var(--text-3); font: italic 400 18px/1.3 var(--serif); }
 
+/* ---------- Chapters: the stops on the journey ----------
+   Each part of the home page opens with a numbered chapter. With the 3D journey on (html.journey, set by
+   main.js), a chapter holds the screen while the world behind it moves and its steps light up in turn;
+   without it, a chapter is a plain block of text. */
+.chapter--wide { width: min(var(--shell), 100% - var(--gutter) * 2); margin-inline: auto; }
+.chapter-frame { padding: clamp(64px, 8vw, 120px) 0 clamp(36px, 4vw, 56px); }
+.chapter--brief > .chapter-frame { padding-bottom: clamp(28px, 3vw, 40px); }
+.chapter-copy { max-width: 36rem; }
+.chapter-kicker { display: flex; align-items: center; gap: 14px; color: var(--text-3); font: 500 12px/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+.chapter-kicker span { display: inline-grid; place-items: center; min-width: 36px; height: 24px; padding: 0 8px; border: 1px solid var(--line-2); border-radius: 999px; color: var(--accent-text); letter-spacing: .04em; }
+.chapter-title { margin-top: 20px; font-size: clamp(2.3rem, 4.4vw, 4.1rem); font-weight: 500; line-height: 1.02; letter-spacing: -.04em; text-wrap: balance; }
+.chapter-title em { font-size: 1.06em; }
+.chapter-lead { margin-top: 20px; max-width: 32em; color: var(--text-2); font-size: clamp(16px, 1.15vw, 18px); line-height: 1.6; }
+.chapter-steps { margin-top: clamp(26px, 3vw, 36px); border-top: 1px solid var(--line); }
+.chapter-steps li { display: grid; grid-template-columns: 46px minmax(0, 1fr); column-gap: 10px; padding: 12px 0 13px; border-bottom: 1px solid var(--line); transition: opacity 500ms ease; }
+.chapter-steps span { color: var(--text-3); font: 500 12px/1.75 var(--mono); transition: color 400ms ease; }
+.chapter-steps strong { font-size: 17px; letter-spacing: -.01em; }
+.chapter-steps p { grid-column: 2; margin-top: 2px; color: var(--text-3); font-size: 14px; line-height: 1.5; }
+.chapter-steps li.is-now span { color: var(--accent-text); }
+.chapter-hint { display: none; margin-top: 14px; color: var(--text-3); font: 500 12px/1.5 var(--mono); letter-spacing: .02em; }
+@media (hover: hover) and (pointer: fine) { html[data-motion="full"] .chapter-hint { display: block; } }
+.chapter-coords { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+.chapter-coords span { padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--text-2); font: 500 12px/1.4 var(--mono); }
+.contact-copy .chapter-kicker { margin-bottom: 22px; }
+
+/* The journey: the hero and each chapter hold the screen for a while; the 3D world shows on the right. */
+html.journey .hero-stage { height: 180vh; }
+html.journey .hero { position: sticky; top: 0; }
+html.journey .chapter:not(.chapter--brief) { height: 240vh; }
+html.journey .chapter:not(.chapter--brief) > .chapter-frame {
+  position: sticky; top: 0; display: grid; align-items: center;
+  min-height: 100vh; min-height: 100svh; padding: calc(var(--nav-h) + 16px) 0 40px;
+}
+html.journey .chapter-steps li { opacity: .34; }
+html.journey .chapter-steps li.is-on { opacity: 1; }
+html.journey :is(.strip, .about) { padding-top: 0; }
+html.journey .about-grid { margin-top: clamp(24px, 4vw, 64px); }
+
+/* The world is drawn on one canvas behind the page; it fades in once journey.js has drawn a frame. */
+.journey-canvas {
+  position: fixed; left: 0; top: 0; z-index: -1;
+  width: 100%; height: 100vh; height: 100lvh;
+  pointer-events: none; opacity: 0; transition: opacity 1.6s ease;
+}
+html.journey-live .journey-canvas { opacity: 1; }
+html.journey-live body { background: transparent; }
+html.journey-live .backdrop { display: none; }
+/* The hero window turns into a window onto the world. */
+html.journey :is(.hero-window, .hero-body) { transition: background-color 1.6s ease; }
+html.journey-live .hero-window { background-color: color-mix(in srgb, var(--surface) 20%, transparent); }
+html.journey-live .hero-body { background-color: transparent; }
+
+/* Chapter rail: where you are on the journey (wide screens only). */
+.journey-map { display: none; }
+html.journey .journey-map {
+  position: fixed; left: clamp(14px, 1.6vw, 30px); top: 50%; z-index: 90; translate: 0 -50%;
+  display: block; opacity: 0; transition: opacity 600ms ease;
+}
+html.journey .journey-map.is-shown { opacity: 1; }
+.journey-map ol { display: grid; gap: 2px; }
+.journey-map a {
+  display: flex; align-items: center; gap: 10px; min-height: 30px; padding-right: 8px; border-radius: 6px;
+  color: var(--text-3); font: 500 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase;
+  transition: color 300ms ease;
+}
+.journey-map a::before { content: ""; width: 12px; height: 1px; background: currentColor; transition: width 500ms var(--ease), background-color 300ms ease; }
+.journey-map b { font-weight: 500; opacity: 0; translate: -6px 0; transition: opacity 300ms ease, translate 500ms var(--ease); }
+.journey-map a:hover, .journey-map a.is-active { color: var(--text); }
+.journey-map a.is-active::before { width: 26px; background: var(--accent-text); }
+.journey-map:hover b, .journey-map a:focus-visible b { opacity: 1; translate: 0 0; }
+@media (min-width: 1500px) { .journey-map a.is-active b { opacity: 1; translate: 0 0; } }
+@media (max-width: 1199px) { html.journey .journey-map { display: none; } }
+
 /* ---------- Work: one column of projects, each in its own frame ---------- */
 .work, .strip, .about, .contact, .case-section, .gallery { padding-top: clamp(96px, 12vw, 160px); }
 .work { width: min(var(--column), 100% - var(--gutter) * 2); margin-inline: auto; padding-top: clamp(32px, 5vw, 72px); }
@@ -423,30 +503,77 @@ a.project-card:hover .project-media > .window, a.project-card:hover .project-med
 .mock-rows i:nth-child(2) { width: 82%; }
 .mock-rows i:nth-child(3) { width: 64%; }
 
-/* Video cards: poster first, a quiet Play pill in the corner. */
-.project-card--video .project-media { height: auto; padding: 0 clamp(12px, 3.2vw, 46px) clamp(12px, 3.2vw, 46px); }
+/* ---------- Showreels ----------
+   No frame and no outline: just the film on the page. Resting the mouse on it for 1.5s plays a muted preview
+   while the page dims and the film grows; a click opens it larger, with sound. main.js runs it, lifting the
+   playing film into the top layer so nothing on the page can sit above it. */
+.project-card.project-card--video { padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.project-card--video::before { display: none; }
+.project-card--video .project-panel { overflow: visible; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.project-card--video .project-head { padding: 0 4px; }
+.project-card--video .project-media { height: auto; margin-top: clamp(18px, 2.4vw, 30px); padding: 0; overflow: visible; }
+.project-card--video .project-media:first-child { margin-top: 0; }
+.video-slot { position: relative; aspect-ratio: 16 / 9; transition: scale 900ms var(--ease); }
+.is-arming .video-slot { scale: 1.012; }
 .video-frame {
   --poster: none;
-  position: relative; overflow: hidden; aspect-ratio: 16 / 9; border-radius: 16px;
-  border: 1px solid var(--line);
+  position: absolute; inset: 0; overflow: hidden; border-radius: 18px;
   background: var(--poster) center / cover no-repeat, var(--surface-2);
+  cursor: pointer;
 }
-.video-frame video { position: absolute; inset: 0; width: 100%; height: 100%; background: #000; object-fit: cover; }
+.video-frame video { position: absolute; inset: 0; width: 100%; height: 100%; background: #000; object-fit: cover; opacity: 0; transition: opacity 500ms ease; }
+.video-frame.has-film video { opacity: 1; }
+/* Lifted out of the page while it plays; main.js sets the box and flies it there. */
+.video-frame:popover-open {
+  position: fixed; inset: auto; margin: 0; padding: 0; border: 0; max-width: none; max-height: none;
+  overflow: hidden; color: inherit; transform-origin: 0 0; border-radius: 20px;
+  box-shadow: 0 50px 140px -40px rgba(0, 0, 0, .85);
+}
+[data-mode="theater"] .video-frame { cursor: auto; }
+.reel-veil {
+  position: fixed; inset: 0; width: auto; height: auto; max-width: none; max-height: none;
+  margin: 0; padding: 0; border: 0; background: var(--veil); opacity: 0;
+}
+html.reel-lock { overflow: hidden; }
+
 .video-play {
   position: absolute; right: 16px; bottom: 16px; z-index: 2;
-  display: inline-flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 20px 0 16px; border-radius: 999px;
-  background: rgba(10, 15, 26, .66); color: #fff; border: 1px solid rgba(255, 255, 255, .22);
+  display: inline-flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 20px 0 8px; border-radius: 999px;
+  background: rgba(8, 12, 22, .62); color: #fff;
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   font-size: 15px; font-weight: 500;
-  transition: background-color var(--dur) ease, scale var(--dur) var(--ease);
+  transition: background-color var(--dur) ease, scale var(--dur) var(--ease), opacity 300ms ease, visibility 0s;
 }
-.video-play svg { width: 16px; height: 16px; fill: currentColor; stroke: none; }
-.video-play:hover { background: rgba(10, 15, 26, .84); scale: 1.03; }
-.is-playing .video-play { display: none; }
+.video-play-icon { position: relative; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: rgba(255, 255, 255, .14); }
+.video-play-icon svg { width: 14px; height: 14px; fill: currentColor; stroke: none; }
+/* The ring fills while the mouse rests on the film; when it closes, the preview starts. */
+.video-play-icon .video-ring { position: absolute; inset: -3px; width: 38px; height: 38px; rotate: -90deg; fill: none; stroke: currentColor; stroke-width: 2.4; }
+.video-ring circle { stroke-dasharray: 113.1; stroke-dashoffset: 113.1; opacity: 0; transition: stroke-dashoffset 200ms ease, opacity 200ms ease; }
+.is-arming .video-ring circle { stroke-dashoffset: 0; opacity: 1; transition: stroke-dashoffset 1.5s linear, opacity 200ms ease; }
+.video-play:hover { background: rgba(8, 12, 22, .8); scale: 1.03; }
+.video-hint {
+  position: absolute; left: 16px; bottom: 18px; z-index: 2;
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px 8px 11px; border-radius: 999px;
+  background: rgba(8, 12, 22, .6); color: rgba(255, 255, 255, .92); font-size: 13px; font-weight: 500;
+}
+.video-hint svg { width: 16px; height: 16px; }
+.video-progress { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; height: 3px; background: rgba(255, 255, 255, .16); }
+.video-progress i { display: block; height: 100%; background: #fff; transform: scaleX(0); transform-origin: 0 50%; transition: transform 260ms linear; }
+.video-close {
+  position: absolute; right: 14px; top: 14px; z-index: 3;
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(8, 12, 22, .62); color: #fff;
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  transition: background-color var(--dur) ease, opacity 300ms ease, visibility 300ms;
+}
+.video-close svg { width: 18px; height: 18px; }
+.video-close:hover { background: rgba(8, 12, 22, .85); }
+/* Controls hide after they fade but show at once, so focus can land on them in the same moment. */
+.video-hint, .video-progress, .video-close { opacity: 0; visibility: hidden; transition: opacity 300ms ease, visibility 0s 300ms, background-color var(--dur) ease; }
+[data-mode="preview"] :is(.video-hint, .video-progress), [data-mode="theater"] .video-close { opacity: 1; visibility: visible; transition: opacity 300ms ease, visibility 0s, background-color var(--dur) ease; }
+[data-mode] .video-play { opacity: 0; visibility: hidden; transition: opacity 300ms ease, visibility 0s 300ms; }
 
 /* ---------- The moving strip ---------- */
-.strip-head { width: min(var(--shell), 100% - var(--gutter) * 2); margin-inline: auto; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 32px; align-items: end; }
-.strip-lead { justify-self: end; max-width: 30em; color: var(--text-2); font-size: 17px; }
 .marquee {
   position: relative; overflow: hidden; margin-top: clamp(32px, 4vw, 56px); padding: 36px 0;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
@@ -649,8 +776,12 @@ main:focus { outline: none; }
 }
 
 @media (max-width: 900px) {
-  .strip-head, .split, .mcp-grid, .contact-grid, .about-grid { grid-template-columns: 1fr; }
-  .strip-lead { justify-self: start; }
+  .split, .mcp-grid, .contact-grid, .about-grid { grid-template-columns: 1fr; }
+  /* Phones: nothing holds the screen; each chapter leaves the top of the screen to its piece of the world. */
+  html.journey .hero-stage, html.journey .chapter:not(.chapter--brief) { height: auto; }
+  html.journey .hero { position: relative; }
+  html.journey .chapter:not(.chapter--brief) > .chapter-frame { position: relative; align-items: end; padding: 46svh 0 32px; }
+  html.journey .chapter-steps li { opacity: 1; }
   .about-photo { position: static; width: min(360px, 100%); }
   .facts-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .facts-row li:nth-child(3) { border-left: 0; }
