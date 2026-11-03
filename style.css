@@ -781,6 +781,7 @@ main:focus { outline: none; }
   html.journey .hero-stage, html.journey .chapter:not(.chapter--brief) { height: auto; }
   html.journey .hero { position: relative; }
   html.journey .chapter:not(.chapter--brief) > .chapter-frame { position: relative; align-items: end; padding: 46svh 0 32px; }
+  html.journey .chapter--brief > .chapter-frame { padding-top: 46svh; }
   html.journey .chapter-steps li { opacity: 1; }
   .about-photo { position: static; width: min(360px, 100%); }
   .facts-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }

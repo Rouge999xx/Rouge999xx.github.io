@@ -1,12 +1,13 @@
 /* =========================================================
    Carl Tampus — Portfolio journey (three.js + GSAP ScrollTrigger)
-   One world sits behind the home page and the camera travels through it as you scroll, along a trail of
-   light. Each chapter has its own piece of the world: a living core in the hero, a production line of video
-   frames for Flow Auto, a heartbeat for HealthNest, an orbit of tools, a globe that turns to Cebu, and a
-   ring of light at the end. While a chapter holds the screen the camera eases in; between chapters it travels.
+   A walk through a New York–style city behind the home page. The camera comes in over the harbor, drops
+   into an avenue and travels the grid as you scroll, turning corners between chapters. Each chapter stops
+   at a piece of the city: a deco tower with searchlights in the hero, a wall of screens for Flow Auto, an
+   LED news ticker for HealthNest, a theater marquee for the intro film, a transit map of the toolkit, a
+   split-flap departures board for Cebu, and a building going up for Contact.
    main.js marks the page with html.journey (full motion, hardware WebGL 2) so the layout is ready early;
-   this adds html.journey-live once the world has drawn its first frame. Elements marked data-station tell the
-   camera where each piece of the world is framed. Colors follow the light and dark themes.
+   this adds html.journey-live once the city has drawn its first frame. Elements marked data-station tell
+   the camera where each stop is. The navy theme is the city at night; the paper theme is the city by day.
    ========================================================= */
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.module.min.js';
 
@@ -25,192 +26,199 @@ const loadImage = src => new Promise((resolve, reject) => {
   image.onerror = reject;
   image.src = src;
 });
+// The same city on every visit (mulberry32).
+function seeded(seed) {
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SANS = '"Inter Tight", system-ui, sans-serif';
+const MONO = '"JetBrains Mono", ui-monospace, monospace';
 
 /* ---------- Colors ----------
-   Glowing things add light on the navy theme and are drawn as ink on the paper one. */
+   Night on navy (lit windows, wet streets, glowing signs); day on paper (ink edges, glass, lamps off). */
 const PALETTES = {
   dark: {
-    bg: '#0a0f1a', dust: '#8fb4f5', spark: '#ffffff', trail: '#3d74f0', hot: '#d6e4ff',
-    deep: '#061026', mid: '#1c47c4', rim: '#a8c6ff', edge: '#a8c6ff', dot: '#a8c6ff', glow: '#3b7bff', teal: '#4fe0c8', tealHot: '#c9fff4',
-    label: '#c9d6ee', back: '#2a3b5f', frame: '#0e1729'
+    bg: '#0a0f1a', skyTop: '#03060d', skyHorizon: '#131c32', skyGlow: '#2e2b4a',
+    facade: '#0a111d', facadeAlt: '#161a26', roof: '#060a12', edge: '#27324c', glass: '#0b1626',
+    warm: '#ffc987', cool: '#cfe0ff', asphalt: '#070b13', walk: '#0f1521', marking: '#49577a', water: '#050a14',
+    metal: '#151d2d', wood: '#1d1610', plywood: '#3a2c1d', concrete: '#596173', lamp: '#ffbf6e',
+    head: '#fff1d0', tail: '#ff3b3b', taxi: '#f0b31c', accent: '#3b7bff', hot: '#d6e4ff', teal: '#4fe0c8',
+    tealHot: '#c9fff4', amber: '#ffb547', coral: '#ff7676', go: '#43d17f', bezel: '#04070d', standby: '#0c1528',
+    stone: '#3a4256', beam: '#bcd2ff', steel: '#7d4535', crane: '#d6b347', label: '#c9d6ee',
+    flap: '#121418', flapInk: '#f1f1ec', flapDim: '#8a8f99', steam: '#aab4c8'
   },
   light: {
-    bg: '#f5f4f0', dust: '#4b5a78', spark: '#1d4ed8', trail: '#1d4ed8', hot: '#0b2a80',
-    deep: '#0d1c44', mid: '#1d4ed8', rim: '#a9c2ff', edge: '#1d4ed8', dot: '#2350c9', glow: '#1d4ed8', teal: '#0d9488', tealHot: '#064e45',
-    label: '#1b2433', back: '#b9bfcc', frame: '#e9e6df'
+    bg: '#f5f4f0', skyTop: '#f4f2ec', skyHorizon: '#e5e0d5', skyGlow: '#d8d1c2',
+    facade: '#e2ded5', facadeAlt: '#d3cbbd', roof: '#c9c2b5', edge: '#1b2433', glass: '#a7b2c2',
+    warm: '#ffc987', cool: '#cfe0ff', asphalt: '#c9c4ba', walk: '#ddd7cc', marking: '#f9f8f4', water: '#c3ccd8',
+    metal: '#3b4456', wood: '#7d6449', plywood: '#c79f6b', concrete: '#9aa1ad', lamp: '#ffbf6e',
+    head: '#fff1d0', tail: '#d84343', taxi: '#efb21a', accent: '#1d4ed8', hot: '#0b2a80', teal: '#0d9488',
+    tealHot: '#064e45', amber: '#c27a0e', coral: '#cf4a4a', go: '#1f9d55', bezel: '#1b2433', standby: '#e7e4dc',
+    stone: '#d6d0c4', beam: '#bcd2ff', steel: '#a5543b', crane: '#d3a623', label: '#1b2433',
+    flap: '#1a1c22', flapInk: '#f1f1ec', flapDim: '#8a8f99', steam: '#ffffff'
   }
 };
+const WEATHER = { dark: { night: 1, fog: .0042, veil: .72 }, light: { night: 0, fog: .0047, veil: .62 } };
 const themeName = () => (root.dataset.theme === 'light' ? 'light' : 'dark');
 
-/* ---------- GLSL: 3D simplex noise (Ashima Arts / Stefan Gustavson, MIT) ---------- */
-const NOISE = /* glsl */`
-vec3 mod289(vec3 x){return x-floor(x*(1./289.))*289.;}
-vec4 mod289(vec4 x){return x-floor(x*(1./289.))*289.;}
-vec4 permute(vec4 x){return mod289(((x*34.)+10.)*x);}
-vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-.85373472095314*r;}
-float snoise(vec3 v){
-  const vec2 C=vec2(1./6.,1./3.);const vec4 D=vec4(0.,.5,1.,2.);
-  vec3 i=floor(v+dot(v,C.yyy));vec3 x0=v-i+dot(i,C.xxx);
-  vec3 g=step(x0.yzx,x0.xyz);vec3 l=1.-g;vec3 i1=min(g.xyz,l.zxy);vec3 i2=max(g.xyz,l.zxy);
-  vec3 x1=x0-i1+C.xxx;vec3 x2=x0-i2+C.yyy;vec3 x3=x0-D.yyy;
-  i=mod289(i);
-  vec4 p=permute(permute(permute(i.z+vec4(0.,i1.z,i2.z,1.))+i.y+vec4(0.,i1.y,i2.y,1.))+i.x+vec4(0.,i1.x,i2.x,1.));
-  float n_=.142857142857;vec3 ns=n_*D.wyz-D.xzx;
-  vec4 j=p-49.*floor(p*ns.z*ns.z);vec4 x_=floor(j*ns.z);vec4 y_=floor(j-7.*x_);
-  vec4 x=x_*ns.x+ns.yyyy;vec4 y=y_*ns.x+ns.yyyy;vec4 h=1.-abs(x)-abs(y);
-  vec4 b0=vec4(x.xy,y.xy);vec4 b1=vec4(x.zw,y.zw);
-  vec4 s0=floor(b0)*2.+1.;vec4 s1=floor(b1)*2.+1.;vec4 sh=-step(h,vec4(0.));
-  vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
-  vec3 p0=vec3(a0.xy,h.x);vec3 p1=vec3(a0.zw,h.y);vec3 p2=vec3(a1.xy,h.z);vec3 p3=vec3(a1.zw,h.w);
-  vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
-  p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
-  vec4 m=max(.5-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.);m=m*m;
-  return 105.*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
-}`;
+/* ---------- The grid ----------
+   Avenues run north (−z) every 60 units, roadway ±6 and building line ±9 from their middle; streets run east
+   every 26 units, roadway ±4 and building line ±6.5. A storey is 2 units; the camera rides at about the
+   second floor. */
+const AVENUES = [-120, -60, 0, 60, 120, 180];
+const AVE_LINE = 9, ST = 26, ST_LINE = 6.5, FLOOR = 2, EYE = 3.4;
+const ROWS = 21;       // blocks from the waterfront (z = 0) north
+const END_STREET = 18; // the avenue at x = 60 ends at this street, at the building going up
 
-// Soft round points, shared by every particle field.
-const POINT_FRAGMENT = /* glsl */`
-varying vec3 vColor;
-varying float vAlpha;
-void main() {
-  float d = length(gl_PointCoord - .5);
-  float a = smoothstep(.5, .06, d);
-  if (a * vAlpha < .004) discard;
-  gl_FragColor = vec4(vColor, a * vAlpha);
-}`;
+// In over the harbor, down into the first avenue, east along a street, up the next avenue to the site.
+const ROUTE = [
+  [0, 36, 86], [0, 34, 60], [0, 22, 34], [0, 9, 12], [0, EYE + .4, -8], [1.6, EYE, -40], [1.6, EYE, -100],
+  [.4, EYE, -150], [0, EYE, -192], [8, EYE, -208], [30, EYE, -208], [52, EYE, -208], [60, EYE, -218],
+  [60.8, EYE, -270], [60.8, EYE, -330], [60, EYE + .6, -392], [59, 9, -428], [58, 17, -452]
+];
 
-/* ---------- The world's map ----------
-   The camera path runs into the screen with gentle bends. Each station is a distance along it; a chapter
-   that holds the screen moves the camera only HOLD units either side of its station, the rest is travel. */
-const STATIONS = { core: 26, line: 100, pulse: 170, reel: 232, orbit: 296, globe: 366, portal: 440 };
-const HOLD = 3;
-const HERO_PUSH = 24;
-const LOOK = 7;
-// Where each piece sits on screen when its chapter is centered: x/y as a share of half the screen, d = distance.
-// Narrow screens put it above the text (mx/my) and shrink it.
-const PLACES = {
-  core: { x: .44, y: .04, d: 11, mx: 0, my: .5 },
-  line: { x: .42, y: .02, d: 12, mx: .05, my: .44 },
-  pulse: { x: .43, y: .02, d: 12, mx: 0, my: .44 },
-  reel: { x: 0, y: 0, d: 16, mx: 0, my: 0 },
-  orbit: { x: .46, y: .02, d: 12, mx: 0, my: .44 },
-  globe: { x: .42, y: 0, d: 12, mx: 0, my: .44 },
-  portal: { x: 0, y: .02, d: 15, mx: 0, my: .08 }
+// Each chapter's stop: where the camera holds, what it looks at, and where that lands on screen, as a share
+// of half the screen: beside the text on wide screens (desk), above it on phones (phone).
+const STOPS = {
+  core: { hold: [0, 34.6, 68], subject: [26, 64, -13], desk: [.36, .2], phone: [0, .5], range: 280 },
+  line: { hold: [1.4, EYE, -30], subject: [17, 13, -58.5], desk: [.42, .06], phone: [.05, .42], range: 170 },
+  pulse: { hold: [1, EYE, -136], subject: [16, 12.5, -163], desk: [.42, .06], phone: [0, .42], range: 170 },
+  reel: { hold: [16, EYE, -208], subject: [34, 8.5, -203], desk: [.36, .1], phone: [0, .4], range: 150 },
+  orbit: { hold: [60.6, EYE, -246], subject: [78, 8.2, -266.4], desk: [.42, .06], phone: [0, .42], range: 170 },
+  globe: { hold: [60.8, EYE, -318], subject: [80.2, 8, -344.3], desk: [.42, .06], phone: [0, .42], range: 170 },
+  portal: { hold: [59, 11.5, -436], subject: [70, 54, -490], desk: [.1, .5], phone: [0, .3], range: 230 }
 };
+const HOLD = 3, HERO_PUSH = 55, LOOK = 8;
 
-// Rough coastlines (longitude, latitude) for the dotted globe: enough to read the continents, with the
-// Philippines drawn island by island because that is where the globe stops.
-const LAND = [
-  // Eurasia
-  '-9.5,37 -9,43 -1.5,43.5 -1.2,46.2 -4.5,48 -1.5,48.8 1.6,50.4 4.2,51.6 4.8,53 8.6,53.6 8.4,57 10.6,57.6 10.3,54.5 14,54 19,54.5 21.3,55.5 21,57.3 24.2,57.3 23.6,59.2 28.5,59.7 22.5,60 21.4,61.5 21.6,63.5 25.4,65.2 22,65.8 17,61 18.9,59.8 16.4,56.4 12.8,55.6 11,59.2 5.5,58.8 5,61.5 8,63.5 12.5,66 15.5,68.5 19,70 25,71 31,70 40,68 44,68.5 53,68.5 60,69.8 68,70.5 73,72.8 80,72.5 87,74.5 100,77.5 106,77 113,73.5 127,73 140,72.5 150,71 160,70 170,69.5 180,68.8 180,65 172,64.5 165,60 163,57 156,51 156.5,57 155,59.5 142,59.3 136,54.5 141,53 140.5,48 135,43.5 131,42.7 129.5,41 129.3,37 126.5,34.5 126.2,37.7 124.8,40 121.5,39 121.2,40.7 117.7,39 119,37 122.4,37 120.4,34.3 121.8,31 121.8,28.5 119.5,25.5 116.5,22.9 113,22.2 110.3,21 109.6,21.6 106.7,20.5 105.7,18.8 108.8,15.2 109.3,11.6 106.7,10.4 104.8,8.6 105,10.4 103,10.8 101,12.6 100,13.5 99.2,10.5 100.3,7.7 101.2,6.8 103.4,4.5 104.2,1.4 103.4,1.3 101,2.8 100.3,5.3 98.3,7.9 98.6,12 97.7,16.5 94.5,16 94.2,19 92.3,20.7 91.8,22.4 89,21.8 86.9,21 85,19.5 82.2,16.6 80.2,13.5 79.9,10.3 77.5,8 76.5,8.9 74.8,12.8 73.4,16 72.8,19 72.5,21.3 70.6,20.8 68.4,23.5 66.5,25.4 61.5,25.2 57.3,25.8 56.4,26.4 56.3,24.3 58.7,23.5 59.8,22.4 58.5,20.5 57.2,18.9 55.3,17.3 52.2,15.6 48.7,14 45,12.8 43.4,12.7 42.6,15.2 40.4,20 38.4,23.8 36.6,25.8 35,28 34.4,28.6 34,31.2 35.5,33.8 35.9,36.8 32.5,36.1 29.6,36.2 27.3,37 26.2,39.5 24,40.7 23,39.3 22.7,36.4 21.6,37.8 20.2,39.6 19.4,41.8 18.5,42.5 16.2,43.5 14,45.2 13.6,45.7 12.3,45.4 12.4,44.2 14,42.6 16.2,41.4 18.5,40.1 16.5,38.4 15.6,38 15.7,40 14.3,40.8 12.2,41.7 10.5,42.9 9.8,44.1 8.5,44.3 7,43.6 4.5,43.4 3.2,43 3.1,41.8 1,41 0,39.8 -0.4,38.4 -2,36.7 -5.3,36.1 -6.3,36.8 -7.4,37.2 -8.9,37',
-  // Africa, Madagascar
-  '-17.1,14.7 -16.7,12.4 -15,10.8 -13.2,8.9 -11.4,6.9 -7.5,4.4 -4,5.2 1,5.9 4.3,6.3 6,4.3 8.5,4.5 9.6,3.4 9.8,1 9.3,-1.5 11.8,-4.4 12.3,-6.1 13.4,-8.6 13.8,-11.7 12.2,-14.4 11.8,-17.3 14.4,-22.6 15.2,-26.9 16.5,-28.6 18.2,-31.7 18.4,-34.1 20,-34.8 22.6,-33.9 25.6,-33.7 27.5,-33.2 30,-31.3 32,-28.8 32.6,-26 35.4,-24.1 35.4,-21.8 34.7,-19.8 36.8,-17.9 39.5,-16.7 40.6,-14.8 40.4,-10.5 39.3,-8 39.2,-4.7 40.9,-2.5 43,0.2 46,2.8 48.6,5.4 50.8,10.4 51.2,11.8 48.9,11.2 45,10.5 43.3,11.9 42.1,13.3 39.8,15.4 38.4,18 37.1,21.1 35.6,23.9 34,27 32.6,29.9 32.3,31.3 29,30.9 25,31.6 20,30.9 18.9,30.3 15.2,32.3 11.1,33.3 10.2,37.2 7.5,37 3,36.8 -1.2,35.7 -5.9,35.8 -6.9,34 -9.6,30.4 -10.1,28.6 -12.9,27.8 -14.4,26.2 -16,24 -17,21 -16.3,19.3 -16.5,16.5',
-  '44.2,-25.2 43.3,-22 44.3,-16.4 47,-15.2 49.3,-12 50.4,-15.4 49.8,-17.1 48.7,-20.4 47.2,-24.9 45.5,-25.6',
-  // Americas
-  '-168,66 -162,70 -156,71.3 -141,69.6 -128,70.2 -115,68.5 -95,68 -85,69.5 -80,63 -90,57 -82,52 -78,59 -70,61 -64,58 -60,55 -56,52 -60,47 -66,45 -70,43 -70,41.5 -74,40.6 -76,38 -76,35 -80,32 -81,30 -80,25.5 -82,27 -84,30 -89,30 -94,29.5 -97,26 -97.5,22 -96,19 -91,18.5 -90,21 -87,21.5 -88,16 -84,15.5 -83.5,11 -81,8.7 -79,9.3 -77.5,8 -80,7.2 -82,8 -86,11 -87.5,13 -92,14.5 -96,15.7 -101,17.5 -105.5,20 -105.7,23 -109,26 -112.5,29.5 -114.5,31.5 -114,30 -110,23 -112,25 -115,29.5 -117,32.5 -120.5,34.5 -122.5,37.5 -124,40 -124.5,43 -124,46.5 -124.5,48.5 -128,51 -131,54.5 -135,57.5 -140,59.8 -146,60.8 -152,59 -156,57 -162,55 -158,58 -162,60 -165,62.5 -166,64.5',
-  '-73,78 -60,82 -35,83.5 -20,82 -18,77 -22,70 -30,68 -40,65 -43,60 -48,61 -52,65 -55,70 -60,76 -68,77',
-  '-80,9 -77,8.5 -75,11 -72,12 -68,10.7 -62,10.5 -60,8.5 -55,6 -51,4.5 -50,1 -48,-1 -44,-2.5 -39,-4 -35,-6 -35,-9 -37.5,-12.5 -39,-17 -40,-21 -43,-23 -48,-26 -49,-29 -52,-32 -54,-34.5 -57.5,-35 -57,-37.5 -62,-39 -65,-42 -64,-45 -67.5,-47 -69,-51 -68.5,-53 -71,-54 -74,-52 -75,-48 -74,-44 -73.5,-40 -73,-36 -71.5,-31 -71,-24 -70,-18 -75,-15.5 -77,-12 -79,-8 -81,-5 -80,-1 -80,1.5 -78,3 -77,6 -78,8',
-  '-84.9,21.9 -82,23.2 -77,22.2 -74.1,20.2 -77.5,19.9 -78.5,21.6 -81.5,22.2 -84,21.7',
-  '-74.5,18.4 -72.8,19.9 -69.9,19.6 -68.4,18.6 -70.9,18 -72.8,18.1',
-  // Islands of the north Atlantic
-  '-5.7,50 -3,50.6 1.4,51.2 1.7,52.7 0.2,53.5 -1.4,55.2 -2,56.9 -1.8,57.6 -3.3,58.6 -5,58.6 -6.2,56.8 -5.6,55.3 -4.8,54.8 -3,53.9 -3,53.3 -4.6,52.8 -4.2,51.6 -5.3,51.7',
-  '-10,51.6 -6.3,52.2 -6,54 -5.8,55.2 -7.6,55.3 -10,54.2 -9.5,53',
-  '-24,65.5 -21,66.4 -15,66.5 -13.6,65.1 -15,64.2 -18.7,63.4 -22.7,63.8',
-  // East and Southeast Asia
-  '120.1,23 121,25.1 121.9,25 121.4,23 120.7,21.9',
-  '108.6,19.2 110.5,20.1 111,19.6 109.6,18.2 108.7,18.5',
-  '79.8,9.6 80.3,9.8 81.9,7.4 81.3,6.2 80.1,6 79.7,8.1',
-  '130.9,34 132.6,35.5 135.3,35.7 136.8,37.2 138.5,37.8 139.9,40 140,41.4 141.5,41.4 141.9,39.2 140.9,37.8 140.8,35.7 139.8,34.9 138.7,34.6 137.3,34.6 136,33.4 135,34.6 133.4,34.4 131.9,33.9',
-  '140,42.5 141.5,45.4 143,44.4 145.5,43.3 143.3,41.9 141,41.8',
-  '129.6,33.2 131,33.9 132,33 131.3,31.3 130.2,31.2 129.8,32.7',
-  '132.4,33.5 133.6,34.3 134.7,34.2 134.2,33.2 133,32.7',
-  '141.8,46 142,49 142.2,54.3 143.3,52.8 143.4,49.2 142.5,46.2',
-  '109.6,1.9 111,1.6 113,3.2 115.4,5.3 116.8,6.9 118.5,5.4 119.2,5 118.1,4.3 117.7,3 118.8,1 117.8,0.8 117.5,-0.8 116.5,-2 116.2,-3.9 114.5,-3.5 111.6,-3.4 110.2,-2.9 109.4,-0.6 108.9,0.3',
-  '95.3,5.6 97.5,5.2 100.3,2.2 101.4,1.6 103.7,-1 105.8,-5.8 104.5,-5.9 102.3,-4 100.9,-1.8 99,0.6 98.7,1.7 97.1,3.3',
-  '105.2,-6.8 106,-5.9 108.5,-6.4 110.7,-6.5 112.5,-6.9 114.4,-7.7 114.4,-8.6 111,-8.2 108.7,-7.7 106.4,-7.4',
-  '118.8,-2.8 119.5,0.4 120.9,1.3 124.9,1.5 123.5,0.4 121.1,0.5 120.5,-0.5 121.6,-1 123.3,-0.8 122.4,-1.8 121.4,-1.9 122,-3.4 122.8,-4.8 121.5,-4.6 120.9,-2.6 120.4,-5.5 119.5,-5.5 119.4,-3.5',
-  '115,-8.2 116.5,-8.9 119,-8.7 122,-8.6 124.5,-8.2 127,-8.4 125.2,-9.6 123.5,-10.3 121,-9 118,-8.9 116,-8.9',
-  '130.9,-1.2 132.5,-0.4 134.1,-1 135,-3.3 137.9,-1.5 141,-2.6 144.5,-3.8 146,-5.5 147.6,-6 147.2,-8 150.7,-10.5 149,-10.2 146.4,-8.5 144,-7.7 143.3,-9 141,-9.1 139,-8.1 137.9,-5.4 135.5,-4.5 133.4,-4 132,-2.8',
-  // The Philippines: Luzon, Mindoro, Palawan, Panay, Negros, Cebu, Bohol, Leyte, Samar, Mindanao
-  '120,18.5 121.5,18.6 122.3,18.4 122.2,17 122.5,16.3 121.6,15.7 121.7,14.3 122.6,14.2 123.8,13.8 124.1,12.6 123.3,12.9 122.6,13.2 121.8,13.9 120.6,13.9 120.6,14.5 120,14.9 119.8,16.3 120.3,16.6 120.5,18',
-  '120.3,13.5 121.5,13.2 121.2,12.2 120.8,12.6 120.4,13',
-  '117.2,8.4 119,10.2 119.6,11.3 119.3,10.5 118.2,9 117.4,8.2',
-  '121.9,11.9 123.1,11.6 122.5,10.6 121.9,10.5 121.9,11.4',
-  '122.4,10.8 123.4,10.9 123.4,9.3 123,9 122.4,9.7',
-  '123.3,11.3 124.1,11 124,10.2 123.4,9.4 123.2,10.2',
-  '123.7,10.1 124.6,10.1 124.5,9.6 123.9,9.6',
-  '124.3,11.5 125.1,11.3 125.3,10.2 124.8,10 124.3,10.6',
-  '124.3,12.5 125.3,12.6 125.8,11.1 125,11 124.4,11.6',
-  '121.9,7 122.2,8 123.5,8.6 124.6,8.9 125.5,9.8 126.3,9.3 126.5,7.5 126.2,6.3 125.4,5.6 124.2,6.2 123.9,7.6 122.8,7.3',
-  // Australia, Tasmania, New Zealand
-  '113.6,-22 114.2,-26 115,-30 115.7,-33.5 115,-34.3 118,-35 121.5,-33.8 124,-33 126,-32.3 129,-31.6 131.2,-31.5 134.2,-32.8 135.6,-34.8 137.8,-32.6 137.4,-35.2 139.6,-35.5 140.6,-38 143.5,-38.8 146.3,-39.1 147.9,-37.9 150,-37.4 151.3,-33.8 153.1,-30.4 153.6,-28 153,-25.2 150.8,-22.8 149.2,-21 146.3,-19 145.4,-16.4 145.3,-14.9 143.8,-14.2 143.5,-12.4 142.5,-10.7 141.6,-12.6 141.6,-15 140.8,-17.4 139.3,-17.4 137,-15.9 135.4,-14.9 136.7,-12.2 136,-11.9 133,-11.4 130.3,-12 129.4,-14.9 127.8,-14.2 125.9,-14.5 124.4,-16.3 122.2,-17.9 121.1,-19.4 118.8,-20.3 116.8,-20.6 114.6,-21.8',
-  '144.6,-40.7 148.3,-40.9 148,-43.2 146,-43.6 145,-42.2',
-  '172.7,-34.4 174.6,-36.2 175.9,-37.4 178.5,-37.7 177.9,-39.2 176.9,-39.6 175.2,-41.6 174.6,-41.2 175,-39.8 173.8,-39.2 174.6,-37',
-  '172.7,-40.5 174.3,-41.3 173.4,-42.9 172.7,-43.8 171.2,-44.5 170.6,-45.9 169,-46.6 166.5,-46 166.8,-45.2 168.4,-44 170.5,-43 171.5,-41.7'
-].map(ring => {
-  const points = ring.split(' ').map(pair => pair.split(',').map(Number));
-  const lons = points.map(p => p[0]), lats = points.map(p => p[1]);
-  return { points, box: [Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)] };
-});
-const CEBU = { lat: 10.3157, lon: 123.8854 };
+// Lots the stops stand on: [x0, x1, z0, z1, floors, glass, tone]. The two-storey corner shops keep each
+// stop in view down the avenue.
+const LANDMARKS = [
+  [9, 25, -71.5, -58.5, 46, 1, .1], [9, 23, -45.5, -32.5, 2, 0, .8],
+  [9, 25, -175.5, -162.5, 16, 0, .85], [9, 23, -149.5, -136.5, 2, 0, .6],
+  [26, 42, -201.5, -188.5, 9, 0, 1],
+  [69, 87, -279.5, -266.5, 22, 0, .4], [69, 83, -253.5, -240.5, 2, 0, .7],
+  [69, 91, -357.5, -344.5, 20, 0, .25], [69, 83, -331.5, -318.5, 2, 0, .9]
+];
+const TOWER = [19, 33, -19.5, -6.5]; // the deco tower on the waterfront
+const SITE = [50, 88, -504, -474.5]; // the lot that is going up
 
-function onLand(lon, lat) {
-  if (lat < -71) return true; // Antarctica
-  for (const { points, box } of LAND) {
-    if (lon < box[0] || lon > box[2] || lat < box[1] || lat > box[3]) continue;
-    let inside = false;
-    for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
-      const [xi, yi] = points[i], [xj, yj] = points[j];
-      if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
-    }
-    if (inside) return true;
-  }
-  return false;
+/* ---------- Shader pieces ---------- */
+// The veil: the city fades toward the page color where the text sits, in a band along the left edge (beside
+// the chapters on wide screens) and one along the bottom (under the hero's lines, and a phone's chapters).
+// uVeil holds where each band starts and ends in pixels, uVeilAmount how strong each one is.
+const VEIL = /* glsl */`
+uniform vec4 uVeil; uniform vec2 uVeilAmount;
+float veil() {
+  float left = 1. - smoothstep(uVeil.x, uVeil.y, gl_FragCoord.x);
+  float low = 1. - smoothstep(uVeil.z, uVeil.w, gl_FragCoord.y);
+  return max(left * uVeilAmount.x, low * uVeilAmount.y);
+}`;
+// The sky, and the haze every surface fades into with distance.
+const AIR = VEIL + /* glsl */`
+uniform vec3 uSkyTop, uSkyHorizon, uSkyGlow, uBg;
+uniform float uFog;
+vec3 skyColor(vec3 dir) {
+  vec3 c = mix(uSkyHorizon, uSkyTop, smoothstep(0., .42, dir.y));
+  return c + uSkyGlow * exp(-abs(dir.y) * 8.) * .6;
 }
-// Longitude 0 points along +x and 90°E along -z, so turning the globe by -(90° + lon) brings lon to face +z.
-function latLon(lat, lon, radius, target = new THREE.Vector3()) {
-  const phi = THREE.MathUtils.degToRad(lat), lambda = THREE.MathUtils.degToRad(lon);
-  return target.set(Math.cos(phi) * Math.cos(lambda), Math.sin(phi), -Math.cos(phi) * Math.sin(lambda)).multiplyScalar(radius);
-}
+vec3 fogged(vec3 color, vec3 world) {
+  vec3 d = world - cameraPosition;
+  float f = 1. - exp(-dot(d, d) * uFog * uFog);
+  return mix(mix(color, uSkyHorizon + uSkyGlow * .6, f), uBg, veil()); // haze toward the sky's color at the horizon
+}`;
+const HASH = /* glsl */`
+float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }`;
+// Boxes (instanced or not) pass their local position and size, so shaders can draw edges in world units.
+const BOX_VERTEX = /* glsl */`
+varying vec3 vWorld; varying vec3 vNormal; varying vec3 vLocal; varying vec3 vSize;
+void main() {
+  #ifdef USE_INSTANCING
+    mat4 m = modelMatrix * instanceMatrix;
+  #else
+    mat4 m = modelMatrix;
+  #endif
+  vec4 world = m * vec4(position, 1.);
+  vWorld = world.xyz;
+  vNormal = normalize(mat3(m) * normal);
+  vLocal = position;
+  vSize = vec3(length(m[0].xyz), length(m[1].xyz), length(m[2].xyz));
+  gl_Position = projectionMatrix * viewMatrix * world;
+}`;
+const FLAT_VERTEX = /* glsl */`
+varying vec2 vUv; varying vec3 vWorld;
+void main() {
+  vUv = uv;
+  vec4 world = modelMatrix * vec4(position, 1.);
+  vWorld = world.xyz;
+  gl_Position = projectionMatrix * viewMatrix * world;
+}`;
 
-// Words and numbers drawn once into a texture, so labels in the world cost one draw call.
-function textAtlas(items) {
-  const width = 1024, height = 512, row = 72, pad = 14;
+/* ---------- Helpers ---------- */
+function paint(width, height, draw) {
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#fff';
+  draw(canvas.getContext('2d'), width, height);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.anisotropy = 4;
+  return texture;
+}
+// Words drawn once into a texture, so labels in the world cost one draw call.
+function textAtlas(items) {
+  const width = 512, height = 128, row = 64, pad = 10;
   const rects = {};
-  let x = 0, y = 0;
-  for (const item of items) {
-    ctx.font = item.font;
-    const w = Math.ceil(ctx.measureText(item.text).width) + pad * 2;
-    if (x + w > width) { x = 0; y += row; }
-    ctx.fillText(item.text, x + pad, y + row / 2 + 2);
-    rects[item.key] = { u: x / width, v: 1 - (y + row) / height, w: w / width, h: row / height, aspect: w / row };
-    x += w;
-  }
-  return { texture: new THREE.CanvasTexture(canvas), rects };
+  const texture = paint(width, height, ctx => {
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#fff';
+    let x = 0, y = 0;
+    for (const item of items) {
+      ctx.font = item.font;
+      const w = Math.ceil(ctx.measureText(item.text).width) + pad * 2;
+      if (x + w > width) { x = 0; y += row; }
+      ctx.fillText(item.text, x + pad, y + row / 2 + 2);
+      rects[item.key] = { u: x / width, v: 1 - (y + row) / height, w: w / width, h: row / height, aspect: w / row };
+      x += w;
+    }
+  });
+  return { texture, rects };
 }
-
 function glowTexture() {
-  const size = 128;
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-  gradient.addColorStop(0, 'rgba(255,255,255,1)');
-  gradient.addColorStop(.22, 'rgba(255,255,255,.42)');
-  gradient.addColorStop(.55, 'rgba(255,255,255,.08)');
-  gradient.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, size, size);
-  return new THREE.CanvasTexture(canvas);
+  return paint(128, 128, (ctx, w) => {
+    const gradient = ctx.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2);
+    gradient.addColorStop(0, 'rgba(255,255,255,1)');
+    gradient.addColorStop(.22, 'rgba(255,255,255,.42)');
+    gradient.addColorStop(.55, 'rgba(255,255,255,.08)');
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, w, w);
+  });
 }
-
-// Scroll position to distance along the path: smooth through every key, so speed never jumps.
+// Several small shapes as one geometry: [geometry, x, y, z, turn].
+function merge(parts) {
+  const positions = [], normals = [];
+  const m = new THREE.Matrix4();
+  for (const [shape, x, y, z, turn = 0] of parts) {
+    const g = shape.index ? shape.toNonIndexed() : shape.clone();
+    g.applyMatrix4(m.makeRotationY(turn).setPosition(x, y, z));
+    positions.push(g.attributes.position.array);
+    normals.push(g.attributes.normal.array);
+  }
+  const join = arrays => {
+    const out = new Float32Array(arrays.reduce((n, a) => n + a.length, 0));
+    let offset = 0;
+    for (const a of arrays) { out.set(a, offset); offset += a.length; }
+    return out;
+  };
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(join(positions), 3));
+  geometry.setAttribute('normal', new THREE.BufferAttribute(join(normals), 3));
+  return geometry;
+}
+// Scroll position to distance along the route: smooth through every key, so speed never jumps.
 function monotone(xs, ys) {
   const n = xs.length;
   if (n === 1) return () => ys[0];
@@ -237,6 +245,7 @@ function monotone(xs, ys) {
 async function start() {
   THREE.ColorManagement.enabled = false; // colors are written exactly as the CSS hex values
   const lite = matchMedia('(max-width: 900px), (pointer: coarse)').matches;
+  const random = seeded(1913);
 
   const canvas = document.createElement('canvas');
   canvas.className = 'journey-canvas';
@@ -252,784 +261,1281 @@ async function start() {
   renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(50, 1, .1, 260);
+  const camera = new THREE.PerspectiveCamera(55, 1, .5, 480);
   scene.add(camera);
   const shared = { uTime: { value: 0 }, uScale: { value: 800 } };
-  const palette = { ...PALETTES[themeName()] };
   const colors = {}; // one THREE.Color per palette key, shared by every material that uses it
-  for (const [key, value] of Object.entries(palette)) colors[key] = new THREE.Color(value);
-  const glowing = []; // materials that add light on navy and lay ink on paper
+  for (const [key, value] of Object.entries(PALETTES[themeName()])) colors[key] = new THREE.Color(value);
+  const air = {
+    uSkyTop: { value: colors.skyTop }, uSkyHorizon: { value: colors.skyHorizon }, uSkyGlow: { value: colors.skyGlow }, uBg: { value: colors.bg },
+    uFog: { value: WEATHER[themeName()].fog }, uNight: { value: WEATHER[themeName()].night },
+    uVeil: { value: new THREE.Vector4(0, 1, 0, 1) }, uVeilAmount: { value: new THREE.Vector2() }
+  };
+  const veilStrength = { value: WEATHER[themeName()].veil };
+  const glowing = []; // materials that add light at night and lay ink by day
   const glowBlend = material => {
     material.blending = themeName() === 'dark' ? THREE.AdditiveBlending : THREE.NormalBlending;
     glowing.push(material);
     return material;
   };
   const glowMap = glowTexture();
+  const redraws = []; // textures painted in theme colors, repainted when the theme changes
 
-  /* ---------- The path ---------- */
-  const pathPoints = [];
-  for (let i = 0; i < 48; i++) pathPoints.push(new THREE.Vector3(Math.sin(i * .31) * 5 + Math.sin(i * .11 + 2) * 3, Math.sin(i * .23 + 1.3) * 2.2, 20 - i * 12));
-  const path = new THREE.CatmullRomCurve3(pathPoints, false, 'centripetal');
-  path.arcLengthDivisions = 3000;
-  const LENGTH = path.getLength();
-  const pointAt = (s, target = new THREE.Vector3()) => path.getPointAt(clamp(s / LENGTH, 0, 1), target);
-
-  // A camera pose on the path, used for the real camera and to set each station's piece in front of it.
-  const lookAhead = new THREE.Vector3();
+  /* ---------- The route ---------- */
+  const curve = new THREE.CatmullRomCurve3(ROUTE.map(([x, y, z]) => new THREE.Vector3(x, y, z)), false, 'centripetal');
+  curve.arcLengthDivisions = 4000;
+  const LENGTH = curve.getLength();
+  const STEP = .5;
+  const lut = [];
+  for (let s = 0; s <= LENGTH + STEP; s += STEP) lut.push(curve.getPointAt(Math.min(1, s / LENGTH)));
+  const pointAt = (s, target = new THREE.Vector3()) => {
+    const f = clamp(s, 0, LENGTH) / STEP, i = Math.min(lut.length - 2, Math.floor(f));
+    return target.copy(lut[i]).lerp(lut[i + 1], f - i);
+  };
+  const nearestS = ([x, y, z]) => {
+    let best = 0, closest = Infinity;
+    lut.forEach((p, i) => {
+      const d = (p.x - x) ** 2 + (p.y - y) ** 2 + (p.z - z) ** 2;
+      if (d < closest) { closest = d; best = i * STEP; }
+    });
+    return best;
+  };
+  const ahead = new THREE.Vector3();
   const pose = (s, target) => {
     pointAt(s, target.position);
-    target.lookAt(pointAt(s + LOOK, lookAhead));
+    target.lookAt(pointAt(s + LOOK, ahead));
     target.updateMatrixWorld();
     return target;
   };
 
-  /* ---------- Dust: a field of soft points around the whole path ---------- */
-  function makeDust(count) {
-    const positions = new Float32Array(count * 3), seeds = new Float32Array(count), sizes = new Float32Array(count);
-    const p = new THREE.Vector3();
-    for (let i = 0; i < count; i++) {
-      pointAt(-10 + Math.random() * (LENGTH + 10), p);
-      const angle = Math.random() * Math.PI * 2;
-      const radius = 2.6 + Math.pow(Math.random(), .75) * 32;
-      positions[i * 3] = p.x + Math.cos(angle) * radius;
-      positions[i * 3 + 1] = p.y + Math.sin(angle) * radius * .62;
-      positions[i * 3 + 2] = p.z + (Math.random() - .5) * 14;
-      seeds[i] = Math.random();
-      sizes[i] = .04 + Math.pow(Math.random(), 3.2) * .13;
-    }
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 1));
-    geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
-    const material = glowBlend(new THREE.ShaderMaterial({
-      uniforms: { ...shared, uReveal: { value: 0 }, uDust: { value: colors.dust }, uSpark: { value: colors.spark } },
-      transparent: true, depthWrite: false,
-      vertexShader: /* glsl */`
-        attribute float aSeed; attribute float aSize;
-        uniform float uTime, uScale, uReveal; uniform vec3 uDust, uSpark;
-        varying vec3 vColor; varying float vAlpha;
-        void main() {
-          vec3 p = position;
-          p.x += sin(uTime * .21 + aSeed * 31.) * .3;
-          p.y += cos(uTime * .17 + aSeed * 17.) * .3;
-          vec4 mv = modelViewMatrix * vec4(p, 1.);
-          float d = -mv.z;
-          gl_Position = projectionMatrix * mv;
-          gl_PointSize = min(aSize * uScale / max(d, .1), 40.);
-          float twinkle = .62 + .38 * sin(uTime * (.8 + aSeed * 1.6) + aSeed * 60.);
-          vAlpha = smoothstep(.8, 4., d) * (1. - smoothstep(70., 130., d)) * twinkle * uReveal * .85;
-          vColor = aSeed > .9 ? uSpark : uDust;
-        }`,
-      fragmentShader: POINT_FRAGMENT
-    }));
-    const points = new THREE.Points(geometry, material);
-    points.frustumCulled = false;
-    return points;
-  }
-
-  /* ---------- The trail: a thread of light just below the camera, carrying pulses forward ---------- */
-  function makeTrail(end) {
-    const points = [];
-    for (let s = 0; s <= end; s += 3) points.push(pointAt(s).add(new THREE.Vector3(1.2, -1.6, 0)));
-    const curve = new THREE.CatmullRomCurve3(points);
-    const geometry = new THREE.TubeGeometry(curve, Math.round(end * 2.2), .014, 4, false);
-    const material = glowBlend(new THREE.ShaderMaterial({
-      uniforms: { ...shared, uCam: { value: 0 }, uLength: { value: end }, uReveal: { value: 0 }, uShow: { value: 0 }, uTrail: { value: colors.trail }, uHot: { value: colors.hot } },
-      transparent: true, depthWrite: false,
-      vertexShader: /* glsl */`
-        varying float vS;
-        uniform float uLength;
-        void main() { vS = uv.x * uLength; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`,
-      fragmentShader: /* glsl */`
-        uniform float uTime, uCam, uReveal, uShow; uniform vec3 uTrail, uHot;
-        varying float vS;
-        void main() {
-          float ahead = vS - uCam;
-          float fade = smoothstep(-2., 6., ahead) * (1. - smoothstep(16., 58., ahead));
-          float pulse = pow(fract((vS - uTime * 7.5) / 38.), 18.);
-          gl_FragColor = vec4(mix(uTrail, uHot, pulse), fade * (.22 + pulse * .9) * uReveal * uShow);
-        }`
-    }));
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.frustumCulled = false;
+  /* ---------- Shared materials ---------- */
+  const propMaterial = color => new THREE.ShaderMaterial({
+    uniforms: { ...air, uColor: { value: color } },
+    vertexShader: BOX_VERTEX,
+    fragmentShader: AIR + /* glsl */`
+      uniform vec3 uColor; uniform float uNight;
+      varying vec3 vWorld; varying vec3 vNormal; varying vec3 vLocal; varying vec3 vSize;
+      void main() {
+        vec3 col = uColor * (.5 + .5 * max(vNormal.y, 0.) + .15 * abs(vNormal.x));
+        gl_FragColor = vec4(fogged(col * mix(1., .65, uNight), vWorld), 1.);
+      }`
+  });
+  const unitBox = new THREE.BoxGeometry(1, 1, 1);
+  const addBox = (material, [x, y, z], [w, h, d], parent = scene) => {
+    const mesh = new THREE.Mesh(unitBox, material);
+    mesh.position.set(x, y, z);
+    mesh.scale.set(w, h, d);
+    parent.add(mesh);
     return mesh;
-  }
-
-  /* ---------- Streaks: lines that only appear when you travel fast ---------- */
-  function makeStreaks(count) {
-    const positions = new Float32Array(count * 6), ends = new Float32Array(count * 2), seeds = new Float32Array(count * 2);
-    for (let i = 0; i < count; i++) {
-      const angle = Math.random() * Math.PI * 2, radius = 1.8 + Math.random() * 7, z = -Math.random() * 60;
-      for (let k = 0; k < 2; k++) {
-        positions.set([Math.cos(angle) * radius, Math.sin(angle) * radius * .7, z], (i * 2 + k) * 3);
-        ends[i * 2 + k] = k;
-        seeds[i * 2 + k] = Math.random();
-      }
-    }
+  };
+  const addPlane = (material, [x, y, z], [w, h], turn = 0, parent = scene) => {
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), material);
+    mesh.position.set(x, y, z);
+    mesh.rotation.y = turn;
+    parent.add(mesh);
+    return mesh;
+  };
+  // Soft points of light; `night` ones only shine in the navy theme, `blink` ones flash like beacons.
+  function glowPoints(positions, color, size, { night = false, blink = false, parent = scene } = {}) {
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('aEnd', new THREE.BufferAttribute(ends, 1));
-    geometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 1));
-    const material = glowBlend(new THREE.ShaderMaterial({
-      uniforms: { uTravel: { value: 0 }, uSpeed: { value: 0 }, uColor: { value: colors.rim } },
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('aPhase', new THREE.BufferAttribute(new Float32Array(positions.length / 3).map(() => random()), 1));
+    const points = new THREE.Points(geometry, glowBlend(new THREE.ShaderMaterial({
+      uniforms: { ...shared, uColor: { value: color }, uSize: { value: size }, uNight: air.uNight, uVeil: air.uVeil, uVeilAmount: air.uVeilAmount, uOnlyNight: { value: night ? 1 : 0 }, uBlink: { value: blink ? 1 : 0 }, uOn: { value: 1 } },
       transparent: true, depthWrite: false,
       vertexShader: /* glsl */`
-        attribute float aEnd; attribute float aSeed;
-        uniform float uTravel, uSpeed;
-        varying float vAlpha;
-        void main() {
-          vec3 p = position;
-          p.z = mod(p.z + uTravel * 1.6, 60.) - 60.;
-          p.z -= aEnd * uSpeed * (2. + aSeed * 4.);
-          vAlpha = (1. - aEnd) * smoothstep(-60., -40., p.z) * smoothstep(0., -6., p.z);
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.);
-        }`,
-      fragmentShader: /* glsl */`
-        uniform vec3 uColor; uniform float uSpeed;
-        varying float vAlpha;
-        void main() { gl_FragColor = vec4(uColor, vAlpha * clamp(uSpeed * .9, 0., .55)); }`
-    }));
-    const lines = new THREE.LineSegments(geometry, material);
-    lines.frustumCulled = false;
-    return lines;
-  }
-
-  /* ---------- Stations ----------
-   Each piece of the world lives in a group posed in front of its station, facing the camera that will be
-   there (+z toward it). `stage` inside it is what the reveal animates. */
-  const stations = [];
-  function station(name, el, build) {
-    const group = new THREE.Group();
-    const stage = new THREE.Group();
-    group.add(stage);
-    scene.add(group);
-    const item = { name, el, s: STATIONS[name], place: PLACES[name], group, stage, reveal: { value: 0 }, revealed: false, progress: 0, trigger: null, update: () => {} };
-    if (el && el.offsetHeight > innerHeight * 1.5 || name === 'core') {
-      item.trigger = ScrollTrigger.create({ trigger: el, start: 'top top', end: 'bottom bottom' });
-    } else if (el) {
-      item.trigger = ScrollTrigger.create({ trigger: el, start: 'top bottom', end: 'bottom top' });
-    }
-    item.update = build(item) || item.update;
-    stations.push(item);
-    return item;
-  }
-  const poser = new THREE.PerspectiveCamera(50, 1, .1, 10);
-  function placeStation(item) {
-    const { place } = item;
-    const wide = camera.aspect >= 1;
-    pose(item.s, poser);
-    const halfH = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * place.d;
-    const halfW = halfH * camera.aspect;
-    const x = (wide ? place.x : place.mx) * halfW, y = (wide ? place.y : place.my) * halfH;
-    const offset = new THREE.Vector3(x, y, -place.d).applyQuaternion(poser.quaternion);
-    item.group.position.copy(poser.position).add(offset);
-    item.group.quaternion.copy(poser.quaternion);
-    // Sized for a 16:9 screen; a squarer one has less room beside the text.
-    item.group.scale.setScalar(wide ? clamp(camera.aspect / 1.78, .62, 1.05) : clamp(camera.aspect * 1.25, .5, .9));
-  }
-
-  /* The living core: a slowly breathing form, leaning toward the mouse. */
-  function buildCore(item) {
-    const uniforms = {
-      uTime: shared.uTime, uMorph: { value: 1 }, uPointer: { value: new THREE.Vector3() }, uGlow: { value: .8 },
-      uDeep: { value: colors.deep }, uMid: { value: colors.mid }, uRim: { value: colors.rim }
-    };
-    const orb = new THREE.Mesh(new THREE.IcosahedronGeometry(1, lite ? 12 : 20), new THREE.ShaderMaterial({
-      uniforms,
-      vertexShader: NOISE + /* glsl */`
-        uniform float uTime, uMorph; uniform vec3 uPointer;
-        varying vec3 vNormalV; varying vec3 vView; varying float vWave;
-        float field(vec3 n) {
-          float t = uTime * .16;
-          return snoise(n * .95 + vec3(t, t * .7, -t * .5)) * .7 + snoise(n * 2.1 - vec3(t * 1.2)) * .18;
-        }
-        vec3 shape(vec3 n, out float w) {
-          w = field(n);
-          float lean = pow(max(dot(n, normalize(uPointer + vec3(0., 0., .001))), 0.), 5.) * length(uPointer);
-          return n * (1.2 + (w * .13 + lean * .16) * uMorph);
-        }
-        void main() {
-          vec3 n = normalize(position);
-          vec3 a = normalize(cross(n, abs(n.y) < .99 ? vec3(0., 1., 0.) : vec3(1., 0., 0.)));
-          vec3 b = cross(n, a);
-          float w, w1, w2;
-          vec3 p0 = shape(n, w);
-          vec3 p1 = shape(normalize(n + a * .015), w1);
-          vec3 p2 = shape(normalize(n + b * .015), w2);
-          vec3 nrm = normalize(cross(p1 - p0, p2 - p0));
-          if (dot(nrm, n) < 0.) nrm = -nrm;
-          vWave = w;
-          vec4 mv = modelViewMatrix * vec4(p0, 1.);
-          vView = mv.xyz;
-          vNormalV = normalize(normalMatrix * nrm);
-          gl_Position = projectionMatrix * mv;
-        }`,
-      fragmentShader: /* glsl */`
-        uniform vec3 uDeep, uMid, uRim; uniform float uGlow;
-        varying vec3 vNormalV; varying vec3 vView; varying float vWave;
-        void main() {
-          vec3 N = normalize(vNormalV), V = normalize(-vView);
-          float facing = clamp(dot(N, V), 0., 1.);
-          float fres = pow(1. - facing, 2.6);
-          vec3 L = normalize(vec3(-.45, .75, .55));
-          float diff = clamp(dot(N, L), 0., 1.);
-          float spec = pow(clamp(dot(reflect(-L, N), V), 0., 1.), 36.);
-          // a deep core with light moving through it, bright at the rim like glass catching a lamp
-          float bands = .5 + .5 * sin(vWave * 7. + facing * 3.);
-          vec3 col = mix(uDeep, uMid, clamp(smoothstep(-.6, .8, vWave) * .55 + diff * .3 + bands * .15, 0., 1.));
-          col = mix(col, uRim, fres * .9);
-          col += uRim * (spec * .5 + pow(fres, 4.) * uGlow);
-          gl_FragColor = vec4(col, 1.);
-        }`
-    }));
-    orb.scale.setScalar(1.15);
-    item.stage.add(orb);
-
-    const halo = new THREE.Sprite(glowBlend(new THREE.SpriteMaterial({ map: glowMap, color: colors.glow, transparent: true, depthWrite: false, opacity: .6 })));
-    halo.scale.setScalar(8.5);
-    halo.position.z = -1.2;
-    item.stage.add(halo);
-
-    const rings = [];
-    [[2.25, .9, .3], [2.9, -.5, 1.1]].forEach(([radius, tiltX, tiltZ], index) => {
-      const ring = new THREE.Group();
-      ring.rotation.set(tiltX + Math.PI / 2, 0, tiltZ);
-      const band = new THREE.Mesh(new THREE.TorusGeometry(radius, .006, 3, 220), glowBlend(new THREE.MeshBasicMaterial({ color: colors.glow, transparent: true, opacity: .55, depthWrite: false })));
-      ring.add(band);
-      const moon = new THREE.Mesh(new THREE.SphereGeometry(.055, 12, 12), new THREE.MeshBasicMaterial({ color: colors.rim }));
-      moon.position.x = radius;
-      const spin = new THREE.Group();
-      spin.add(moon);
-      ring.add(spin);
-      rings.push({ ring, spin, speed: index ? -.22 : .3 });
-      item.stage.add(ring);
-    });
-
-    // A shell of points turning around the core.
-    const count = lite ? 260 : 520;
-    const positions = new Float32Array(count * 3), orbit = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const dir = new THREE.Vector3().randomDirection();
-      const radius = 1.75 + Math.pow(Math.random(), 1.6) * 2.2;
-      positions.set([dir.x * radius, dir.y * radius * .8, dir.z * radius], i * 3);
-      orbit.set([.05 + Math.random() * .18, Math.random(), .02 + Math.random() * .05], i * 3);
-    }
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('aOrbit', new THREE.BufferAttribute(orbit, 3));
-    const shell = new THREE.Points(geometry, glowBlend(new THREE.ShaderMaterial({
-      uniforms: { ...shared, uReveal: item.reveal, uColor: { value: colors.hot } },
-      transparent: true, depthWrite: false,
-      vertexShader: /* glsl */`
-        attribute vec3 aOrbit;
-        uniform float uTime, uScale, uReveal; uniform vec3 uColor;
-        varying vec3 vColor; varying float vAlpha;
-        void main() {
-          float a = uTime * aOrbit.x + aOrbit.y * 6.2831;
-          mat2 r = mat2(cos(a), -sin(a), sin(a), cos(a));
-          vec3 p = position; p.xz = r * p.xz;
-          vec4 mv = modelViewMatrix * vec4(p, 1.);
-          gl_Position = projectionMatrix * mv;
-          gl_PointSize = min(aOrbit.z * uScale / -mv.z, 24.);
-          vAlpha = uReveal * (.35 + .65 * fract(aOrbit.y * 7.));
-          vColor = uColor;
-        }`,
-      fragmentShader: POINT_FRAGMENT
-    })));
-    shell.frustumCulled = false;
-    item.stage.add(shell);
-
-    item.stage.scale.setScalar(.001);
-    return (dt, local, pointer) => {
-      uniforms.uPointer.value.set(pointer.x * 1.1, pointer.y * .9, .5).multiplyScalar(.7);
-      orb.rotation.y += dt * .08;
-      rings.forEach(({ ring, spin, speed }) => { ring.rotation.y += dt * speed * .25; spin.rotation.z += dt * speed; });
-      item.stage.rotation.y = pointer.x * .18;
-      item.stage.rotation.x = -pointer.y * .12;
-    };
-  }
-
-  /* Flow Auto: a production line. Frames flow toward you, pass a gate and come out as finished screens. */
-  function buildLine(item, screens, atlas) {
-    const N = 9;
-    // The line comes out of the distance and sweeps past on the right.
-    const curve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-1.8, 2, -22), new THREE.Vector3(-1, 1.3, -13), new THREE.Vector3(-.15, .6, -6),
-      new THREE.Vector3(1.1, -.15, -.6), new THREE.Vector3(3, -.95, 4.4)
-    ]);
-    const conveyor = new THREE.Mesh(new THREE.TubeGeometry(curve, 240, .008, 3, false), glowBlend(new THREE.MeshBasicMaterial({ color: colors.glow, transparent: true, opacity: .22, depthWrite: false })));
-    conveyor.renderOrder = -1; // under the frames that ride it
-    item.stage.add(conveyor);
-
-    const GATE = .42;
-    const gate = new THREE.Group();
-    gate.position.copy(curve.getPointAt(GATE));
-    gate.lookAt(gate.position.clone().add(curve.getTangentAt(GATE)));
-    const gateRing = new THREE.Mesh(new THREE.TorusGeometry(1.15, .014, 4, 160), glowBlend(new THREE.MeshBasicMaterial({ color: colors.edge, transparent: true, opacity: .8, depthWrite: false })));
-    gate.add(gateRing);
-    const gateGlow = new THREE.Sprite(glowBlend(new THREE.SpriteMaterial({ map: glowMap, color: colors.glow, transparent: true, depthWrite: false, opacity: .35 })));
-    gateGlow.scale.setScalar(4.2);
-    gate.add(gateGlow);
-    item.stage.add(gate);
-
-    const geometry = new THREE.PlaneGeometry(1.6, 1);
-    const cells = new Float32Array(N), numbers = new Float32Array(N * 4), states = new Float32Array(N * 2);
-    geometry.setAttribute('aCell', new THREE.InstancedBufferAttribute(cells, 1));
-    geometry.setAttribute('aNum', new THREE.InstancedBufferAttribute(numbers, 4));
-    geometry.setAttribute('aState', new THREE.InstancedBufferAttribute(states, 2));
-    const material = new THREE.ShaderMaterial({
-      uniforms: {
-        uScreens: { value: screens }, uAtlas: { value: atlas.texture },
-        uLine: { value: colors.edge }, uPanel: { value: colors.frame }, uGlow: { value: colors.glow }, uReveal: item.reveal
-      },
-      transparent: true, depthWrite: false, side: THREE.DoubleSide,
-      vertexShader: /* glsl */`
-        attribute float aCell; attribute vec4 aNum; attribute vec2 aState;
-        varying vec2 vUv; varying float vCell; varying vec4 vNum; varying vec2 vState;
-        void main() {
-          vUv = uv; vCell = aCell; vNum = aNum; vState = aState;
-          gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.);
-        }`,
-      fragmentShader: /* glsl */`
-        uniform sampler2D uScreens, uAtlas; uniform vec3 uLine, uPanel, uGlow; uniform float uReveal;
-        varying vec2 vUv; varying float vCell; varying vec4 vNum; varying vec2 vState;
-        float box(vec2 p, vec2 b, float r) { vec2 q = abs(p) - b + r; return length(max(q, 0.)) + min(max(q.x, q.y), 0.) - r; }
-        void main() {
-          float develop = vState.x, alpha = vState.y * uReveal;
-          vec2 p = (vUv - .5) * vec2(1.6, 1.);
-          float d = box(p, vec2(.8, .5), .07);
-          if (d > .01) discard;
-          float edge = 1. - smoothstep(.0, .012, abs(d + .006));
-          // the screen sits under a slim title bar
-          float bar = step(.89, vUv.y);
-          vec2 suv = vec2(vUv.x, vUv.y / .89);
-          float col = mod(vCell, 2.), row = floor(vCell / 2.);
-          vec3 shot = texture2D(uScreens, vec2((col + suv.x) * .5, ((1. - row) + suv.y) * .5)).rgb;
-          // develops from the top down as it passes the gate, with a bright line where it is developing
-          float shown = smoothstep(1. - develop - .02, 1. - develop + .02, suv.y);
-          float sweep = (1. - smoothstep(0., .03, abs(suv.y - (1. - develop)))) * step(.01, develop) * step(develop, .99);
-          float grid = max(step(.96, fract(vUv.x * 16.)), step(.94, fract(vUv.y * 10.))) * .18;
-          vec3 base = mix(uPanel, uLine, grid);
-          vec3 color = mix(base, shot * .92, shown * (1. - bar));
-          color = mix(color, uPanel * 1.15 + uLine * .08, bar);
-          color += uGlow * sweep * .9;
-          color = mix(color, uLine, edge * .85);
-          // frame number in the title bar
-          vec2 nuv = (vUv - vec2(.03, .9)) / vec2(.066, .095);
-          if (nuv.x > 0. && nuv.x < 1. && nuv.y > 0. && nuv.y < 1.) {
-            float ink = texture2D(uAtlas, vNum.xy + nuv * vNum.zw).a;
-            color = mix(color, uLine, ink);
-          }
-          gl_FragColor = vec4(color, alpha * (.55 + .45 * max(shown, edge)));
-        }`
-    });
-    const frames = new THREE.InstancedMesh(geometry, material, N);
-    frames.frustumCulled = false;
-    frames.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    item.stage.add(frames);
-
-    // Frames are drawn far to near, so their soft edges blend in the right order.
-    const order = [...Array(N).keys()];
-    const us = new Float32Array(N);
-    const at = new THREE.Vector3(), ahead = new THREE.Vector3(), m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), sc = new THREE.Vector3();
-    let drift = 0;
-    item.stage.scale.setScalar(.001);
-    return (dt, local) => {
-      drift += dt * .012;
-      const flow = drift + item.progress * 1.1 + local * .25;
-      for (let i = 0; i < N; i++) us[i] = (((i / N + flow) % 1) + 1) % 1;
-      order.sort((a, b) => us[a] - us[b]);
-      order.forEach((i, slot) => {
-        const u = us[i];
-        curve.getPointAt(u, at);
-        curve.getPointAt(Math.min(1, u + .01), ahead);
-        const yaw = Math.atan2(ahead.x - at.x, ahead.z - at.z);
-        e.set(0, yaw * .35 - .2, 0);
-        q.setFromEuler(e);
-        const size = 1.1 + u * .9;
-        m.compose(at, q, sc.set(size, size, size));
-        frames.setMatrixAt(slot, m);
-        // Every lap a frame comes back as a different screen; its number stays its place in the line.
-        const label = item.labels[(N - i) % N];
-        cells[slot] = (i + Math.floor(i / N + flow)) % 4;
-        numbers[slot * 4] = label.u;
-        numbers[slot * 4 + 1] = label.v;
-        numbers[slot * 4 + 2] = label.w;
-        numbers[slot * 4 + 3] = label.h;
-        states[slot * 2] = smooth(GATE - .06, GATE + .1, u);
-        states[slot * 2 + 1] = smooth(0, .12, u) * (1 - smooth(.86, 1, u));
-      });
-      frames.instanceMatrix.needsUpdate = true;
-      geometry.attributes.aCell.needsUpdate = true;
-      geometry.attributes.aNum.needsUpdate = true;
-      geometry.attributes.aState.needsUpdate = true;
-      gateRing.rotation.z += dt * .4;
-      const passing = us.some(u => Math.abs(u - GATE) < .03);
-      gateGlow.material.opacity = lerp(gateGlow.material.opacity, passing ? .7 : .3, damp(dt, 6));
-      item.stage.rotation.y = -.12 + local * .1;
-    };
-  }
-
-  /* HealthNest: a heartbeat traced across the dark, with a ring of appointments filling in. */
-  function buildPulse(item) {
-    const beat = [[0, 0], [.55, 0], [.72, .2], [.9, 0], [1.08, 0], [1.16, -.28], [1.3, 1.6], [1.44, -.58], [1.56, 0], [1.95, 0], [2.2, .36], [2.5, 0], [3.2, 0]];
-    const trace = new THREE.CurvePath();
-    let last = null;
-    for (let k = 0; k < 3; k++) {
-      for (const [x, y] of beat) {
-        const point = new THREE.Vector3(-4.2 + (k * 3.2 + x) * .875, y * .9, 0);
-        if (last && point.distanceTo(last) > 1e-4) trace.add(new THREE.LineCurve3(last, point));
-        last = point;
-      }
-    }
-    const uniforms = { ...shared, uHead: { value: 0 }, uReveal: item.reveal, uColor: { value: colors.teal }, uHot: { value: colors.tealHot } };
-    const line = new THREE.Mesh(new THREE.TubeGeometry(trace, 900, .024, 4, false), glowBlend(new THREE.ShaderMaterial({
-      uniforms, transparent: true, depthWrite: false,
-      vertexShader: /* glsl */`varying float vX; void main() { vX = uv.x; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`,
-      fragmentShader: /* glsl */`
-        uniform float uHead, uReveal; uniform vec3 uColor, uHot;
-        varying float vX;
-        void main() {
-          float behind = uHead - vX;
-          float trail = behind >= 0. ? exp(-behind * 2.6) : 0.;
-          float head = exp(-pow(behind / .012, 2.));
-          gl_FragColor = vec4(mix(uColor, uHot, head), (.1 + trail * .9 + head) * uReveal);
-        }`
-    })));
-    item.stage.add(line);
-    const spark = new THREE.Sprite(glowBlend(new THREE.SpriteMaterial({ map: glowMap, color: colors.teal, transparent: true, depthWrite: false, opacity: .9 })));
-    spark.scale.setScalar(1.1);
-    item.stage.add(spark);
-
-    // Appointments: dots around the trace that fill in as the chapter goes on.
-    const count = 36;
-    const positions = new Float32Array(count * 3), index = new Float32Array(count);
-    for (let i = 0; i < count; i++) {
-      const a = Math.PI / 2 - i / count * Math.PI * 2;
-      positions.set([Math.cos(a) * 3.3, Math.sin(a) * 3.3, -.8], i * 3);
-      index[i] = i / count;
-    }
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('aIndex', new THREE.BufferAttribute(index, 1));
-    const dotUniforms = { ...shared, uFill: { value: 0 }, uReveal: item.reveal, uColor: { value: colors.teal }, uBack: { value: colors.back } };
-    const dots = new THREE.Points(geometry, glowBlend(new THREE.ShaderMaterial({
-      uniforms: dotUniforms, transparent: true, depthWrite: false,
-      vertexShader: /* glsl */`
-        attribute float aIndex;
-        uniform float uScale, uFill, uReveal, uTime; uniform vec3 uColor, uBack;
+        attribute float aPhase;
+        uniform float uScale, uSize, uTime, uNight, uOnlyNight, uBlink, uOn;
+        uniform vec3 uColor;
         varying vec3 vColor; varying float vAlpha;
         void main() {
           vec4 mv = modelViewMatrix * vec4(position, 1.);
           gl_Position = projectionMatrix * mv;
-          float on = smoothstep(aIndex, aIndex + .03, uFill);
-          gl_PointSize = (.09 + on * .07) * uScale / -mv.z;
-          vColor = mix(uBack, uColor, on);
-          vAlpha = (.45 + on * .55) * uReveal;
+          gl_PointSize = min(uSize * uScale / -mv.z, 72.);
+          float shine = mix(1., uNight, uOnlyNight) * mix(1., step(.55, fract(uTime * .6 + aPhase)), uBlink);
+          vAlpha = shine * uOn * smoothstep(.6, 2.5, -mv.z);
+          vColor = uColor;
         }`,
-      fragmentShader: POINT_FRAGMENT
-    })));
-    dots.frustumCulled = false;
-    item.stage.add(dots);
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(3.85, .005, 3, 200), glowBlend(new THREE.MeshBasicMaterial({ color: colors.teal, transparent: true, opacity: .25, depthWrite: false })));
-    ring.position.z = -.8;
-    item.stage.add(ring);
-    const headPoint = new THREE.Vector3();
-
-    item.stage.scale.setScalar(.001);
-    return (dt, local) => {
-      const head = (shared.uTime.value * .17) % 1.25;
-      uniforms.uHead.value = head;
-      trace.getPointAt(clamp(head, 0, 1), headPoint);
-      spark.position.copy(headPoint);
-      spark.material.opacity = head <= 1 ? .9 : 0;
-      dotUniforms.uFill.value = lerp(dotUniforms.uFill.value, clamp(item.progress * 1.15, 0, 1), damp(dt, 4));
-      ring.rotation.z += dt * .05;
-      item.stage.rotation.y = -.16 + local * .12;
-    };
-  }
-
-  /* Toolkit: the tools on three tilted orbits around a small core; the chapter's current group glows. */
-  function buildOrbit(item, atlas) {
-    const groups = [
-      ['C#', 'C', 'JavaScript', 'TypeScript', 'HTML', 'CSS'],
-      ['WinUI 3', 'WinForms', '.NET', 'XAML', 'React'],
-      ['SQLite', 'MySQL', 'SQL', 'MS Access', 'MCP'],
-      ['Algorithms', 'Data structures', 'Linear algebra']
-    ];
-    const orbits = [
-      { radius: 1.7, tilt: new THREE.Euler(1.2, 0, .25), speed: .16 },
-      { radius: 2.5, tilt: new THREE.Euler(1.36, 0, -.42), speed: -.11 },
-      { radius: 3.25, tilt: new THREE.Euler(1.08, 0, .62), speed: .08 },
-      { radius: 3.9, tilt: new THREE.Euler(1.44, 0, -.12), speed: -.05 }
-    ];
-    const core = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 3), new THREE.MeshBasicMaterial({ color: colors.mid, wireframe: true, transparent: true, opacity: .55 }));
-    core.scale.setScalar(.55);
-    item.stage.add(core);
-    const coreGlow = new THREE.Sprite(glowBlend(new THREE.SpriteMaterial({ map: glowMap, color: colors.glow, transparent: true, depthWrite: false, opacity: .55 })));
-    coreGlow.scale.setScalar(3.6);
-    item.stage.add(coreGlow);
-    const ringMaterials = orbits.map(({ radius, tilt }) => {
-      const material = glowBlend(new THREE.MeshBasicMaterial({ color: colors.glow, transparent: true, opacity: .22, depthWrite: false }));
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(radius, .005, 3, 240), material);
-      ring.quaternion.setFromEuler(tilt).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2));
-      item.stage.add(ring);
-      return material;
-    });
-
-    const labels = groups.flatMap((names, ring) => names.map((name, k) => ({ ring, phase: k / names.length * Math.PI * 2 + ring, rect: atlas.rects[name] })));
-    const count = labels.length;
-    const base = new THREE.PlaneGeometry(1, 1);
-    const geometry = new THREE.InstancedBufferGeometry();
-    geometry.index = base.index;
-    geometry.setAttribute('position', base.attributes.position);
-    geometry.setAttribute('uv', base.attributes.uv);
-    geometry.instanceCount = count;
-    const centers = new Float32Array(count * 3), rects = new Float32Array(count * 4), glow = new Float32Array(count);
-    labels.forEach(({ rect }, i) => rects.set([rect.u, rect.v, rect.w, rect.h], i * 4));
-    geometry.setAttribute('aCenter', new THREE.InstancedBufferAttribute(centers, 3));
-    geometry.setAttribute('aRect', new THREE.InstancedBufferAttribute(rects, 4));
-    geometry.setAttribute('aGlow', new THREE.InstancedBufferAttribute(glow, 1));
-    const uniforms = { uAtlas: { value: atlas.texture }, uSize: { value: .3 }, uColor: { value: colors.label }, uHot: { value: colors.hot }, uReveal: item.reveal, uCore: { value: 0 } };
-    const words = new THREE.Mesh(geometry, new THREE.ShaderMaterial({
-      uniforms, transparent: true, depthWrite: false,
-      vertexShader: /* glsl */`
-        attribute vec3 aCenter; attribute vec4 aRect; attribute float aGlow;
-        uniform float uSize, uCore;
-        varying vec2 vUv; varying float vGlow; varying float vFront;
+      fragmentShader: VEIL + /* glsl */`
+        varying vec3 vColor; varying float vAlpha;
         void main() {
-          vec4 mv = modelViewMatrix * vec4(aCenter, 1.);
-          float aspect = 2. * aRect.z / aRect.w; // the atlas is twice as wide as it is tall
-          mv.xy += position.xy * vec2(aspect, 1.) * uSize * (1. + aGlow * .25);
-          gl_Position = projectionMatrix * mv;
-          vUv = aRect.xy + uv * aRect.zw;
-          vGlow = aGlow;
-          vFront = smoothstep(uCore - 1.2, uCore + .6, mv.z);
-        }`,
-      fragmentShader: /* glsl */`
-        uniform sampler2D uAtlas; uniform vec3 uColor, uHot; uniform float uReveal;
-        varying vec2 vUv; varying float vGlow; varying float vFront;
-        void main() {
-          float a = texture2D(uAtlas, vUv).a;
-          if (a < .02) discard;
-          gl_FragColor = vec4(mix(uColor, uHot, vGlow), a * (.28 + .72 * mix(.35, 1., vGlow)) * mix(.3, 1., vFront) * uReveal);
+          float d = length(gl_PointCoord - .5);
+          float core = exp(-d * d * 90.);
+          float a = (exp(-d * d * 18.) * .7 + core) * vAlpha * (1. - veil());
+          if (a < .01) discard;
+          gl_FragColor = vec4(vColor * (1. + core * .6), min(a, 1.));
         }`
-    }));
-    words.frustumCulled = false;
-    item.stage.add(words);
-
-    const spot = new THREE.Vector3(), center = new THREE.Vector3();
-    const tilts = orbits.map(({ tilt }) => new THREE.Quaternion().setFromEuler(tilt));
-    const lit = orbits.map(() => 0);
-    let spin = 0;
-    item.stage.scale.setScalar(.001);
-    return (dt, local) => {
-      spin += dt;
-      const active = Math.min(3, Math.floor(item.progress * 4.3));
-      lit.forEach((value, ring) => { lit[ring] = lerp(value, ring === active && item.progress > 0 ? 1 : 0, damp(dt, 5)); });
-      ringMaterials.forEach((material, ring) => { material.opacity = .16 + lit[ring] * .5; });
-      labels.forEach(({ ring, phase }, i) => {
-        const { radius, speed } = orbits[ring];
-        const a = phase + spin * speed + local * speed * 3;
-        spot.set(Math.cos(a) * radius, 0, Math.sin(a) * radius).applyQuaternion(tilts[ring]);
-        centers[i * 3] = spot.x;
-        centers[i * 3 + 1] = spot.y;
-        centers[i * 3 + 2] = spot.z;
-        glow[i] = lit[ring];
-      });
-      geometry.attributes.aCenter.needsUpdate = true;
-      geometry.attributes.aGlow.needsUpdate = true;
-      center.setFromMatrixPosition(item.stage.matrixWorld).applyMatrix4(camera.matrixWorldInverse);
-      uniforms.uCore.value = center.z;
-      core.rotation.y += dt * .3;
-      core.rotation.x += dt * .12;
-      item.stage.rotation.y = local * .25;
-    };
+    })));
+    points.frustumCulled = false;
+    parent.add(points);
+    return points;
   }
 
-  /* About: a dotted globe that turns until Cebu faces you, with a pin and a beam of light. */
-  function buildGlobe(item, atlas) {
-    const RADIUS = 2.5;
-    const spin = new THREE.Group(), tilt = new THREE.Group();
-    tilt.rotation.x = THREE.MathUtils.degToRad(CEBU.lat);
-    tilt.add(spin);
-    item.stage.add(tilt);
-    const settled = THREE.MathUtils.degToRad(-90 - CEBU.lon);
+  /* ---------- The city ----------
+     Blocks along the route are cut into lots; each lot gets a building whose height follows two clusters,
+     downtown by the water and midtown near the end. Tall ones step back as they rise. */
+  const boxes = []; // [x0, x1, y0, y1, z0, z1, seed, lit, tone, glass]
+  const towers = []; // water towers on low roofs: [x, y, z, size]
+  const antennas = []; // red lights on the tallest roofs
+  const building = (x0, x1, y0, y1, z0, z1, info) => boxes.push([x0, x1, y0, y1, z0, z1, ...info]);
+  const reserved = [...LANDMARKS.map(lot => lot.slice(0, 4)), TOWER, SITE];
+  const isReserved = (x0, x1, z0, z1) => reserved.some(([a0, a1, b0, b1]) => x0 < a1 && x1 > a0 && z0 < b1 && z1 > b0);
+  const routeMarks = lut.filter((_, i) => i % 8 === 0);
+  const nearRoute = (x, z, r) => routeMarks.some(p => (p.x - x) ** 2 + (p.z - z) ** 2 < r * r);
+  const floorsAt = (x, z) => 6 + 20 * Math.exp(-((z + 100) ** 2) / 9000 - ((x - 10) ** 2) / 14000) + 30 * Math.exp(-((z + 330) ** 2) / 9000 - ((x - 100) ** 2) / 9000);
+  function lot(x0, x1, z0, z1) {
+    if (isReserved(x0, x1, z0, z1)) return;
+    const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+    let floors = floorsAt(cx, cz) * (.45 + random() * .95);
+    if (random() < .05) floors *= 1.7;
+    floors = Math.max(3, Math.round(floors));
+    const h = floors * FLOOR;
+    const glass = floors > 18 && random() < .22 ? 1 : 0;
+    const info = [random(), .18 + random() * .4, random() < .3 ? .7 + random() * .3 : random() * .35, glass];
+    if (floors > 22 && random() < .6) {
+      const h1 = h * (.42 + random() * .16), h2 = h * (.7 + random() * .1);
+      const i1 = Math.min(x1 - x0, z1 - z0) * .14, i2 = i1 * 2.2;
+      building(x0, x1, 0, h1, z0, z1, info);
+      building(x0 + i1, x1 - i1, h1, h2, z0 + i1, z1 - i1, info);
+      building(x0 + i2, x1 - i2, h2, h, z0 + i2, z1 - i2, info);
+      if (floors > 38 && random() < .5) {
+        building(cx - .15, cx + .15, h, h + 7, cz - .15, cz + .15, [0, 0, 0, 0]);
+        antennas.push(cx, h + 7.2, cz);
+      }
+    } else {
+      building(x0, x1, 0, h, z0, z1, info);
+      if (floors < 18 && random() < .32) towers.push([x0 + (x1 - x0) * (.3 + random() * .4), h, z0 + (z1 - z0) * (.3 + random() * .4), .8 + random() * .45]);
+    }
+  }
+  for (let k = 0; k < AVENUES.length - 1; k++) {
+    for (let j = 0; j <= ROWS; j++) {
+      const x0 = AVENUES[k] + AVE_LINE;
+      // North of the last street the avenue at x = 60 is gone, so the blocks either side of it join up.
+      const x1 = j >= END_STREET && AVENUES[k + 1] === 60 ? 60 + AVE_LINE : AVENUES[k + 1] - AVE_LINE;
+      const z1 = -ST * j - ST_LINE, z0 = -ST * (j + 1) + ST_LINE;
+      if (!nearRoute((x0 + x1) / 2, (z0 + z1) / 2, 160)) continue;
+      const mid = (z0 + z1) / 2, kept = [boxes.length, towers.length, antennas.length];
+      for (const [a, b] of [[z0, mid], [mid, z1]]) {
+        let x = x0;
+        while (x < x1 - 1.5) {
+          const w = Math.min(x1 - x, 5 + random() * 7);
+          lot(x, x + w, a, b);
+          x += w;
+        }
+      }
+      // Phones draw fewer blocks, but every block is still rolled, so the skyline (and every sightline to a
+      // stop) is the same city as on a wide screen.
+      if (lite && !nearRoute((x0 + x1) / 2, (z0 + z1) / 2, 110)) [boxes.length, towers.length, antennas.length] = kept;
+    }
+  }
+  LANDMARKS.forEach(([x0, x1, z0, z1, floors, glass, tone], i) => building(x0, x1, 0, floors * FLOOR, z0, z1, [.37 + i * .07, .38, tone, glass]));
+  // The deco tower: three stages of stone; its crown and spire light up with the hero.
+  building(19, 33, 0, 40, -19.5, -6.5, [.11, .5, 1, 0]);
+  building(20.5, 31.5, 40, 52, -18, -8, [.13, .5, 1, 0]);
+  building(22, 30, 52, 60, -16.5, -9.5, [.17, .55, 1, 0]);
+  // The site's finished lower floors, in glass.
+  building(51.8, 85.2, 0, 19.6, -503.2, -476.3, [.5, .45, .2, 1]);
 
-    const candidates = lite ? 12000 : 22000;
-    const golden = Math.PI * (3 - Math.sqrt(5));
-    const positions = [], seeds = [];
-    const v = new THREE.Vector3();
-    for (let i = 0; i < candidates; i++) {
-      const y = 1 - (i + .5) / candidates * 2, r = Math.sqrt(1 - y * y), phi = i * golden;
-      v.set(Math.cos(phi) * r, y, Math.sin(phi) * r);
-      const lat = THREE.MathUtils.radToDeg(Math.asin(v.y));
-      const lon = THREE.MathUtils.radToDeg(Math.atan2(-v.z, v.x));
-      if (!onLand(lon, lat)) continue;
-      positions.push(v.x * RADIUS, v.y * RADIUS, v.z * RADIUS);
-      seeds.push(Math.random());
+  const buildingVertex = /* glsl */`
+    attribute vec4 aInfo;
+    varying vec3 vWorld; varying vec3 vNormal; varying vec3 vLocal; varying vec3 vSize; varying vec4 vInfo;
+    void main() {
+      mat4 m = modelMatrix * instanceMatrix;
+      vec4 world = m * vec4(position, 1.);
+      vWorld = world.xyz;
+      vNormal = normal;
+      vLocal = position;
+      vSize = vec3(length(m[0].xyz), length(m[1].xyz), length(m[2].xyz));
+      vInfo = aInfo;
+      gl_Position = projectionMatrix * viewMatrix * world;
+    }`;
+  const buildingMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      ...air, ...shared, uFacade: { value: colors.facade }, uFacadeAlt: { value: colors.facadeAlt }, uRoof: { value: colors.roof },
+      uEdge: { value: colors.edge }, uGlass: { value: colors.glass }, uWarm: { value: colors.warm }, uCool: { value: colors.cool }
+    },
+    vertexShader: buildingVertex,
+    fragmentShader: AIR + HASH + /* glsl */`
+      uniform vec3 uFacade, uFacadeAlt, uRoof, uEdge, uGlass, uWarm, uCool;
+      uniform float uNight;
+      varying vec3 vWorld; varying vec3 vNormal; varying vec3 vLocal; varying vec3 vSize; varying vec4 vInfo;
+      void main() {
+        bool sideX = abs(vNormal.x) > .5;
+        float u = sideX ? vWorld.z : vWorld.x;
+        float glass = vInfo.w;
+        vec2 size = mix(vec2(1.45, 2.), vec2(1.05, 2.), glass);
+        vec2 cell = vec2(u, vWorld.y) / size;
+        vec2 fw = max(fwidth(cell), vec2(1e-4));
+        vec3 e = (.5 - abs(vLocal)) * vSize;
+        vec3 col;
+        if (vNormal.y > .5) {
+          col = mix(uRoof, uEdge, (1. - smoothstep(0., .35, min(e.x, e.z))) * .55);
+        } else if (vNormal.y < -.5) {
+          col = uRoof;
+        } else {
+          vec2 id = floor(cell), f = fract(cell);
+          vec2 lo = mix(vec2(.2, .24), vec2(.07, .09), glass), hi = 1. - lo;
+          vec2 inside = smoothstep(lo - fw, lo + fw, f) * (1. - smoothstep(hi - fw, hi + fw, f));
+          float win = inside.x * inside.y;
+          // one roll per window decides whether it is lit, its color, brightness and glass; one per storey
+          float r = hash(id + vInfo.x * 37.);
+          float storey = hash(vec2(id.y, vInfo.x * 11.));
+          float lit = step(r * .65 + storey * .35, vInfo.y) * uNight;
+          vec3 light = mix(uWarm, uCool, step(.64, fract(r * 13.7))) * (.5 + .5 * fract(r * 7.31));
+          vec3 pane = uGlass * (.72 + .28 * fract(r * 3.17));
+          vec3 facade = mix(uFacade, uFacadeAlt, vInfo.z);
+          col = mix(facade, mix(pane, light, lit), win);
+          // shopfronts along the street
+          if (vWorld.y < 2.4) {
+            float bay = fract(u / 3.2);
+            float open = step(.3, hash(vec2(floor(u / 3.2), vInfo.x * 5.)));
+            float front = step(.25, vWorld.y) * step(.08, bay) * step(bay, .92);
+            col = mix(col, mix(pane, uWarm * .85, uNight * open), front);
+          }
+          // up close, windows and shopfronts settle toward the wall, so near facades frame the view instead of glaring
+          col = mix(col, facade, (1. - smoothstep(14., 64., length(vWorld - cameraPosition))) * .6);
+          // far off, the window grid melts into its average instead of shimmering
+          float far = smoothstep(.4, 1., max(fw.x, fw.y));
+          col = mix(col, mix(facade, mix(pane, uWarm * .7, vInfo.y * uNight), .4), far);
+          // corners and cornices: a little light on navy, ink on paper
+          float corner = 1. - smoothstep(0., .12 + fw.x * size.x * 1.5, sideX ? e.z : e.x);
+          float cornice = 1. - smoothstep(0., .2 + fw.y * size.y, e.y);
+          col = mix(col, uEdge, max(corner * .75, cornice * .5));
+        }
+        gl_FragColor = vec4(fogged(col, vWorld), 1.);
+      }`
+  });
+  // The city's depth is laid down first, so the window shader only runs once per pixel instead of once for
+  // every building stacked behind it. Pushed a hair back, so the real pass always wins on the same surface.
+  const depthOnly = new THREE.ShaderMaterial({
+    vertexShader: buildingVertex, fragmentShader: 'void main() {}',
+    colorWrite: false, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2
+  });
+  // The city is drawn in slices along the route, so slices out of view are skipped.
+  const slices = new Map();
+  for (const b of boxes) {
+    const key = Math.floor(-(b[4] + b[5]) / 2 / 110);
+    if (!slices.has(key)) slices.set(key, []);
+    slices.get(key).push(b);
+  }
+  {
+    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), at = new THREE.Vector3(), size = new THREE.Vector3();
+    for (const list of slices.values()) {
+      const geometry = unitBox.clone();
+      const info = new Float32Array(list.length * 4);
+      geometry.setAttribute('aInfo', new THREE.InstancedBufferAttribute(info, 4));
+      const mesh = new THREE.InstancedMesh(geometry, buildingMaterial, list.length);
+      list.forEach(([x0, x1, y0, y1, z0, z1, a, b, c, d], i) => {
+        mesh.setMatrixAt(i, m.compose(at.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2), q, size.set(x1 - x0, y1 - y0, z1 - z0)));
+        info.set([a, b, c, d], i * 4);
+      });
+      mesh.computeBoundingSphere();
+      scene.add(mesh);
+      const early = new THREE.InstancedMesh(geometry, depthOnly, list.length);
+      early.instanceMatrix = mesh.instanceMatrix;
+      early.boundingSphere = mesh.boundingSphere;
+      early.renderOrder = -1;
+      scene.add(early);
+    }
+  }
+
+  /* ---------- Streets, the harbor and the sky ---------- */
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(440, 860).rotateX(-Math.PI / 2).translate(30, 0, -230), new THREE.ShaderMaterial({
+    uniforms: {
+      ...air, ...shared, uAsphalt: { value: colors.asphalt }, uWalk: { value: colors.walk }, uMarking: { value: colors.marking },
+      uWater: { value: colors.water }, uLamp: { value: colors.lamp }, uWarm: { value: colors.warm }, uCool: { value: colors.cool }
+    },
+    vertexShader: /* glsl */`varying vec3 vWorld; void main() { vec4 w = modelMatrix * vec4(position, 1.); vWorld = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+    fragmentShader: AIR + HASH + /* glsl */`
+      uniform vec3 uAsphalt, uWalk, uMarking, uWater, uLamp, uWarm, uCool;
+      uniform float uNight, uTime;
+      varying vec3 vWorld;
+      // A lamp's pool of light, stretched toward the eye like a reflection on a wet street.
+      float pool(vec2 p, vec2 lamp, vec2 view) {
+        vec2 d = p - lamp;
+        float along = dot(d, view), across = d.x * view.y - d.y * view.x;
+        return exp(-dot(d, d) * .08) * .6 + exp(-(across * across * 1.4 + along * along * .02)) * .3;
+      }
+      void main() {
+        vec2 p = vWorld.xz;
+        vec2 view = normalize(cameraPosition.xz - p + vec2(1e-4));
+        vec3 col;
+        if (p.y > 7.5) {
+          // the harbor: dark water with the skyline's lights smeared across it
+          float t = uTime;
+          float ripple = sin(p.x * .4 + t * .5) * sin(p.y * 1.6 - t * .8) * .5 + sin(p.x * 1.3 - t * .6 + p.y * .2) * sin(p.y * 3.1 + t * 1.2) * .5;
+          float column = step(.58, hash(vec2(floor(p.x / 2.4), 3.)));
+          float glint = pow(max(ripple, 0.), 5.) * column * exp(-(p.y - 7.5) * .02);
+          col = uWater * (1. + ripple * .06) + mix(uWarm, uCool, hash(vec2(floor(p.x / 2.4), 9.))) * glint * uNight * 1.4;
+        } else {
+          float ax = floor(p.x / 60. + .5) * 60.;
+          float dx = p.x - ax;
+          float sz = floor(p.y / 26. + .5) * 26.;
+          float dz = p.y - sz;
+          float ends = step(59., ax) * step(ax, 61.) * step(p.y, -474.5); // the last avenue stops at the site
+          float onAve = step(abs(dx), 6.) * (1. - ends);
+          float onSt = step(abs(dz), 4.);
+          float road = max(onAve, onSt);
+          vec2 slab = fract(p / 1.6);
+          float seam = (1. - road) * max(step(slab.x, .035), step(slab.y, .035));
+          col = mix(uWalk, uAsphalt, road) * (1. - seam * .12);
+          // lane dashes mid-block, zebra crossings at the corners
+          float lane = onAve * (1. - onSt) * step(6.5, abs(dz)) * (1. - smoothstep(.06, .1, abs(abs(dx) - 3.))) * step(.45, fract(p.y / 3.2));
+          float crossAve = onAve * step(4.4, abs(dz)) * step(abs(dz), 6.3) * step(.5, fract(dx / .9));
+          float crossSt = onSt * (1. - ends) * step(6.4, abs(dx)) * step(abs(dx), 8.6) * step(.5, fract(dz / .9));
+          col = mix(col, uMarking, max(lane, max(crossAve, crossSt)) * .8);
+          // street lamps every 15 along each sidewalk, clear of the corners (the same spots the lamps stand on)
+          if (uNight > 0.) {
+            float lz = floor((p.y - 7.5) / 15. + .5) * 15. + 7.5;
+            float aveLamp = step(7., abs(lz - floor(lz / 26. + .5) * 26.)) * (1. - ends);
+            float lx = floor((p.x - 7.5) / 15. + .5) * 15. + 7.5;
+            float stLamp = step(10., abs(lx - floor(lx / 60. + .5) * 60.));
+            float glow = (pool(p, vec2(ax - 7.25, lz), view) + pool(p, vec2(ax + 7.25, lz), view)) * aveLamp
+                       + (pool(p, vec2(lx, sz - 5.3), view) + pool(p, vec2(lx, sz + 5.3), view)) * stLamp;
+            col += uLamp * glow * uNight * .5;
+          }
+        }
+        gl_FragColor = vec4(fogged(col, vWorld), 1.);
+      }`
+  }));
+  scene.add(ground);
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(300, 32, 16), new THREE.ShaderMaterial({
+    uniforms: { ...air }, side: THREE.BackSide, depthWrite: false,
+    vertexShader: /* glsl */`varying vec3 vDir; void main() { vDir = position; vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.); gl_Position = vec4(p.xy, p.w * .99999, p.w); }`,
+    fragmentShader: AIR + /* glsl */`varying vec3 vDir; void main() { gl_FragColor = vec4(mix(skyColor(normalize(vDir)), uBg, veil()), 1.); }`
+  }));
+  sky.frustumCulled = false;
+  sky.renderOrder = 10; // after the buildings, so it only fills what they leave open
+  scene.add(sky);
+
+  /* ---------- Street life: lamps, water towers, steam and red lights on the roofs ---------- */
+  function buildStreets() {
+    const spots = []; // [x, z, turn]
+    const avenue = (ax, z0, z1) => {
+      for (let z = Math.ceil((z0 - 7.5) / 15) * 15 + 7.5; z <= z1; z += 15) {
+        if (Math.abs(z - Math.round(z / ST) * ST) <= 7) continue;
+        spots.push([ax - 7.25, z, 0], [ax + 7.25, z, Math.PI]);
+      }
+    };
+    const street = (sz, x0, x1) => {
+      for (let x = Math.ceil((x0 - 7.5) / 15) * 15 + 7.5; x <= x1; x += 15) {
+        if (Math.abs(x - Math.round(x / 60) * 60) <= 10) continue;
+        spots.push([x, sz - 5.3, -Math.PI / 2], [x, sz + 5.3, Math.PI / 2]);
+      }
+    };
+    avenue(0, -205, 4);
+    avenue(60, -470, -212);
+    street(0, -70, 70);
+    street(-208, 8, 52);
+    // No lamp between a street-level stop and its piece, where it would stand in front of it.
+    const blocking = ([x, z]) => Object.values(STOPS).some(({ hold: [hx, hy, hz], subject: [sx, , sz] }) =>
+      hy < 6 && x > Math.min(hx, sx) - 3 && x < Math.max(hx, sx) + 3 && z > Math.min(hz, sz) - 3 && z < Math.max(hz, sz) + 3);
+    const standing = spots.filter(spot => !blocking(spot));
+    const lampGeometry = merge([[new THREE.BoxGeometry(.16, 5.8, .16), 0, 2.9, 0], [new THREE.BoxGeometry(1.3, .09, .09), .65, 5.75, 0], [new THREE.BoxGeometry(.46, .14, .26), 1.3, 5.66, 0]]);
+    const lamps = new THREE.InstancedMesh(lampGeometry, propMaterial(colors.metal), standing.length);
+    const m = new THREE.Matrix4(), heads = [];
+    standing.forEach(([x, z, turn], i) => {
+      lamps.setMatrixAt(i, m.makeRotationY(turn).setPosition(x, 0, z));
+      heads.push(x + Math.cos(turn) * 1.3, 5.52, z - Math.sin(turn) * 1.3);
+    });
+    lamps.computeBoundingSphere();
+    scene.add(lamps);
+    glowPoints(heads, colors.lamp, 1.6, { night: true });
+
+    const tankGeometry = merge([
+      [new THREE.CylinderGeometry(1, 1, 2.2, 10), 0, 2.7, 0], [new THREE.ConeGeometry(1.1, .9, 10), 0, 4.25, 0],
+      ...[[-.62, -.62], [.62, -.62], [-.62, .62], [.62, .62]].map(([x, z]) => [new THREE.BoxGeometry(.12, 1.6, .12), x, .8, z])
+    ]);
+    const tanks = new THREE.InstancedMesh(tankGeometry, propMaterial(colors.wood), towers.length);
+    towers.forEach(([x, y, z, size], i) => tanks.setMatrixAt(i, m.makeScale(size, size, size).setPosition(x, y, z)));
+    tanks.computeBoundingSphere();
+    scene.add(tanks);
+    glowPoints(antennas, colors.tail, 1.1, { blink: true });
+
+    // Steam stacks in the middle of the road, striped orange and white.
+    const stacks = [[-.4, -46], [47, -209.6], [60.2, -304]];
+    const stackMaterial = new THREE.ShaderMaterial({
+      uniforms: { ...air, uA: { value: new THREE.Color('#f07a2a') }, uB: { value: new THREE.Color('#f4f1ea') } },
+      vertexShader: BOX_VERTEX,
+      fragmentShader: AIR + /* glsl */`
+        uniform vec3 uA, uB; uniform float uNight;
+        varying vec3 vWorld; varying vec3 vNormal; varying vec3 vLocal; varying vec3 vSize;
+        void main() { vec3 col = mix(uA, uB, step(.5, fract(vWorld.y / .5))) * mix(1., .6, uNight); gl_FragColor = vec4(fogged(col, vWorld), 1.); }`
+    });
+    const puffs = [], seeds = [];
+    for (const [x, z] of stacks) {
+      const stack = new THREE.Mesh(new THREE.CylinderGeometry(.42, .5, 2.4, 14), stackMaterial);
+      stack.position.set(x, 1.2, z);
+      scene.add(stack);
+      for (let i = 0; i < (lite ? 8 : 16); i++) { puffs.push(x, 2.4, z); seeds.push(random()); }
     }
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(puffs, 3));
     geometry.setAttribute('aSeed', new THREE.Float32BufferAttribute(seeds, 1));
-    const dots = new THREE.Points(geometry, glowBlend(new THREE.ShaderMaterial({
-      uniforms: { ...shared, uReveal: item.reveal, uColor: { value: colors.dot }, uBack: { value: colors.back } },
+    const steam = new THREE.Points(geometry, new THREE.ShaderMaterial({
+      uniforms: { ...shared, uColor: { value: colors.steam }, uVeil: air.uVeil, uVeilAmount: air.uVeilAmount },
       transparent: true, depthWrite: false,
       vertexShader: /* glsl */`
         attribute float aSeed;
-        uniform float uScale, uReveal; uniform vec3 uColor, uBack;
-        varying vec3 vColor; varying float vAlpha;
+        uniform float uTime, uScale;
+        varying float vAlpha;
         void main() {
-          vec4 world = modelMatrix * vec4(position, 1.);
-          vec3 center = (modelMatrix * vec4(0., 0., 0., 1.)).xyz;
-          float facing = dot(normalize(world.xyz - center), normalize(cameraPosition - world.xyz));
-          vec4 mv = viewMatrix * world;
-          gl_Position = projectionMatrix * mv;
-          float grow = smoothstep(aSeed * .55, aSeed * .55 + .45, uReveal);
-          float front = smoothstep(-.1, .3, facing);
-          gl_PointSize = min((.042 + front * .018) * uScale / -mv.z * grow, 14.);
-          vColor = mix(uBack, uColor, front);
-          vAlpha = mix(.22, 1., front) * grow;
-        }`,
-      fragmentShader: POINT_FRAGMENT
-    })));
-    dots.frustumCulled = false;
-    spin.add(dots);
-
-    const air = new THREE.Mesh(new THREE.SphereGeometry(RADIUS * 1.09, 48, 32), glowBlend(new THREE.ShaderMaterial({
-      uniforms: { uColor: { value: colors.glow }, uReveal: item.reveal },
-      transparent: true, depthWrite: false, side: THREE.BackSide,
-      vertexShader: /* glsl */`varying vec3 vN; varying vec3 vV; void main() { vec4 mv = modelViewMatrix * vec4(position, 1.); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
-      fragmentShader: /* glsl */`
-        uniform vec3 uColor; uniform float uReveal;
-        varying vec3 vN; varying vec3 vV;
-        void main() { float rim = pow(clamp(1. - abs(dot(vN, vV)), 0., 1.), 3.); gl_FragColor = vec4(uColor, rim * .55 * uReveal); }`
-    })));
-    item.stage.add(air);
-
-    // Cebu: a bright point, rings that ripple out from it, and a beam with its name.
-    const home = latLon(CEBU.lat, CEBU.lon, RADIUS);
-    const normal = home.clone().normalize();
-    const pin = new THREE.Group();
-    pin.position.copy(home);
-    pin.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
-    spin.add(pin);
-    const point = new THREE.Mesh(new THREE.SphereGeometry(.05, 16, 16), new THREE.MeshBasicMaterial({ color: colors.hot }));
-    pin.add(point);
-    const ripples = [0, .5].map(phase => {
-      const ripple = new THREE.Mesh(new THREE.RingGeometry(.09, .11, 48), glowBlend(new THREE.MeshBasicMaterial({ color: colors.hot, transparent: true, depthWrite: false, side: THREE.DoubleSide })));
-      pin.add(ripple);
-      return { ripple, phase };
-    });
-    const beamMaterial = glowBlend(new THREE.ShaderMaterial({
-      uniforms: { uColor: { value: colors.hot }, uReveal: item.reveal },
-      transparent: true, depthWrite: false,
-      vertexShader: /* glsl */`varying float vY; void main() { vY = uv.y; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`,
-      fragmentShader: /* glsl */`uniform vec3 uColor; uniform float uReveal; varying float vY; void main() { gl_FragColor = vec4(uColor, (1. - vY) * .9 * uReveal); }`
-    }));
-    const beam = new THREE.Mesh(new THREE.CylinderGeometry(.008, .008, 1.1, 6, 1, true), beamMaterial);
-    beam.rotation.x = Math.PI / 2;
-    beam.position.z = .55;
-    pin.add(beam);
-    const tag = atlas.rects['Cebu, Philippines'];
-    const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: atlas.texture.clone(), color: colors.label, transparent: true, depthWrite: false }));
-    label.material.map.offset.set(tag.u, tag.v);
-    label.material.map.repeat.set(tag.w, tag.h);
-    label.scale.set(.3 * tag.aspect, .3, 1);
-    label.center.set(-.08, .5);
-    label.position.z = 1.15;
-    pin.add(label);
-
-    item.stage.scale.setScalar(.001);
-    return (dt, local) => {
-      // The globe spins in from the east and settles with Cebu in front while the chapter holds.
-      const turn = smooth(-1.1, -.05, local);
-      spin.rotation.y = settled + (1 - turn) * 2.4 + Math.max(0, local) * .5 + Math.sin(shared.uTime.value * .2) * .02;
-      ripples.forEach(({ ripple, phase }) => {
-        const t = (shared.uTime.value * .55 + phase) % 1;
-        ripple.scale.setScalar(1 + t * 5);
-        ripple.material.opacity = (1 - t) * .8 * item.reveal.value;
-      });
-      label.material.opacity = item.reveal.value * smooth(.5, .9, turn);
-      point.scale.setScalar(1 + Math.sin(shared.uTime.value * 3) * .15);
-    };
-  }
-
-  /* Contact: a ring of light the trail runs into, with points drifting toward its center. */
-  function buildPortal(item) {
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(5, .022, 4, 320), glowBlend(new THREE.MeshBasicMaterial({ color: colors.edge, transparent: true, opacity: .7, depthWrite: false })));
-    item.stage.add(ring);
-    const outer = new THREE.Mesh(new THREE.TorusGeometry(5.45, .006, 3, 320), glowBlend(new THREE.MeshBasicMaterial({ color: colors.glow, transparent: true, opacity: .35, depthWrite: false })));
-    item.stage.add(outer);
-    const count = lite ? 380 : 800;
-    const orbit = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) orbit.set([Math.random(), Math.random() * Math.PI * 2, .4 + Math.random() * .9], i * 3);
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
-    geometry.setAttribute('aOrbit', new THREE.BufferAttribute(orbit, 3));
-    const vortex = new THREE.Points(geometry, glowBlend(new THREE.ShaderMaterial({
-      uniforms: { ...shared, uReveal: item.reveal, uColor: { value: colors.rim }, uHot: { value: colors.hot } },
-      transparent: true, depthWrite: false,
-      vertexShader: /* glsl */`
-        attribute vec3 aOrbit;
-        uniform float uTime, uScale, uReveal; uniform vec3 uColor, uHot;
-        varying vec3 vColor; varying float vAlpha;
-        void main() {
-          float t = fract(aOrbit.x - uTime * .025 * aOrbit.z);
-          float r = mix(.3, 5.2, t);
-          float a = aOrbit.y + uTime * .22 * aOrbit.z / (r * .35 + .5);
-          vec3 p = vec3(cos(a) * r, sin(a) * r, -(1. - t) * 3.);
+          float t = fract(uTime * .11 + aSeed);
+          vec3 p = position + vec3(sin(aSeed * 40. + uTime * .6) * .4 * t + t * t * 2.2, t * 10., cos(aSeed * 30. + uTime * .5) * .4 * t);
           vec4 mv = modelViewMatrix * vec4(p, 1.);
           gl_Position = projectionMatrix * mv;
-          gl_PointSize = min((.03 + aOrbit.z * .022) * uScale / -mv.z, 10.);
-          vColor = mix(uHot, uColor, t);
-          vAlpha = smoothstep(0., .25, t) * (1. - smoothstep(.85, 1., t)) * .6 * uReveal;
+          gl_PointSize = min((1.1 + t * 5.5) * uScale / -mv.z, 180.);
+          vAlpha = (1. - t) * smoothstep(0., .12, t) * .3 * smoothstep(1.5, 5., -mv.z);
         }`,
-      fragmentShader: POINT_FRAGMENT
+      fragmentShader: VEIL + /* glsl */`
+        uniform vec3 uColor; varying float vAlpha;
+        void main() { float d = length(gl_PointCoord - .5); float a = smoothstep(.5, .05, d) * vAlpha * (1. - veil()); if (a < .004) discard; gl_FragColor = vec4(uColor, a); }`
+    }));
+    steam.frustumCulled = false;
+    scene.add(steam);
+  }
+
+  /* ---------- Traffic: cabs and cars along the route, tail lights going your way, headlights coming back ---------- */
+  function buildTraffic(count) {
+    const start = nearestS([0, EYE, -6]), end = nearestS([60, EYE, -420]);
+    const geometry = merge([[new THREE.BoxGeometry(1.25, .55, 3.1), 0, .45, 0], [new THREE.BoxGeometry(1.05, .45, 1.55), 0, .95, -.1]]);
+    const tints = new Float32Array(count * 3);
+    const paints = [colors.taxi, colors.taxi, new THREE.Color('#1c2333'), new THREE.Color('#2b3346'), new THREE.Color('#3d4458'), new THREE.Color('#c9ced8')];
+    for (let i = 0; i < count; i++) paints[Math.floor(random() * paints.length)].toArray(tints, i * 3);
+    geometry.setAttribute('aTint', new THREE.InstancedBufferAttribute(tints, 3));
+    const cars = new THREE.InstancedMesh(geometry, new THREE.ShaderMaterial({
+      uniforms: { ...air, uGlass: { value: colors.glass } },
+      vertexShader: /* glsl */`
+        attribute vec3 aTint;
+        varying vec3 vWorld; varying vec3 vNormal; varying vec3 vLocal; varying vec3 vTint;
+        void main() {
+          mat4 m = modelMatrix * instanceMatrix;
+          vec4 w = m * vec4(position, 1.);
+          vWorld = w.xyz; vNormal = normalize(mat3(m) * normal); vLocal = position; vTint = aTint;
+          gl_Position = projectionMatrix * viewMatrix * w;
+        }`,
+      fragmentShader: AIR + /* glsl */`
+        uniform vec3 uGlass; uniform float uNight;
+        varying vec3 vWorld; varying vec3 vNormal; varying vec3 vLocal; varying vec3 vTint;
+        void main() {
+          vec3 col = vTint * (.45 + .55 * max(vNormal.y, 0.) + .12 * abs(vNormal.x));
+          col = mix(col, uGlass * .8, step(.72, vLocal.y) * (1. - step(.5, vNormal.y)));
+          gl_FragColor = vec4(fogged(col * mix(1., .55, uNight), vWorld), 1.);
+        }`
+    }), count);
+    cars.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    cars.frustumCulled = false;
+    scene.add(cars);
+    const lights = new Float32Array(count * 6);
+    const tones = new Float32Array(count * 6);
+    const lightGeometry = new THREE.BufferGeometry();
+    lightGeometry.setAttribute('position', new THREE.BufferAttribute(lights, 3).setUsage(THREE.DynamicDrawUsage));
+    lightGeometry.setAttribute('aTone', new THREE.BufferAttribute(tones, 3));
+    const lamps = new THREE.Points(lightGeometry, glowBlend(new THREE.ShaderMaterial({
+      uniforms: { ...shared, uNight: air.uNight, uVeil: air.uVeil, uVeilAmount: air.uVeilAmount },
+      transparent: true, depthWrite: false,
+      vertexShader: /* glsl */`
+        attribute vec3 aTone;
+        uniform float uScale, uNight;
+        varying vec3 vColor; varying float vAlpha;
+        void main() {
+          vec4 mv = modelViewMatrix * vec4(position, 1.);
+          gl_Position = projectionMatrix * mv;
+          gl_PointSize = min(mix(.45, .9, uNight) * uScale / -mv.z, 40.);
+          vColor = aTone; vAlpha = mix(.75, 1., uNight) * smoothstep(1., 3., -mv.z);
+        }`,
+      fragmentShader: VEIL + /* glsl */`
+        varying vec3 vColor; varying float vAlpha;
+        void main() { float d = length(gl_PointCoord - .5); float core = exp(-d * d * 80.); float a = (exp(-d * d * 16.) * .6 + core) * vAlpha * (1. - veil()); if (a < .01) discard; gl_FragColor = vec4(vColor * (1. + core * .5), min(a, 1.)); }`
     })));
-    vortex.frustumCulled = false;
-    item.stage.add(vortex);
-    const heart = new THREE.Sprite(glowBlend(new THREE.SpriteMaterial({ map: glowMap, color: colors.glow, transparent: true, depthWrite: false, opacity: .5 })));
-    heart.scale.setScalar(5);
-    heart.position.z = -3;
-    item.stage.add(heart);
-    item.stage.scale.setScalar(.001);
-    return dt => {
-      ring.rotation.z += dt * .05;
-      outer.rotation.z -= dt * .03;
+    lamps.frustumCulled = false;
+    scene.add(lamps);
+    const fleet = Array.from({ length: count }, (_, i) => {
+      const dir = i % 3 === 2 ? -1 : 1;
+      return { s: start + random() * (end - start), dir, lane: dir * (random() < .5 ? 2 : 4.6), speed: 4 + random() * 4 };
+    });
+    fleet.forEach((car, i) => {
+      const tone = car.dir > 0 ? colors.tail : colors.head;
+      tone.toArray(tones, i * 6);
+      tone.toArray(tones, i * 6 + 3);
+    });
+    const at = new THREE.Vector3(), next = new THREE.Vector3(), forward = new THREE.Vector3(), right = new THREE.Vector3();
+    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1), up = new THREE.Vector3(0, 1, 0);
+    return (dt, camS) => {
+      fleet.forEach((car, i) => {
+        car.s += car.dir * car.speed * dt;
+        if (car.s < camS - 25 || car.s > camS + 170 || car.s < start || car.s > end) car.s = clamp(camS + 40 + random() * 130, start, end);
+        pointAt(car.s, at);
+        pointAt(car.s + 1, next);
+        forward.subVectors(next, at).setY(0).normalize();
+        right.set(-forward.z, 0, forward.x);
+        const across = car.lane * (Math.abs(forward.x) > Math.abs(forward.z) ? .62 : 1);
+        at.addScaledVector(right, across).setY(0);
+        forward.multiplyScalar(car.dir);
+        q.setFromAxisAngle(up, Math.atan2(forward.x, forward.z));
+        cars.setMatrixAt(i, m.compose(at, q, one));
+        const back = car.dir > 0 ? -1.58 : 1.58;
+        for (let k = 0; k < 2; k++) {
+          const sideways = k ? .45 : -.45;
+          lights[i * 6 + k * 3] = at.x + forward.x * back + right.x * sideways;
+          lights[i * 6 + k * 3 + 1] = .55;
+          lights[i * 6 + k * 3 + 2] = at.z + forward.z * back + right.z * sideways;
+        }
+      });
+      cars.instanceMatrix.needsUpdate = true;
+      lightGeometry.attributes.position.needsUpdate = true;
     };
   }
 
-  /* ---------- Build: the hero first, so it can appear right away; the rest while the page is idle ---------- */
+  /* ---------- Stops ----------
+     Each stop is built where it stands in the city. While the camera holds at a stop it turns to face it,
+     so the piece lands beside the text (or above it on a phone). */
+  const stations = [];
   const elements = Object.fromEntries([...document.querySelectorAll('[data-station]')].map(el => [el.dataset.station, el]));
-  const dust = makeDust(lite ? 1100 : 2600);
-  scene.add(dust);
-  const trail = makeTrail(STATIONS.portal + 16);
-  scene.add(trail);
-  const streaks = lite ? null : makeStreaks(220);
-  if (streaks) camera.add(streaks);
-  const core = elements.core ? station('core', elements.core, buildCore) : null;
+  function station(name) {
+    const stop = STOPS[name], el = elements[name];
+    const group = new THREE.Group();
+    scene.add(group);
+    const item = { name, el, stop, s: nearestS(stop.hold), subject: new THREE.Vector3(...stop.subject), group, reveal: { value: 0 }, revealed: false, progress: 0, aim: { yaw: 0, pitch: 0 }, update: () => {} };
+    const holds = el.offsetHeight > innerHeight * 1.5 || name === 'core';
+    item.trigger = ScrollTrigger.create(holds ? { trigger: el, start: 'top top', end: 'bottom bottom' } : { trigger: el, start: 'top bottom', end: 'bottom top' });
+    stations.push(item);
+    return item;
+  }
+  const poser = new THREE.PerspectiveCamera(55, 1, .5, 10);
+  const local = new THREE.Vector3();
+  let crowd = 0; // how much further right the text column reaches than on a 16:9 laptop, as a share of half the screen
+  function aimAt(item) {
+    pose(item.s, poser);
+    local.copy(item.subject).applyMatrix4(poser.matrixWorldInverse);
+    const [nx, ny] = camera.aspect >= 1 ? [item.stop.desk[0] + crowd * .6, item.stop.desk[1]] : item.stop.phone;
+    const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2), tanH = tanV * camera.aspect;
+    item.aim.yaw = Math.atan2(local.x, -local.z) - Math.atan(nx * tanH);
+    item.aim.pitch = Math.atan2(local.y, Math.hypot(local.x, local.z)) - Math.atan(ny * tanV);
+  }
+
+  /* The deco tower: a crown of light that climbs and breathes, two searchlights sweeping the sky, a beacon. */
+  function buildCore(item) {
+    const crown = new THREE.ShaderMaterial({
+      uniforms: { ...air, ...shared, uStone: { value: colors.stone }, uAccent: { value: colors.accent }, uHot: { value: colors.hot }, uReveal: item.reveal },
+      vertexShader: BOX_VERTEX,
+      fragmentShader: AIR + /* glsl */`
+        uniform vec3 uStone, uAccent, uHot; uniform float uTime, uNight, uReveal;
+        varying vec3 vWorld; varying vec3 vNormal; varying vec3 vLocal; varying vec3 vSize;
+        void main() {
+          vec3 e = (.5 - abs(vLocal)) * vSize;
+          bool side = abs(vNormal.y) < .5;
+          bool alongX = abs(vNormal.x) > .5;
+          float across = alongX ? vLocal.z * vSize.z : vLocal.x * vSize.x;
+          float d = side ? min(alongX ? e.z : e.x, e.y) : min(e.x, e.z);
+          float edge = 1. - smoothstep(0., .18, d);
+          float wave = .55 + .45 * sin(vWorld.y * 1.3 - uTime * 1.5);
+          float slot = side ? step(.62, abs(fract(across / 1.2) - .5) * 2.) * step(.35, e.y) : 0.;
+          vec3 col = uStone * mix(1., .4, uNight);
+          col = mix(col, uAccent, slot * (.35 + .65 * wave) * uReveal);
+          col = mix(col, uHot, edge * (.55 + .45 * wave) * uReveal);
+          gl_FragColor = vec4(fogged(col, vWorld), 1.);
+        }`
+    });
+    [[8.8, 7.2, 61.3], [6.4, 5.2, 63.9], [4.2, 3.4, 66.5]].forEach(([w, d, y]) => addBox(crown, [26, y, -13], [w, 2.6, d], item.group));
+    const spire = new THREE.Mesh(new THREE.ConeGeometry(1.1, 14, 8), crown);
+    spire.position.set(26, 74.8, -13);
+    item.group.add(spire);
+
+    const beamGeometry = new THREE.ConeGeometry(6, 150, 28, 1, true).translate(0, -75, 0).rotateX(Math.PI);
+    const beamMaterial = glowBlend(new THREE.ShaderMaterial({
+      uniforms: { uColor: { value: colors.beam }, uNight: air.uNight, uVeil: air.uVeil, uVeilAmount: air.uVeilAmount, uReveal: item.reveal },
+      transparent: true, depthWrite: false,
+      vertexShader: /* glsl */`
+        varying float vY; varying vec3 vN; varying vec3 vV;
+        void main() { vY = position.y; vec4 mv = modelViewMatrix * vec4(position, 1.); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
+      fragmentShader: VEIL + /* glsl */`
+        uniform vec3 uColor; uniform float uNight, uReveal;
+        varying float vY; varying vec3 vN; varying vec3 vV;
+        void main() { float a = smoothstep(0., 10., vY) * exp(-vY / 70.) * pow(abs(dot(vN, vV)), 2.) * .36 * uNight * uReveal * (1. - veil()); gl_FragColor = vec4(uColor, a); }`
+    }));
+    const beams = [0, Math.PI].map(phase => {
+      const pivot = new THREE.Group();
+      pivot.position.set(26, 67.5, -13);
+      pivot.add(new THREE.Mesh(beamGeometry, beamMaterial));
+      item.group.add(pivot);
+      return { pivot, phase };
+    });
+    glowPoints([26, 82.2, -13], colors.tail, 2.2, { blink: true, parent: item.group });
+    return () => {
+      const t = shared.uTime.value;
+      beams.forEach(({ pivot, phase }) => {
+        pivot.rotation.set(0, 0, 0);
+        pivot.rotateY(t * .22 + phase);
+        pivot.rotateZ(.32 + .1 * Math.sin(t * .4 + phase));
+      });
+    };
+  }
+
+  /* Flow Auto: a wall of screens. Each comes on as its step lights up; the big one cycles the app's screens. */
+  function buildScreens(item, shots, tags) {
+    const wall = [[9.8, 3.4, 6.8, 4.25, 1], [17.2, 3.4, 7.2, 4.5, 3], [9.8, 19, 7, 4.375, 2], [17.4, 19, 7, 4.375, 0], [9.8, 8.6, 14.6, 9.125, -1]];
+    const count = wall.length;
+    const geometry = new THREE.PlaneGeometry(1, 1);
+    const cells = new Float32Array(count), sizes = new Float32Array(count * 2), numbers = new Float32Array(count * 4), states = new Float32Array(count * 2);
+    geometry.setAttribute('aCell', new THREE.InstancedBufferAttribute(cells, 1));
+    geometry.setAttribute('aSize', new THREE.InstancedBufferAttribute(sizes, 2));
+    geometry.setAttribute('aNum', new THREE.InstancedBufferAttribute(numbers, 4));
+    geometry.setAttribute('aState', new THREE.InstancedBufferAttribute(states, 2));
+    const screens = new THREE.InstancedMesh(geometry, new THREE.ShaderMaterial({
+      uniforms: {
+        ...air, ...shared, uShots: { value: shots }, uTags: { value: tags.texture }, uBezel: { value: colors.bezel },
+        uStandby: { value: colors.standby }, uAccent: { value: colors.accent }, uHot: { value: colors.hot }, uReveal: item.reveal
+      },
+      vertexShader: /* glsl */`
+        attribute float aCell; attribute vec2 aSize; attribute vec4 aNum; attribute vec2 aState;
+        varying vec2 vUv; varying float vCell; varying vec2 vSize; varying vec4 vNum; varying vec2 vState; varying vec3 vWorld;
+        void main() {
+          vUv = uv; vCell = aCell; vSize = aSize; vNum = aNum; vState = aState;
+          vec4 world = modelMatrix * instanceMatrix * vec4(position, 1.);
+          vWorld = world.xyz;
+          gl_Position = projectionMatrix * viewMatrix * world;
+        }`,
+      fragmentShader: AIR + /* glsl */`
+        uniform sampler2D uShots, uTags; uniform vec3 uBezel, uStandby, uAccent, uHot; uniform float uTime, uReveal;
+        varying vec2 vUv; varying float vCell; varying vec2 vSize; varying vec4 vNum; varying vec2 vState; varying vec3 vWorld;
+        void main() {
+          vec2 px = vUv * vSize;
+          float bezel = 1. - step(.12, px.x) * step(px.x, vSize.x - .12) * step(.12, px.y) * step(px.y, vSize.y - .12);
+          float index = vCell < 0. ? mod(floor(uTime / 4.), 4.) : vCell;
+          float col = mod(index, 2.), row = floor(index / 2.);
+          vec3 shot = texture2D(uShots, vec2((col + vUv.x) * .5, ((1. - row) + vUv.y) * .5)).rgb;
+          float develop = vState.x, power = vState.y * uReveal;
+          float scan = .5 + .5 * sin(px.y * 9. - uTime * 5.);
+          vec3 standby = uStandby + uAccent * (.06 + .05 * scan) + uAccent * .35 * smoothstep(.985, 1., fract(vUv.y * 2. - uTime * .3));
+          float shown = smoothstep(1. - develop - .015, 1. - develop + .015, vUv.y);
+          float sweep = (1. - smoothstep(0., .02, abs(vUv.y - (1. - develop)))) * step(.01, develop) * step(develop, .99);
+          vec3 color = mix(standby, shot * 1.08, shown) + uHot * sweep;
+          vec2 tag = (px - vec2(.4, vSize.y - 1.2)) / vec2(.9, .8);
+          if (tag.x > 0. && tag.x < 1. && tag.y > 0. && tag.y < 1. && vCell >= 0.) {
+            float ink = texture2D(uTags, vNum.xy + tag * vNum.zw).a;
+            color = mix(mix(color, uBezel, .7), uHot, ink);
+          }
+          color = mix(color * power, uBezel, bezel);
+          gl_FragColor = vec4(fogged(color, vWorld), 1.);
+        }`
+    }), count);
+    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), at = new THREE.Vector3(), size = new THREE.Vector3();
+    wall.forEach(([x, y, w, h, shot], i) => {
+      screens.setMatrixAt(i, m.compose(at.set(x + w / 2, y + h / 2, -58.32), q, size.set(w, h, 1)));
+      cells[i] = shot;
+      sizes.set([w, h], i * 2);
+      const rect = tags.rects[String(i + 1).padStart(2, '0')];
+      numbers.set([rect.u, rect.v, rect.w, rect.h], i * 4);
+    });
+    screens.frustumCulled = false;
+    item.group.add(screens);
+
+    // A news strip along the top, and a blade sign on the corner.
+    const strip = led(['FLOW AUTO', 'A PRODUCTION LINE FOR AI VIDEO', 'NUMBERED 1080P EXPORTS', '18 MCP TOOLS'], ' · ');
+    const ticker = new THREE.Mesh(new THREE.PlaneGeometry(14.6, 1.5), ledMaterial(strip, colors.hot, 14.6 / 1.5, item.reveal));
+    ticker.position.set(17.1, 24.4, -58.32);
+    item.group.add(ticker);
+    const blade = paint(256, 1860, (ctx, w, h) => {
+      ctx.fillStyle = '#fff';
+      ctx.font = `600 190px ${SANS}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      'FLOW AUTO'.split('').forEach((letter, i) => ctx.fillText(letter, w / 2, 140 + i * 200));
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 8;
+      ctx.strokeRect(14, 14, w - 28, h - 28);
+    });
+    const sign = new THREE.Mesh(unitBox, signMaterial(blade, colors.hot, colors.accent, item.reveal));
+    sign.position.set(8, 15, -57.5);
+    sign.scale.set(2.2, 16, .35);
+    sign.rotation.y = -Math.PI / 4;
+    item.group.add(sign);
+    const glow = new THREE.Sprite(glowBlend(new THREE.SpriteMaterial({ map: glowMap, color: colors.accent, transparent: true, depthWrite: false, opacity: 0 })));
+    glow.position.set(17, 13, -56);
+    glow.scale.set(30, 26, 1);
+    item.group.add(glow);
+
+    let scroll = 0;
+    return dt => {
+      for (let i = 0; i < count; i++) {
+        const order = wall[i][4] < 0 ? 4 : i;
+        states[i * 2] = clamp(item.progress * 5.4 - order, 0, 1);
+        states[i * 2 + 1] = clamp(item.progress * 5.4 - order + 1, .18, 1);
+      }
+      geometry.attributes.aState.needsUpdate = true;
+      scroll += dt * .035;
+      ticker.material.uniforms.uScroll.value = scroll % 1;
+      glow.material.opacity = item.reveal.value * .22 * air.uNight.value;
+    };
+  }
+
+  /* HealthNest: an LED ticker wrapping the corner with a heartbeat, and clinic windows filling in teal. */
+  function buildTicker(item) {
+    const text = led(['HEALTHNEST', 'PATIENT CASES', 'APPOINTMENTS', 'STATUS OVER TIME'], 'ecg');
+    const y0 = 9.4, y1 = 10.8, west = 13.1, south = 16.2, length = west + south;
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute([
+      8.84, y0, -175.6, 8.84, y0, -162.5, 8.84, y1, -162.5, 8.84, y1, -175.6,
+      9, y0, -162.34, 25.2, y0, -162.34, 25.2, y1, -162.34, 9, y1, -162.34
+    ], 3));
+    const split = west / length;
+    geometry.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, split, 0, split, 1, 0, 1, split, 0, 1, 0, 1, 1, split, 1], 2));
+    geometry.setIndex([0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7]);
+    const band = new THREE.Mesh(geometry, ledMaterial(text, colors.teal, length / (y1 - y0), item.reveal));
+    band.material.side = THREE.DoubleSide;
+    item.group.add(band);
+
+    const windows = new THREE.ShaderMaterial({
+      uniforms: { ...air, ...shared, uFill: { value: 0 }, uReveal: item.reveal, uFacade: { value: colors.facadeAlt }, uGlass: { value: colors.glass }, uTeal: { value: colors.teal }, uTealHot: { value: colors.tealHot }, uWarm: { value: colors.warm } },
+      vertexShader: FLAT_VERTEX,
+      fragmentShader: AIR + HASH + /* glsl */`
+        uniform float uFill, uReveal, uNight, uTime; uniform vec3 uFacade, uGlass, uTeal, uTealHot, uWarm;
+        varying vec2 vUv; varying vec3 vWorld;
+        void main() {
+          vec2 cell = vUv * vec2(10., 7.);
+          vec2 id = floor(cell), f = fract(cell);
+          float win = step(.2, f.x) * step(f.x, .8) * step(.22, f.y) * step(f.y, .78);
+          float order = hash(id * 1.3 + 4.);
+          float on = step(order, uFill) * uReveal;
+          vec3 pane = mix(uGlass, uWarm * .6, step(.8, hash(id + 9.)) * uNight);
+          vec3 lit = mix(uTeal, uTealHot, .2 + .2 * sin(uTime * 2. + order * 20.));
+          gl_FragColor = vec4(fogged(mix(uFacade * mix(1., .9, uNight), mix(pane, lit, on), win), vWorld), 1.);
+        }`
+    });
+    addPlane(windows, [17.1, 19, -162.32], [15.4, 14], 0, item.group);
+    const neon = paint(1024, 180, (ctx, w, h) => {
+      ctx.fillStyle = '#fff';
+      ctx.shadowColor = '#fff';
+      ctx.shadowBlur = 22;
+      ctx.font = `600 104px ${SANS}`;
+      ctx.textBaseline = 'middle';
+      ctx.fillText('HealthNest', 150, h / 2 + 4);
+      ctx.fillRect(40, h / 2 - 12, 80, 24);
+      ctx.fillRect(68, h / 2 - 40, 24, 80);
+    });
+    addPlane(glowBlend(new THREE.MeshBasicMaterial({ map: neon, color: colors.teal, transparent: true, depthWrite: false })), [17, 5.8, -162.28], [11.4, 2], 0, item.group);
+
+    let scroll = 0;
+    return dt => {
+      scroll += dt * .045;
+      band.material.uniforms.uScroll.value = scroll % 1;
+      windows.uniforms.uFill.value = lerp(windows.uniforms.uFill.value, clamp(item.progress * 1.15, 0, 1), damp(dt, 4));
+    };
+  }
+
+  /* Meet Carl: a theater marquee with chasing bulbs and a blade sign above it. */
+  function buildMarquee(item) {
+    const board = (top, bottom) => paint(1400, 520, (ctx, w, h) => {
+      ctx.fillStyle = '#fff4dc';
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = '#14161b';
+      ctx.lineWidth = 10;
+      ctx.strokeRect(30, 30, w - 60, h - 60);
+      ctx.fillStyle = '#14161b';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = `600 66px ${SANS}`;
+      ctx.fillText(top, w / 2, 130);
+      ctx.font = `600 184px ${SANS}`;
+      ctx.fillText(bottom, w / 2, 330);
+    });
+    const faces = [[[34, -205.2], [28, -201.6], board('NOW SHOWING · A SHORT INTRO FILM', 'MEET CARL')], [[40, -201.6], [34, -205.2], board('NOW SHOWING', 'MEET CARL')]];
+    const bulbs = [];
+    for (const [[ax, az], [bx, bz], texture] of faces) {
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute([ax, 4.6, az, bx, 4.6, bz, bx, 7.2, bz, ax, 7.2, az], 3));
+      geometry.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 1, 1, 0, 1], 2));
+      geometry.setIndex([0, 1, 2, 0, 2, 3]);
+      const material = new THREE.ShaderMaterial({
+        uniforms: { ...air, uMap: { value: texture }, uReveal: item.reveal },
+        side: THREE.DoubleSide,
+        vertexShader: FLAT_VERTEX,
+        fragmentShader: AIR + /* glsl */`
+          uniform sampler2D uMap; uniform float uReveal;
+          varying vec2 vUv; varying vec3 vWorld;
+          void main() { gl_FragColor = vec4(fogged(texture2D(uMap, vUv).rgb * (.35 + .75 * uReveal), vWorld), 1.); }`
+      });
+      item.group.add(new THREE.Mesh(geometry, material));
+      const n = 22;
+      for (let i = 0; i <= n; i++) {
+        const t = i / n;
+        for (const y of [4.45, 7.35]) bulbs.push(lerp(ax, bx, t) - .05, y, lerp(az, bz, t) - .08);
+      }
+    }
+    const cap = new THREE.BufferGeometry();
+    cap.setAttribute('position', new THREE.Float32BufferAttribute([28, 7.2, -201.5, 34, 7.2, -205.2, 40, 7.2, -201.5, 28, 4.6, -201.5, 40, 4.6, -201.5, 34, 4.6, -205.2], 3));
+    cap.computeVertexNormals();
+    item.group.add(new THREE.Mesh(cap, new THREE.MeshBasicMaterial({ color: colors.metal, side: THREE.DoubleSide })));
+    // Bulbs chase in groups of four: replace the random phases and switch them on with the reveal.
+    const chase = glowPoints(bulbs, colors.lamp, .42, { parent: item.group });
+    chase.material.vertexShader = chase.material.vertexShader.replace('float shine =', 'float shine = step(.5, fract(aPhase + uTime * 1.2)) * .6 + .4; shine *=');
+    chase.geometry.setAttribute('aPhase', new THREE.Float32BufferAttribute(Array.from({ length: bulbs.length / 3 }, (_, i) => (i % 4) / 4), 1));
+    chase.material.uniforms.uOn = { value: 0 };
+
+    const carl = paint(300, 1180, (ctx, w, h) => {
+      ctx.fillStyle = '#fff';
+      ctx.font = `600 220px ${SANS}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      'CARL'.split('').forEach((letter, i) => ctx.fillText(letter, w / 2, 190 + i * 265));
+      for (let y = 30; y < h; y += 52) { ctx.beginPath(); ctx.arc(28, y, 11, 0, Math.PI * 2); ctx.arc(w - 28, y, 11, 0, Math.PI * 2); ctx.fill(); }
+    });
+    const sign = new THREE.Mesh(unitBox, signMaterial(carl, colors.hot, colors.lamp, item.reveal, 'x'));
+    sign.position.set(34, 12.5, -202.7);
+    sign.scale.set(.35, 9.4, 2.4);
+    item.group.add(sign);
+    const pool = new THREE.Mesh(new THREE.PlaneGeometry(16, 7).rotateX(-Math.PI / 2), glowBlend(new THREE.MeshBasicMaterial({ map: glowMap, color: colors.lamp, transparent: true, depthWrite: false, opacity: 0 })));
+    pool.position.set(34, .04, -204.5);
+    item.group.add(pool);
+    return () => {
+      chase.material.uniforms.uOn.value = item.reveal.value;
+      pool.material.opacity = .55 * item.reveal.value * air.uNight.value;
+    };
+  }
+
+  /* Toolkit: a transit map. Four lines (one per group of tools) all meet at the CARL interchange; the line for
+     the step you are on lights up and a train runs along it. */
+  const LINES = [
+    { color: 'accent', name: 'Languages', path: [[150, 520], [1400, 520]], stops: [['C#', 150, 520, 'up'], ['C', 290, 520, 'up'], ['JavaScript', 450, 520, 'up'], ['TypeScript', 1080, 520, 'up'], ['HTML', 1240, 520, 'up'], ['CSS', 1400, 520, 'up']] },
+    { color: 'teal', name: 'Desktop & UI', path: [[800, 190], [800, 790]], stops: [['WinUI 3', 800, 190, 'right'], ['WinForms', 800, 300, 'right'], ['.NET', 800, 410, 'right'], ['XAML', 800, 650, 'right'], ['React', 800, 790, 'right']] },
+    { color: 'amber', name: 'Data', path: [[200, 300], [580, 300], [1000, 720], [1360, 720]], stops: [['SQLite', 200, 300, 'up'], ['MySQL', 380, 300, 'up'], ['SQL', 1060, 720, 'down'], ['MS Access', 1210, 720, 'down'], ['MCP', 1360, 720, 'down']] },
+    { color: 'coral', name: 'Foundations', path: [[200, 740], [580, 740], [1000, 320], [1360, 320]], stops: [['Data structures', 200, 740, 'down'], ['Algorithms', 380, 740, 'down'], ['Numerical methods', 1090, 320, 'up'], ['Linear algebra', 1360, 320, 'up']] }
+  ];
+  function buildTransit(item) {
+    const hex = key => `#${colors[key].getHexString()}`;
+    const map = paint(1600, 896, () => {});
+    const drawMap = () => {
+      const ctx = map.image.getContext('2d');
+      const dark = themeName() === 'dark';
+      ctx.fillStyle = dark ? '#0b1322' : '#ffffff';
+      ctx.fillRect(0, 0, 1600, 896);
+      ctx.fillStyle = dark ? '#05090f' : '#14161b';
+      ctx.fillRect(0, 0, 1600, 112);
+      ctx.fillStyle = '#ffffff';
+      ctx.textBaseline = 'middle';
+      ctx.font = `600 58px ${SANS}`;
+      ctx.fillText('Toolkit', 56, 60);
+      ctx.font = `500 26px ${MONO}`;
+      ctx.textAlign = 'right';
+      ctx.fillText('TRANSIT MAP · 4 LINES · 20 STOPS', 1544, 60);
+      ctx.textAlign = 'left';
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      for (const line of LINES) {
+        ctx.strokeStyle = hex(line.color);
+        ctx.lineWidth = 22;
+        ctx.beginPath();
+        line.path.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+        ctx.stroke();
+      }
+      ctx.font = `600 30px ${SANS}`;
+      for (const line of LINES) {
+        for (const [name, x, y, side] of line.stops) {
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = dark ? '#0b1322' : '#14161b';
+          ctx.lineWidth = 6;
+          ctx.beginPath();
+          ctx.arc(x, y, 15, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = dark ? '#dbe5f7' : '#14161b';
+          ctx.textAlign = side === 'right' ? 'left' : 'center';
+          ctx.fillText(name, side === 'right' ? x + 30 : x, side === 'up' ? y - 40 : side === 'down' ? y + 42 : y);
+        }
+      }
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = dark ? '#0b1322' : '#14161b';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(720, 488, 160, 64, 32);
+      else ctx.rect(720, 488, 160, 64); // older browsers: a square-cornered sign rather than no city at all
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#14161b';
+      ctx.font = `600 32px ${SANS}`;
+      ctx.fillText('CARL', 800, 522);
+      ctx.textAlign = 'left';
+      ctx.font = `500 22px ${MONO}`;
+      LINES.forEach((line, i) => {
+        const x = 960 + i * 158;
+        ctx.fillStyle = hex(line.color);
+        ctx.beginPath();
+        ctx.arc(x, 858, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = dark ? '#8f9bb3' : '#4b5261';
+        ctx.fillText(line.name.toUpperCase(), x + 18, 859);
+      });
+      map.needsUpdate = true;
+    };
+    drawMap();
+    redraws.push(drawMap);
+    const mask = paint(1600, 896, ctx => {
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 34;
+      LINES.forEach((line, i) => {
+        ctx.strokeStyle = `rgb(${(i + 1) * 60}, 0, 0)`;
+        ctx.beginPath();
+        line.path.forEach(([x, y], k) => (k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+        ctx.stroke();
+      });
+    });
+    mask.minFilter = mask.magFilter = THREE.NearestFilter;
+    mask.generateMipmaps = false;
+    const panel = new THREE.ShaderMaterial({
+      uniforms: { ...air, ...shared, uMap: { value: map }, uMask: { value: mask }, uActive: { value: 0 }, uReveal: item.reveal },
+      vertexShader: FLAT_VERTEX,
+      fragmentShader: AIR + /* glsl */`
+        uniform sampler2D uMap, uMask; uniform float uActive, uReveal, uTime;
+        varying vec2 vUv; varying vec3 vWorld;
+        void main() {
+          vec3 base = texture2D(uMap, vUv).rgb;
+          float id = floor(texture2D(uMask, vUv).r * 255. / 60. + .5);
+          float isLine = step(.5, id);
+          float current = isLine * (1. - step(.5, abs(id - uActive)));
+          float dimmed = isLine * (1. - current) * step(.5, uActive);
+          vec3 color = mix(base, base * .3, dimmed * .65);
+          color += base * current * (.3 + .15 * sin(uTime * 3.));
+          gl_FragColor = vec4(fogged(color * (.25 + .75 * uReveal), vWorld), 1.);
+        }`
+    });
+    addPlane(panel, [78, 8.2, -266.32], [17.6, 9.86], 0, item.group);
+    addBox(propMaterial(colors.metal), [78, 8.2, -266.5], [18.4, 10.6, .3], item.group);
+    // A subway entrance beside it: two green globes.
+    const posts = propMaterial(colors.metal);
+    const globes = [];
+    for (const z of [-268.2, -271.8]) {
+      addBox(posts, [67.6, 1.2, z], [.12, 2.4, .12], item.group);
+      const globe = new THREE.Mesh(new THREE.SphereGeometry(.28, 14, 10), new THREE.MeshBasicMaterial({ color: colors.go }));
+      globe.position.set(67.6, 2.65, z);
+      item.group.add(globe);
+      globes.push(67.6, 2.65, z);
+    }
+    glowPoints(globes, colors.go, 1.2, { night: true, parent: item.group });
+    const train = new THREE.Sprite(glowBlend(new THREE.SpriteMaterial({ map: glowMap, color: colors.hot, transparent: true, depthWrite: false, opacity: 0 })));
+    train.scale.setScalar(1.3);
+    item.group.add(train);
+    const toWorld = ([x, y]) => [69.2 + x / 1600 * 17.6, 3.27 + (1 - y / 896) * 9.86];
+    let ride = 0;
+    return dt => {
+      // The line for the step you are on; a phone, which shows every step at once, takes each line in turn.
+      const active = camera.aspect < 1 ? 1 + Math.floor(shared.uTime.value / 3) % 4
+        : item.progress > 0 && item.progress < 1 ? Math.min(4, Math.floor(item.progress * 4.3) + 1) : 0;
+      panel.uniforms.uActive.value = active;
+      train.material.opacity = active ? item.reveal.value : 0;
+      if (!active) return;
+      ride = (ride + dt * .16) % 1;
+      const path = LINES[active - 1].path;
+      const lengths = path.slice(1).map((p, i) => Math.hypot(p[0] - path[i][0], p[1] - path[i][1]));
+      let left = ride * lengths.reduce((a, b) => a + b, 0), k = 0;
+      while (k < lengths.length - 1 && left > lengths[k]) left -= lengths[k++];
+      const t = left / lengths[k];
+      const [x, y] = toWorld([lerp(path[k][0], path[k + 1][0], t), lerp(path[k][1], path[k + 1][1], t)]);
+      train.position.set(x, y, -266.15);
+    };
+  }
+
+  /* About: a split-flap departures board. Rows flip while you scroll toward it and land one by one. */
+  const GLYPHS = ' ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,+-/&:';
+  const BOARD = ['FROM       CEBU, PHILIPPINES', 'COORDS     10.32 N  123.89 E', 'STUDYING   COMPUTER ENGINEERING', 'BUILDS     DESKTOP + AUTOMATION', 'STATUS     OPEN TO INTERNSHIPS'];
+  function buildBoard(item) {
+    const glyphs = paint(1024, 1024, ctx => {
+      ctx.fillStyle = '#fff';
+      ctx.font = `500 120px ${MONO}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      GLYPHS.split('').forEach((glyph, i) => ctx.fillText(glyph, (i % 8) * 128 + 64, Math.floor(i / 8) * 170 + 90));
+    });
+    const columns = 32, count = columns * BOARD.length;
+    const geometry = new THREE.PlaneGeometry(.52, .86);
+    const target = new Float32Array(count), seeds = new Float32Array(count), rows = new Float32Array(count), dims = new Float32Array(count);
+    const m = new THREE.Matrix4();
+    const flaps = new THREE.InstancedMesh(geometry, null, count);
+    BOARD.forEach((line, r) => {
+      const padded = line.padEnd(columns);
+      for (let c = 0; c < columns; c++) {
+        const i = r * columns + c;
+        flaps.setMatrixAt(i, m.makeTranslation(70.9 + c * .6, 10.1 - r * 1.05, -344.2));
+        target[i] = Math.max(0, GLYPHS.indexOf(padded[c]));
+        seeds[i] = random();
+        rows[i] = r;
+        dims[i] = c < 11 ? 1 : 0;
+      }
+    });
+    geometry.setAttribute('aGlyph', new THREE.InstancedBufferAttribute(target, 1));
+    geometry.setAttribute('aSeed', new THREE.InstancedBufferAttribute(seeds, 1));
+    geometry.setAttribute('aRow', new THREE.InstancedBufferAttribute(rows, 1));
+    geometry.setAttribute('aDim', new THREE.InstancedBufferAttribute(dims, 1));
+    const settle = [1e6, 1e6, 1e6, 1e6, 1e6];
+    flaps.material = new THREE.ShaderMaterial({
+      uniforms: { ...air, ...shared, uGlyphs: { value: glyphs }, uRows: { value: settle }, uReveal: item.reveal, uFlap: { value: colors.flap }, uInk: { value: colors.flapInk }, uDim: { value: colors.flapDim } },
+      vertexShader: /* glsl */`
+        attribute float aGlyph; attribute float aSeed; attribute float aRow; attribute float aDim;
+        varying vec2 vUv; varying float vGlyph; varying float vSeed; varying float vRow; varying float vDim; varying vec3 vWorld;
+        void main() {
+          vUv = uv; vGlyph = aGlyph; vSeed = aSeed; vRow = aRow; vDim = aDim;
+          vec4 world = modelMatrix * instanceMatrix * vec4(position, 1.);
+          vWorld = world.xyz;
+          gl_Position = projectionMatrix * viewMatrix * world;
+        }`,
+      fragmentShader: AIR + HASH + /* glsl */`
+        uniform sampler2D uGlyphs; uniform float uRows[5]; uniform float uTime, uReveal; uniform vec3 uFlap, uInk, uDim;
+        varying vec2 vUv; varying float vGlyph; varying float vSeed; varying float vRow; varying float vDim; varying vec3 vWorld;
+        void main() {
+          float since = uTime - uRows[int(vRow + .5)] - vSeed * .9;
+          float glyph = since > 0. ? vGlyph : floor(hash(vec2(floor(uTime * 12. + vSeed * 31.), vSeed * 7.)) * 43.) + 1.;
+          vec2 at = vec2((mod(glyph, 8.) + vUv.x) / 8., 1. - (floor(glyph / 8.) + 1. - vUv.y) * (170. / 1024.));
+          float ink = texture2D(uGlyphs, at).a * uReveal;
+          vec3 flap = uFlap * (vUv.y > .5 ? 1.08 : .94);
+          vec3 color = mix(flap, mix(uInk, uDim, vDim), ink);
+          color = mix(color, flap * .3, 1. - smoothstep(0., .025, abs(vUv.y - .5)));
+          color += uInk * .05 * uReveal * (since > 0. ? smoothstep(.3, 0., since) : 1.);
+          gl_FragColor = vec4(fogged(color, vWorld), 1.);
+        }`
+    });
+    flaps.frustumCulled = false;
+    item.group.add(flaps);
+    addBox(propMaterial(colors.bezel), [80.2, 8, -344.45], [20.2, 7.6, .4], item.group);
+    const header = paint(1024, 48, (ctx, w, h) => {
+      ctx.fillStyle = '#0d0f13';
+      ctx.fillRect(0, 0, w, h);
+      ctx.font = `500 28px ${MONO}`;
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#ffb547';
+      ctx.fillText('DEPARTURES', 16, h / 2 + 1);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#c9ced8';
+      ctx.fillText('ABOUT · 05', w - 16, h / 2 + 1);
+    });
+    addPlane(new THREE.MeshBasicMaterial({ map: header }), [80.2, 11.25, -344.23], [19.6, .9], 0, item.group);
+    return () => {
+      if (!item.revealed) return;
+      const now = shared.uTime.value;
+      for (let r = 0; r < BOARD.length; r++) {
+        const landed = item.progress >= (r + .6) / (BOARD.length + .4);
+        if (landed && settle[r] > now) settle[r] = now;
+        if (!landed) settle[r] = 1e6;
+      }
+    };
+  }
+
+  /* Contact: a building going up. Steel rises floor by floor as you read, a tower crane swings a beam over it. */
+  function buildSite(item) {
+    const xs = [52.5, 60.5, 68.5, 76.5, 84.5], zs = [-477, -485.5, -494, -502.5], first = 7, last = 23, storey = 2.8;
+    const parts = []; // [x, y, z, w, h, d, floor]
+    for (let f = first; f < last; f++) {
+      const y = f * storey;
+      for (const x of xs) for (const z of zs) parts.push([x, y + storey / 2, z, .45, storey, .45, f]);
+      for (const z of zs) for (let i = 0; i < xs.length - 1; i++) parts.push([(xs[i] + xs[i + 1]) / 2, y + storey - .2, z, 8, .4, .35, f]);
+      for (const x of xs) for (let i = 0; i < zs.length - 1; i++) parts.push([x, y + storey - .2, (zs[i] + zs[i + 1]) / 2, .35, .4, 8.5, f]);
+    }
+    const geometry = unitBox.clone();
+    const floors = new Float32Array(parts.length);
+    geometry.setAttribute('aFloor', new THREE.InstancedBufferAttribute(floors, 1));
+    const built = { value: first };
+    const steel = new THREE.InstancedMesh(geometry, new THREE.ShaderMaterial({
+      uniforms: { ...air, uBuilt: built, uSteel: { value: colors.steel }, uWarm: { value: colors.warm } },
+      vertexShader: /* glsl */`
+        attribute float aFloor; uniform float uBuilt;
+        varying vec3 vWorld; varying vec3 vNormal;
+        void main() {
+          mat4 m = modelMatrix * instanceMatrix;
+          vec4 world = m * vec4(position, 1.);
+          vWorld = world.xyz;
+          vNormal = normal;
+          gl_Position = aFloor >= uBuilt ? vec4(2., 2., 2., 1.) : projectionMatrix * viewMatrix * world;
+        }`,
+      fragmentShader: AIR + /* glsl */`
+        uniform vec3 uSteel, uWarm; uniform float uNight;
+        varying vec3 vWorld; varying vec3 vNormal;
+        void main() {
+          vec3 col = uSteel * (.55 + .45 * max(vNormal.y, 0.) + .2 * abs(vNormal.x)) * mix(1., .6, uNight);
+          col += uWarm * .1 * uNight;
+          gl_FragColor = vec4(fogged(col, vWorld), 1.);
+        }`
+    }), parts.length);
+    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), at = new THREE.Vector3(), size = new THREE.Vector3();
+    parts.forEach(([x, y, z, w, h, d, f], i) => {
+      steel.setMatrixAt(i, m.compose(at.set(x, y, z), q, size.set(w, h, d)));
+      floors[i] = f;
+    });
+    steel.computeBoundingSphere();
+    item.group.add(steel);
+
+    // The crane: a lattice mast, a jib that swings, a counterweight, and a beam on the hook.
+    const truss = new THREE.ShaderMaterial({
+      uniforms: { ...air, uColor: { value: colors.crane } },
+      side: THREE.DoubleSide,
+      vertexShader: BOX_VERTEX,
+      fragmentShader: AIR + /* glsl */`
+        uniform vec3 uColor; uniform float uNight;
+        varying vec3 vWorld; varying vec3 vNormal; varying vec3 vLocal; varying vec3 vSize;
+        void main() {
+          vec3 s = vSize, l = vLocal * vSize, a = abs(vLocal);
+          float along, across, halfWidth;
+          if (s.y > max(s.x, s.z)) {
+            along = l.y;
+            across = a.x > a.z ? l.z : l.x;
+            halfWidth = (a.x > a.z ? s.z : s.x) * .5;
+          } else {
+            bool longX = s.x > s.z;
+            along = longX ? l.x : l.z;
+            bool topFace = a.y > (longX ? a.z : a.x);
+            across = topFace ? (longX ? l.z : l.x) : l.y;
+            halfWidth = (topFace ? (longX ? s.z : s.x) : s.y) * .5;
+          }
+          float w = max(.09, fwidth(along) * 1.2);
+          float pitch = halfWidth * 2.;
+          float rail = step(halfWidth - w, abs(across));
+          float rung = step(abs(fract(along / pitch) - .5) * pitch, w * .7);
+          float diagonal = step(abs(fract((along + across) / pitch + .5) - .5) * pitch, w * .9);
+          if (max(rail, max(rung, diagonal)) < .5) discard;
+          vec3 col = uColor * (.6 + .4 * clamp(dot(vNormal, normalize(vec3(.3, 1., .4))), 0., 1.)) * mix(1., .85, uNight);
+          gl_FragColor = vec4(fogged(col, vWorld), 1.);
+        }`
+    });
+    const solid = propMaterial(colors.concrete);
+    addBox(truss, [92, 34, -499], [1.8, 68, 1.8], item.group);
+    const head = new THREE.Group();
+    head.position.set(92, 68, -499);
+    item.group.add(head);
+    addBox(truss, [-25, 0, 0], [52, 1.4, 1.4], head);
+    addBox(truss, [7.5, 0, 0], [15, 1.2, 1.2], head);
+    addBox(truss, [0, 4, 0], [.8, 8, .8], head);
+    addBox(solid, [13, -1.9, 0], [3, 2.6, 2.2], head);
+    addBox(propMaterial(colors.hot), [-1.6, -1.6, 1.4], [2.2, 2, 2.2], head);
+    const tie = x => {
+      const dy = .7 - 8, len = Math.hypot(x, dy);
+      const bar = addBox(solid, [x / 2, (8 + .7) / 2, 0], [len, .08, .08], head);
+      bar.rotation.z = Math.atan2(dy, x);
+    };
+    tie(-51);
+    tie(15);
+    addBox(solid, [-34, -.9, 0], [1.6, .8, 1.6], head);
+    addBox(solid, [-34, -13.4, 0], [.07, 25, .07], head);
+    addBox(solid, [-34, -26.3, 0], [.7, .9, .7], head);
+    const load = addBox(propMaterial(colors.steel), [-34, -27.5, 0], [7, .45, .45], head);
+    glowPoints([-51, .2, 0, 0, 8.3, 0, 15, .2, 0], colors.tail, 1.6, { blink: true, parent: head });
+    glowPoints([52.5, 21, -476.4, 84.5, 30, -476.4, 68.5, 39, -476.4, 60.5, 47, -502.9], colors.lamp, 2.4, { night: true, parent: item.group });
+
+    // A plywood fence round the lot, with a banner on it.
+    addBox(propMaterial(colors.plywood), [68.5, 1.3, -474.9], [36.5, 2.6, .25], item.group);
+    const banner = paint(2048, 112, (ctx, w, h) => {
+      ctx.fillStyle = '#14161b';
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `600 64px ${SANS}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('YOUR PROJECT  ·  COMING SOON', w / 2, h / 2 + 3);
+    });
+    addPlane(new THREE.MeshBasicMaterial({ map: banner }), [68.5, 1.45, -474.74], [30, 1.64], 0, item.group);
+
+    return dt => {
+      const t = shared.uTime.value;
+      const goal = first + (last - first) * clamp(item.reveal.value * .35 + item.progress * .9, 0, 1);
+      built.value = lerp(built.value, goal, damp(dt, 2.5));
+      head.rotation.y = .3 + Math.sin(t * .07) * .4;
+      load.rotation.y = Math.sin(t * .5) * .25;
+      load.rotation.z = Math.sin(t * .8) * .03;
+    };
+  }
+
+  // LED text: a strip of words (and heartbeats) drawn once; ledMaterial scrolls it across a field of dots.
+  function led(words, joiner) {
+    const font = `600 46px ${MONO}`;
+    const ecg = 200;
+    const measure = document.createElement('canvas').getContext('2d');
+    measure.font = font;
+    const gap = joiner === 'ecg' ? ecg + 60 : measure.measureText(joiner).width + 60;
+    const width = Math.ceil(words.reduce((sum, word) => sum + measure.measureText(word).width + gap, 15));
+    const texture = paint(width, 64, (ctx, w, h) => {
+      ctx.fillStyle = '#fff';
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 6;
+      ctx.lineJoin = 'round';
+      ctx.font = font;
+      ctx.textBaseline = 'middle';
+      let x = 15;
+      for (const word of words) {
+        ctx.fillText(word, x, h / 2 + 3);
+        x += ctx.measureText(word).width + 30;
+        if (joiner === 'ecg') {
+          const beat = [[0, 0], [40, 0], [55, -8], [70, 0], [85, 0], [93, 10], [103, -24], [113, 16], [121, 0], [150, 0], [165, -10], [182, 0], [200, 0]];
+          ctx.beginPath();
+          beat.forEach(([bx, by], i) => (i ? ctx.lineTo(x + bx, h / 2 + by) : ctx.moveTo(x + bx, h / 2 + by)));
+          ctx.stroke();
+          x += ecg + 30;
+        } else {
+          ctx.fillText(joiner, x, h / 2 + 3);
+          x += ctx.measureText(joiner).width + 30;
+        }
+      }
+    });
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.userData.aspect = width / 64;
+    return texture;
+  }
+  function ledMaterial(texture, color, ratio, reveal) {
+    const rows = 14;
+    return new THREE.ShaderMaterial({
+      uniforms: { ...air, uText: { value: texture }, uScroll: { value: 0 }, uWindow: { value: ratio / texture.userData.aspect }, uGrid: { value: new THREE.Vector2(rows * ratio, rows) }, uOn: { value: color }, uOff: { value: colors.bezel }, uReveal: reveal },
+      vertexShader: FLAT_VERTEX,
+      fragmentShader: AIR + /* glsl */`
+        uniform sampler2D uText; uniform float uScroll, uWindow, uReveal; uniform vec2 uGrid; uniform vec3 uOn, uOff;
+        varying vec2 vUv; varying vec3 vWorld;
+        void main() {
+          vec2 cell = vUv * uGrid;
+          vec2 id = floor(cell), f = fract(cell) - .5;
+          float dots = 1. - smoothstep(.28, .42, length(f));
+          dots = mix(dots, .6, smoothstep(.3, .8, fwidth(cell.x)));
+          float on = step(.45, texture2D(uText, vec2((id.x + .5) / uGrid.x * uWindow + uScroll, (id.y + .5) / uGrid.y)).a) * uReveal;
+          vec3 color = mix(uOff, mix(uOff * 2.2 + .02, uOn * 1.15, on), dots);
+          gl_FragColor = vec4(fogged(color, vWorld), 1.);
+        }`
+    });
+  }
+  // A box sign: letters on its two broad faces (the thin side along `thin`), dark metal round the edges.
+  function signMaterial(texture, ink, glow, reveal, thin = 'z') {
+    return new THREE.ShaderMaterial({
+      uniforms: { ...air, ...shared, uMap: { value: texture }, uInk: { value: ink }, uGlow: { value: glow }, uMetal: { value: colors.metal }, uReveal: reveal },
+      vertexShader: /* glsl */`
+        varying vec3 vWorld; varying vec3 vObject; varying vec2 vUv;
+        void main() { vUv = uv; vObject = normal; vec4 w = modelMatrix * vec4(position, 1.); vWorld = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+      fragmentShader: AIR + /* glsl */`
+        uniform sampler2D uMap; uniform vec3 uInk, uGlow, uMetal; uniform float uReveal, uTime;
+        varying vec3 vWorld; varying vec3 vObject; varying vec2 vUv;
+        void main() {
+          float face = abs(vObject.${thin});
+          float letters = texture2D(uMap, vUv).a * step(.5, face);
+          float pulse = .82 + .18 * sin(uTime * 2.2);
+          vec3 color = mix(uMetal, uInk * pulse + uGlow * .25, letters * uReveal);
+          gl_FragColor = vec4(fogged(color, vWorld), 1.);
+        }`
+    });
+  }
 
   /* ---------- Scroll to camera ---------- */
-  let toS = () => STATIONS.core;
-  let jumped = true;
+  let toS = () => 0;
+  let heroEnd = 0; // where the hero's stage ends on the page; the hero's veil fades as it scrolls away
   function measure() {
-    jumped = true;
     const vh = innerHeight;
     const max = Math.max(1, ScrollTrigger.maxScroll(window));
     const keys = [];
-    const ordered = [...stations].sort((a, b) => a.s - b.s);
-    ordered.forEach((item, index) => {
+    [...stations].sort((a, b) => a.s - b.s).forEach((item, index) => {
       const rect = item.el.getBoundingClientRect();
       const top = rect.top + scrollY, height = rect.height;
       const holds = height > vh * 1.5;
       if (index === 0) {
+        heroEnd = top + height;
         keys.push({ y: 0, s: item.s });
         if (holds) keys.push({ y: top + height - vh, s: item.s + HERO_PUSH });
       } else if (holds) {
         keys.push({ y: top, s: item.s - HOLD }, { y: top + height - vh, s: item.s + HOLD });
       } else if (camera.aspect < 1 && item.el.matches('.chapter')) {
-        // Phones: a chapter leaves the top of the screen empty for its piece, so frame it as the chapter arrives.
+        // Phones: a chapter leaves the top of the screen open for its piece, so arrive as the chapter does.
         keys.push({ y: top, s: item.s });
       } else {
         keys.push({ y: top + height / 2 - vh / 2, s: item.s });
@@ -1037,24 +1543,34 @@ async function start() {
     });
     keys.forEach(key => { key.y = clamp(key.y, 0, max); });
     for (let i = 1; i < keys.length; i++) keys[i].y = Math.max(keys[i].y, keys[i - 1].y + 1);
-    // Past the last station the camera only drifts, so the end of the page never flies into the ring.
+    // Past the last stop the camera only drifts, so the end of the page never runs into the site.
     const last = keys[keys.length - 1];
     if (max > last.y + 1) keys.push({ y: max, s: last.s + 2 });
     toS = monotone(keys.map(key => key.y), keys.map(key => key.s));
   }
 
+  // The city fills the screen behind the text, so one render pixel per CSS pixel is plenty: on a laptop at
+  // 125% scaling that is a third fewer pixels than its native resolution. Retina screens get a little more.
+  let quality = 1;
   function layout() {
     const width = canvas.clientWidth || innerWidth, height = canvas.clientHeight || innerHeight;
-    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, lite ? 1.25 : 1.5) * quality);
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, lite ? 1.25 : devicePixelRatio >= 2 ? 1.5 : 1) * quality);
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
+    camera.fov = camera.aspect < 1 ? 72 : 55; // a phone held upright sees wider, so each piece fits above the text
     camera.updateProjectionMatrix();
     shared.uScale.value = height * renderer.getPixelRatio() / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
-    stations.forEach(placeStation);
+    // The left band lies under the chapters' text column; the bottom band under the hero's lines, or the lower
+    // half of a phone where its chapter text sits.
+    const pr = renderer.getPixelRatio(), wide = camera.aspect >= 1;
+    const right = wide ? Math.max(width * .3, ...[...document.querySelectorAll('.chapter-copy')].map(el => el.getBoundingClientRect().right)) : 0;
+    air.uVeil.value.set(right * .7 * pr, (right + width * .12) * pr, height * (wide ? .38 : .5) * pr, height * (wide ? .62 : .7) * pr);
+    // Where the text column takes more of the width (a squarer screen), each piece moves over to make room.
+    crowd = wide ? clamp(2 * right / width - 1.02, 0, .3) : 0;
+    stations.forEach(aimAt);
   }
 
   /* ---------- Frame loop, on GSAP's ticker so it moves in step with smooth scrolling ---------- */
-  let quality = 1;
   const pointer = { x: 0, y: 0, tx: 0, ty: 0, moved: 0 };
   addEventListener('pointermove', event => {
     if (event.pointerType !== 'mouse') return;
@@ -1065,8 +1581,9 @@ async function start() {
   let paused = false;
   document.addEventListener('reel:toggle', event => { paused = event.detail.open; });
 
+  let traffic = () => {};
   const look = new THREE.Vector3(), side = new THREE.Vector3(), lift = new THREE.Vector3();
-  let camS = toS(scrollY), speed = 0, frameCount = 0, lastScroll = scrollY, stillSince = 0, skipped = 0;
+  let frameCount = 0, lastScroll = scrollY, stillSince = 0, skipped = 0;
   // Frames that keep running late lower the resolution a step; a long smooth stretch raises it back.
   const perf = { native: 1000 / 60, samples: [], late: 0, count: 0, upgrades: 0, calm: 0, after: performance.now() + 4000 };
 
@@ -1081,11 +1598,10 @@ async function start() {
 
     const y = scrollY;
     const moving = Math.abs(y - lastScroll) > .1;
-    if (Math.abs(y - lastScroll) > innerHeight * 1.5) jumped = true;
     lastScroll = y;
     if (moving || performance.now() - pointer.moved < 400) stillSince = time;
     frameCount++;
-    // At rest on a fast screen, every other frame is plenty for the slow drift of the world.
+    // At rest on a fast screen, every other frame is plenty for the slow life of the city.
     if (!moving && perf.native < 12 && time - stillSince > .5 && frameCount % 2) {
       skipped += deltaMs;
       return;
@@ -1094,41 +1610,38 @@ async function start() {
     skipped = 0;
 
     const s = toS(y);
-    // A re-measured page or a restored scroll position is a jump, not travel: no streaks for it.
-    if (jumped) jumped = false;
-    else speed = lerp(speed, Math.abs(s - camS) / Math.max(dt, 1 / 240), damp(dt, 5));
-    camS = s;
+    // The veil: always beside the chapters on wide screens, and under the hero's lines while the hero is up.
+    const wide = camera.aspect >= 1;
+    air.uVeilAmount.value.set(wide ? veilStrength.value : 0, veilStrength.value * (wide ? clamp((heroEnd - y) / innerHeight, 0, 1) : 1));
     pointer.x = lerp(pointer.x, pointer.tx, damp(dt, 2.6));
     pointer.y = lerp(pointer.y, pointer.ty, damp(dt, 2.6));
 
     pose(s, camera);
     side.set(1, 0, 0).applyQuaternion(camera.quaternion);
     lift.set(0, 1, 0).applyQuaternion(camera.quaternion);
-    camera.position.addScaledVector(side, pointer.x * .35).addScaledVector(lift, pointer.y * .22);
-    pointAt(s + LOOK, look).addScaledVector(side, pointer.x * .9).addScaledVector(lift, pointer.y * .6);
-    camera.lookAt(look);
-    camera.updateMatrixWorld();
-
-    // The trail shows while travelling between chapters and steps aside while one holds the screen.
-    let nearest = Infinity;
-    for (const item of stations) nearest = Math.min(nearest, Math.abs(s - item.s));
-    trail.material.uniforms.uCam.value = s;
-    trail.material.uniforms.uShow.value = lerp(trail.material.uniforms.uShow.value, smooth(HOLD + 1, HOLD + 12, nearest), damp(dt, 6));
-    if (streaks) {
-      streaks.material.uniforms.uTravel.value = s;
-      streaks.material.uniforms.uSpeed.value = lerp(streaks.material.uniforms.uSpeed.value, clamp((speed - 18) / 50, 0, 1.2), damp(dt, 4));
-    }
-
-    // Each piece shows only as its chapter nears, so nothing far ahead peeks out from behind the text.
+    camera.position.addScaledVector(side, pointer.x * .3).addScaledVector(lift, pointer.y * .18);
+    camera.lookAt(pointAt(s + LOOK, look));
+    // Near a stop the camera turns to it, so its piece of the city sits beside the text.
+    let yaw = 0, pitch = 0;
     for (const item of stations) {
-      const ahead = item.s + item.place.d;
-      const visible = s > item.s - 58 && s < ahead + 4;
-      item.group.visible = visible;
-      if (!visible) continue;
-      if (!item.revealed) reveal(item);
-      item.progress = item.trigger ? item.trigger.progress : 0;
-      const local = clamp((s - item.s) / 40, -1.5, 1.5);
-      item.update(dt, local, pointer);
+      const w = 1 - smooth(HOLD + 2, 32, Math.abs(s - item.s));
+      yaw += item.aim.yaw * w;
+      pitch += item.aim.pitch * w;
+    }
+    camera.rotateY(-yaw - pointer.x * .035);
+    camera.rotateX(pitch + pointer.y * .025);
+    camera.updateMatrixWorld();
+    sky.position.copy(camera.position);
+
+    traffic(dt, s);
+    for (const item of stations) {
+      const near = Math.abs(s - item.s) < item.stop.range;
+      item.group.visible = near;
+      if (!near) continue;
+      if (!item.revealed && s > item.s - 75) reveal(item);
+      // A phone doesn't hold a chapter, so its piece plays out as the camera arrives instead.
+      item.progress = wide ? (item.trigger ? item.trigger.progress : 0) : clamp(1 - (item.s - s) / 50, 0, 1);
+      item.update(dt);
     }
 
     renderer.setClearColor(colors.bg);
@@ -1156,87 +1669,74 @@ async function start() {
     }
   }
 
-  // A piece of the world assembles the first time the camera comes near it.
+  // A stop powers up the first time the camera comes near it.
   function reveal(item) {
     item.revealed = true;
-    gsap.to(item.reveal, { value: 1, duration: 2.4, ease: 'power2.out' });
-    gsap.to(item.stage.scale, { x: 1, y: 1, z: 1, duration: 2.2, ease: 'expo.out' });
-    gsap.fromTo(item.stage.position, { z: -4 }, { z: 0, duration: 2.6, ease: 'expo.out' });
+    gsap.to(item.reveal, { value: 1, duration: 2.2, ease: 'power2.out' });
   }
 
-  /* ---------- Themes: colors ease over with the page; glow switches between light and ink ---------- */
+  /* ---------- Themes: colors ease over with the page; night switches to day ---------- */
   function applyTheme() {
-    const next = PALETTES[themeName()];
-    const additive = themeName() === 'dark';
+    const name = themeName();
     glowing.forEach(material => {
-      material.blending = additive ? THREE.AdditiveBlending : THREE.NormalBlending;
+      material.blending = name === 'dark' ? THREE.AdditiveBlending : THREE.NormalBlending;
       material.needsUpdate = true;
     });
-    for (const [key, value] of Object.entries(next)) {
+    for (const [key, value] of Object.entries(PALETTES[name])) {
       const target = new THREE.Color(value);
       gsap.to(colors[key], { r: target.r, g: target.g, b: target.b, duration: .4, ease: 'power1.out', overwrite: true });
     }
+    gsap.to(air.uNight, { value: WEATHER[name].night, duration: .4, ease: 'power1.out', overwrite: true });
+    gsap.to(air.uFog, { value: WEATHER[name].fog, duration: .4, ease: 'power1.out', overwrite: true });
+    gsap.to(veilStrength, { value: WEATHER[name].veil, duration: .4, ease: 'power1.out', overwrite: true });
+    gsap.delayedCall(.42, () => redraws.forEach(draw => draw()));
   }
   new MutationObserver(applyTheme).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
 
-  /* ---------- Start ---------- */
+  /* ---------- Start: the city and the hero first, the rest while the page is idle ---------- */
+  const core = elements.core ? station('core') : null;
+  if (core) core.update = buildCore(core);
   layout();
   measure();
-  if (core) core.revealed = true; // it assembles with the intro below, not on first sight
+  if (core) core.revealed = true; // it lights up with the intro below, not on first sight
   await renderer.compileAsync(scene, camera);
   gsap.ticker.add(render);
   ScrollTrigger.addEventListener('refresh', () => { measure(); layout(); });
   addEventListener('resize', layout, { passive: true });
 
-  // The first frame is drawn: the world fades in behind the hero and its core assembles.
+  // The first frame is drawn: the city fades in behind the hero and the tower's crown comes on.
   requestAnimationFrame(() => {
     root.classList.add('journey-live');
-    gsap.to(dust.material.uniforms.uReveal, { value: 1, duration: 2.6, ease: 'power2.out' });
-    gsap.to(trail.material.uniforms.uReveal, { value: 1, duration: 3, delay: .6, ease: 'power2.out' });
-    if (core) {
-      gsap.to(core.reveal, { value: 1, duration: 2.4, delay: .3, ease: 'power2.out' });
-      gsap.to(core.stage.scale, { x: 1, y: 1, z: 1, duration: 2.8, delay: .2, ease: 'expo.out' });
-    }
+    if (core) gsap.to(core.reveal, { value: 1, duration: 2.6, delay: .6, ease: 'power2.out' });
   });
 
-  // The other pieces are built while the page is idle, each in its own task, before anyone scrolls to them.
+  await idle();
+  buildStreets();
+  traffic = buildTraffic(lite ? 18 : 44);
+  await renderer.compileAsync(scene, camera);
+
   const fonts = Promise.race([document.fonts?.ready ?? Promise.resolve(), new Promise(resolve => setTimeout(resolve, 1500))]);
   await fonts;
-  const words = [
-    'C#', 'C', 'JavaScript', 'TypeScript', 'HTML', 'CSS', 'WinUI 3', 'WinForms', '.NET', 'XAML', 'React',
-    'SQLite', 'MySQL', 'SQL', 'MS Access', 'MCP', 'Algorithms', 'Data structures', 'Linear algebra'
-  ].map(text => ({ key: text, text, font: '500 44px "Inter Tight", system-ui, sans-serif' }));
-  const tags = ['01', '02', '03', '04', '05', '06', '07', '08', '09'].map(text => ({ key: text, text, font: '500 44px "JetBrains Mono", ui-monospace, monospace' }));
-  const atlas = textAtlas([...words, ...tags, { key: 'Cebu, Philippines', text: 'Cebu, Philippines', font: '500 44px "Inter Tight", system-ui, sans-serif' }]);
-  atlas.texture.anisotropy = 4;
-  renderer.initTexture(atlas.texture);
-
+  const tags = textAtlas(['01', '02', '03', '04', '05'].map(text => ({ key: text, text, font: `500 40px ${MONO}` })));
   const builders = [
     ['line', async item => {
       const images = await Promise.all(['scenes', 'story', 'settings', 'connect'].map(name => loadImage(`img/flow-auto/${name}.webp`)));
-      const sheet = document.createElement('canvas');
-      sheet.width = 2048;
-      sheet.height = 1280;
-      const ctx = sheet.getContext('2d');
-      images.forEach((image, i) => ctx.drawImage(image, (i % 2) * 1024, Math.floor(i / 2) * 640, 1024, 640));
-      const screens = new THREE.CanvasTexture(sheet);
-      screens.anisotropy = 4;
-      renderer.initTexture(screens);
-      item.labels = tags.map(tag => atlas.rects[tag.key]);
-      return buildLine(item, screens, atlas);
+      const shots = paint(2048, 1280, ctx => images.forEach((image, i) => ctx.drawImage(image, (i % 2) * 1024, Math.floor(i / 2) * 640, 1024, 640)));
+      renderer.initTexture(shots);
+      return buildScreens(item, shots, tags);
     }],
-    ['pulse', buildPulse],
-    ['reel', () => () => {}],
-    ['orbit', item => buildOrbit(item, atlas)],
-    ['globe', item => buildGlobe(item, atlas)],
-    ['portal', buildPortal]
+    ['pulse', buildTicker],
+    ['reel', buildMarquee],
+    ['orbit', buildTransit],
+    ['globe', buildBoard],
+    ['portal', buildSite]
   ];
   for (const [name, build] of builders) {
     if (!elements[name]) continue;
     await idle();
-    const item = station(name, elements[name], () => () => {});
+    const item = station(name);
     item.update = (await build(item)) || item.update;
-    placeStation(item);
+    aimAt(item);
     measure();
     await renderer.compileAsync(scene, camera);
   }
