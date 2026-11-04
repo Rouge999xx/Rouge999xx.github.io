@@ -99,28 +99,8 @@ test('pages load the shared styles and scripts, with pinned CDN versions', () =>
   }
 });
 
-test('the 3D journey loads a pinned three.js and has a stop in the city for every station on the home page', () => {
-  const journey = read('journey.js');
-  assert.match(journey, /from 'https:\/\/cdn\.jsdelivr\.net\/npm\/three@\d+\.\d+\.\d+\/build\/three\.module\.min\.js'/, 'three.js should pin an exact version');
-  assert.match(html['index.html'], /<script type="module" src="journey\.js"><\/script>/, 'index.html loads journey.js');
-  const stations = attrs(html['index.html'], 'data-station');
-  assert.deepEqual(stations, ['core', 'line', 'pulse', 'reel', 'orbit', 'globe', 'portal'], 'stations appear in page order');
-  for (const name of stations) {
-    assert.match(journey, new RegExp(`\\b${name}: \\{ hold: \\[[^\\]]+\\], subject: \\[[^\\]]+\\], desk: \\[[^\\]]+\\], phone: \\[`), `journey.js has a stop for ${name}`);
-    if (name !== 'core') assert.match(journey, new RegExp(`\\['${name}', `), `journey.js builds a piece for ${name}`);
-  }
-});
-
-test('every showreel sits in a slot and can be closed once opened', () => {
-  for (const [page, source] of Object.entries(html)) {
-    const reels = (source.match(/\sdata-video="/g) || []).length;
-    assert.equal((source.match(/class="video-slot"/g) || []).length, reels, `${page}: a slot for every reel`);
-    assert.equal((source.match(/class="video-close"/g) || []).length, reels, `${page}: a close button for every reel`);
-  }
-});
-
 test('only Carl’s own projects are listed', () => {
-  const files = [...PAGES, 'main.js', 'motion.js', 'journey.js', 'style.css', 'videos/README.md'];
+  const files = [...PAGES, 'main.js', 'motion.js', 'style.css', 'videos/README.md'];
   for (const file of files) {
     assert.doesNotMatch(read(file), /NurseDesk|Barangay/i, `${file} mentions a project that is not Carl's`);
   }
@@ -145,6 +125,22 @@ test('every page has the light/dark switch, defaults to navy and picks a theme b
     assert.match(source, /<button class="theme-toggle" id="themeToggle" type="button" aria-label="[^"]+">/, `${page}: theme switch`);
   }
   const css = read('style.css');
-  assert.match(css, /:root\[data-theme="light"\] \{[\s\S]*?--bg: #f5f4f0;/, 'light tokens');
+  assert.match(css, /:root\[data-theme="light"\][^{]*\{[\s\S]*?--bg: #f5f4f0;/, 'light tokens');
 });
 
+test('the work studio lists each project as a tab with its own panel, and keeps the 3D stage out of the reading order', () => {
+  const page = html['index.html'];
+  const tabs = [...page.matchAll(/<button class="studio-tab"[^>]*role="tab" id="([^"]+)" aria-controls="([^"]+)"/g)];
+  assert.equal(tabs.length, 3, 'three projects in the studio');
+  for (const [, tab, panel] of tabs) {
+    assert.match(page, new RegExp(`role="tabpanel" id="${panel}" aria-labelledby="${tab}"`), `${tab} -> ${panel}`);
+  }
+  assert.equal((page.match(/class="orbit-item[ "]/g) || []).length, tabs.length, 'one window per project on the turntable');
+  assert.match(page, /<div class="studio-stage" aria-hidden="true">/, 'the 3D stage is decorative');
+  for (const target of ['flow-auto.html', 'healthnest.html']) assert.match(page, new RegExp(`<a class="button" href="${target}" data-studio-open>`), target);
+  assert.match(page, /<dialog class="theater" id="theater"[^>]*data-video="videos\/intro.mp4"/, 'the intro plays in the theater');
+  // Each preview clip ships as MP4 with a WebM twin.
+  for (const [, clip] of page.matchAll(/data-preview="([^"]+)"/g)) {
+    for (const file of [clip, clip.replace(/\.mp4$/, '.webm')]) assert.ok(fs.existsSync(path.join(ROOT, file)), `${file} is missing`);
+  }
+});
