@@ -427,6 +427,7 @@ if (studio) {
   const quiet = motion === 'reduced' || navigator.connection?.saveData;
   let onScreen = false;
   let hoverIndex = -1;
+  let filmOpen = false;
   function preview() {
     items.forEach((item, i) => {
       const on = !quiet && onScreen && studio.dataset.phase !== 'out' && (i === active || i === hoverIndex);
@@ -453,7 +454,7 @@ if (studio) {
         qs('.orbit-body', item)?.appendChild(video);
       }
       if (!video) return;
-      if (on) video.play()?.catch(() => {});
+      if (on && !filmOpen) video.play()?.catch(() => {});
       else video.pause();
     });
   }
@@ -461,6 +462,16 @@ if (studio) {
     new IntersectionObserver(([entry]) => { onScreen = entry.isIntersecting; preview(); }).observe(qs('.studio-stage', studio));
   }
   studio.addEventListener('studio:phase', preview);
+  // The loops hold still while a film plays in front of them.
+  document.addEventListener('film:toggle', event => {
+    filmOpen = event.detail.open;
+    items.forEach(item => {
+      const video = qs('.orbit-preview', item);
+      if (!video) return;
+      if (filmOpen) video.pause();
+      else if (item.classList.contains('is-playing')) video.play()?.catch(() => {});
+    });
+  });
   items.forEach((item, i) => {
     item.addEventListener('pointerenter', event => { if (event.pointerType === 'mouse') { hoverIndex = i; preview(); } });
     item.addEventListener('pointerleave', () => { hoverIndex = -1; preview(); });
@@ -539,6 +550,396 @@ if (theater) {
   // A click on the dimmed backdrop (the dialog itself, outside its content) closes it too.
   theater.addEventListener('click', event => { if (event.target === theater) theater.close(); });
   qsa('[data-theater-open]').forEach(button => button.addEventListener('click', open));
+}
+
+/* ---------- Films: rest the mouse on a video for a second and it comes forward ----------
+   The page dims, the video grows out of where it stands into a flat, sharp picture in the middle of the
+   screen, and its sound comes on. The studio's muted loops are cut from the full films (data-film-from says
+   where), so the film takes over from the moment the loop has reached. Moving away, scrolling, Esc or a
+   click on the dimmed page sends it back. Browsers refuse sound until the visitor has clicked or pressed a
+   key on the site at least once: until then the film plays silently and says so, and the first click turns
+   it on. Mouse only, and not with reduced motion or when the browser asks to save data. */
+const FILM_DELAY = 1000;
+const filmHosts = [];
+if (motion === 'full' && hasGsap && !navigator.connection?.saveData) {
+  qsa('.orbit-item[data-film]').forEach(item => filmHosts.push({
+    el: item,
+    surface: qs('.orbit-body', item),
+    src: item.dataset.film,
+    from: Number(item.dataset.filmFrom) || 0,
+    resume: 0,
+    loop: () => qs('.orbit-preview', item),
+    picture: () => qs('img', item),
+    away: () => studio?.dataset.phase === 'out'
+  }));
+  videoCards.forEach(card => {
+    const frame = qs('.video-frame', card);
+    const picture = new Image();
+    if (card.dataset.poster) picture.src = card.dataset.poster;
+    filmHosts.push({
+      el: frame,
+      surface: frame,
+      src: card.dataset.video,
+      from: 0,
+      resume: 0,
+      loop: () => null,
+      picture: () => picture,
+      away: () => !card.classList.contains('is-ready') || card.classList.contains('is-playing')
+    });
+  });
+}
+
+if (filmHosts.length) {
+  const overlay = document.createElement('div');
+  overlay.className = 'film-focus';
+  overlay.setAttribute('aria-hidden', 'true'); // an extra for the mouse: the same videos have their own players
+  overlay.innerHTML = `
+    <div class="film-veil"></div>
+    <div class="film-screen">
+      <canvas class="film-still" width="1280" height="720"></canvas>
+      <span class="film-state"><svg viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg></span>
+      <span class="film-wait"></span>
+      <button class="film-sound" type="button" tabindex="-1" data-state="on">
+        <svg viewBox="0 0 24 24"><path d="M4 9.5v5h3.5l4.5 4v-13l-4.5 4Z"/><path class="film-waves" d="M15.5 9.2a4 4 0 0 1 0 5.6M18.2 6.6a7.6 7.6 0 0 1 0 10.8"/><path class="film-off" d="m16 9.8 4.4 4.4M20.4 9.8 16 14.2"/></svg>
+        <span>Click for sound</span>
+      </button>
+      <div class="film-track"><i></i></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const filmBox = qs('.film-screen', overlay);
+  const still = qs('.film-still', overlay);
+  const soundButton = qs('.film-sound', overlay);
+  const progress = qs('.film-track i', overlay);
+
+  const films = new Map();
+  let armed = null;   // the video the mouse is waiting on
+  let active = null;  // the video that is out in front
+  let leaving = null; // the film on its way back
+  let calm = null;    // sent back by hand: waits until the mouse has left it before it can come forward again
+  let armTimer = 0, cueTimer = 0, leaveTimer = 0, idleTimer = 0;
+  let pointer = { x: 0, y: 0 };
+  let lastScroll = -1000;
+  let openedAt = 0;
+  let zones = [];     // where the mouse may be while a film is open: on the picture, or still on the video it came from
+  let swallowClick = false;
+  let wantSound = true;
+  try { wantSound = localStorage.getItem('portfolio-film-sound') !== 'off'; } catch {}
+
+  function filmFor(host) {
+    let film = films.get(host.src);
+    if (film) return film;
+    film = document.createElement('video');
+    film.className = 'film-video';
+    film.src = host.src;
+    film.playsInline = true;
+    film.preload = 'auto';
+    film.addEventListener('waiting', () => filmBox.classList.add('is-waiting'));
+    film.addEventListener('playing', () => filmBox.classList.remove('is-waiting'));
+    film.addEventListener('timeupdate', () => { if (film.duration) progress.style.transform = `scaleX(${film.currentTime / film.duration})`; });
+    film.addEventListener('ended', () => { if (active) close({ settle: true }); });
+    still.after(film);
+    films.set(host.src, film);
+    return film;
+  }
+
+  // Where the film should be to match the loop on the window, some seconds from now.
+  function filmTime(host, ahead = 0) {
+    if (host.resume) return host.resume;
+    const loop = host.loop();
+    return loop?.duration ? host.from + (loop.currentTime + ahead) % loop.duration : host.from;
+  }
+
+  /* ----- Waiting on the mouse ----- */
+  function disarm() {
+    clearTimeout(armTimer);
+    clearTimeout(cueTimer);
+    armed?.el.classList.remove('is-arming');
+    armed = null;
+  }
+  function arm(host) {
+    if (armed === host || active || calm === host || host.away() || performance.now() - lastScroll < 200 || qs('dialog[open]')) return;
+    disarm();
+    armed = host;
+    host.el.classList.add('is-arming');
+    // The film starts loading a little way in, so a mouse just passing over doesn't fetch it, and waits at the right moment.
+    cueTimer = setTimeout(() => { filmFor(host).currentTime = filmTime(host, (FILM_DELAY - 250) / 1000); }, 250);
+    armTimer = setTimeout(() => open(host), FILM_DELAY);
+  }
+  filmHosts.forEach(host => {
+    // Only a mouse that really moves counts: a page scrolled under a resting mouse doesn't start anything.
+    host.el.addEventListener('pointermove', event => {
+      if (event.pointerType !== 'mouse') return;
+      pointer = { x: event.clientX, y: event.clientY };
+      if (event.movementX || event.movementY) arm(host);
+    });
+    host.el.addEventListener('pointerleave', () => {
+      if (armed === host) disarm();
+      if (calm === host) calm = null;
+    });
+    // A click has its own job (open the case study, turn the turntable, play in place).
+    host.el.addEventListener('pointerdown', () => { disarm(); calm = host; });
+  });
+
+  /* ----- The picture's way out of the page ----- */
+  // Four invisible points at the corners of the video, because its corners on screen depend on every 3D turn above it.
+  function cornersOf(surface) {
+    let probes = qsa(':scope > .film-probe', surface);
+    if (!probes.length) {
+      probes = [['0', '0'], ['100%', '0'], ['100%', '100%'], ['0', '100%']].map(([left, top]) => {
+        const probe = document.createElement('i');
+        probe.className = 'film-probe';
+        probe.style.left = left;
+        probe.style.top = top;
+        surface.appendChild(probe);
+        return probe;
+      });
+    }
+    return probes.map(probe => {
+      const box = probe.getBoundingClientRect();
+      return [box.left, box.top];
+    });
+  }
+
+  // The perspective map that lays the rectangle (x, y, w, h) of the picture exactly over those four corners.
+  function mapOnto([x, y, w, h], [[x0, y0], [x1, y1], [x2, y2], [x3, y3]]) {
+    const sx = x0 - x1 + x2 - x3, sy = y0 - y1 + y2 - y3;
+    const dx1 = x1 - x2, dx2 = x3 - x2, dy1 = y1 - y2, dy2 = y3 - y2;
+    const det = dx1 * dy2 - dx2 * dy1;
+    const g = (sx * dy2 - dx2 * sy) / det, h2 = (dx1 * sy - sx * dy1) / det;
+    const a = x1 - x0 + g * x1, b = x3 - x0 + h2 * x3;
+    const d = y1 - y0 + g * y1, e = y3 - y0 + h2 * y3;
+    const end = 1 - g * x / w - h2 * y / h;
+    return [a / w, b / h, x0 - a * x / w - b * y / h, d / w, e / h, y0 - d * x / w - e * y / h, g / w, h2 / h].map(value => value / end);
+  }
+
+  let box = { left: 0, top: 0, width: 0, height: 0 };
+  let from = [1, 0, 0, 0, 1, 0, 0, 0];
+  const morph = { p: 1 };
+  function paint() {
+    const p = morph.p, q = 1 - p;
+    const [a, b, c, d, e, f, g, h] = from;
+    filmBox.style.transform = `matrix3d(${a * q + p},${d * q},0,${g * q},${b * q},${e * q + p},0,${h * q},0,0,1,0,${c * q},${f * q},0,1)`;
+  }
+  function measure(host) {
+    const corners = cornersOf(host.surface).map(([x, y]) => [x - box.left, y - box.top]);
+    // The video fills its surface and is cropped to do it, so only part of the picture lines up with the corners.
+    const fit = Math.max(host.surface.offsetWidth / box.width, host.surface.offsetHeight / box.height);
+    const w = host.surface.offsetWidth / fit, h = host.surface.offsetHeight / fit;
+    const map = mapOnto([(box.width - w) / 2, (box.height - h) / 2, w, h], corners);
+    if (map.every(Number.isFinite)) from = map;
+  }
+
+  // A still of what the window shows right now, so the picture is never empty while the film gets ready.
+  function paintStill(host) {
+    const context = still.getContext('2d', { alpha: false });
+    const loop = host.loop();
+    const source = loop?.readyState >= 2 ? loop : host.picture();
+    const sw = source?.videoWidth || source?.naturalWidth, sh = source?.videoHeight || source?.naturalHeight;
+    context.fillStyle = '#05080f';
+    context.fillRect(0, 0, still.width, still.height);
+    if (!sw || !sh) return;
+    const fit = Math.max(still.width / sw, still.height / sh);
+    context.drawImage(source, (still.width - sw * fit) / 2, (still.height - sh * fit) / 2, sw * fit, sh * fit);
+  }
+
+  /* ----- Sound ----- */
+  function showSound(state) {
+    soundButton.dataset.state = state;
+    soundButton.setAttribute('aria-label', state === 'on' ? 'Turn the sound off' : 'Turn the sound on');
+  }
+  function raiseSound(film) {
+    gsap.killTweensOf(film);
+    film.muted = false;
+    film.volume = .01;
+    gsap.to(film, { volume: 1, duration: .6, ease: 'power1.out' });
+    showSound('on');
+  }
+  // Starts the film with sound if the browser allows it. Asked with the volume a hair above silence, because a
+  // browser only refuses a film it could actually hear, and would stop it later when the volume came up.
+  function speak(film) {
+    gsap.killTweensOf(film);
+    if (!wantSound) {
+      film.muted = true;
+      film.volume = 1;
+      showSound('off');
+      film.play()?.catch(() => {});
+      return;
+    }
+    film.muted = false;
+    film.volume = .01;
+    film.play()?.then(() => { if (!film.muted && filmFor(active || {}) === film) raiseSound(film); }, error => {
+      if (error.name !== 'NotAllowedError') return;
+      film.muted = true;
+      film.volume = 1;
+      showSound('blocked');
+      if (active) film.play()?.catch(() => {});
+    });
+  }
+  // A click or key press is what the browser was waiting for.
+  function unlockSound() {
+    if (!active || soundButton.dataset.state !== 'blocked') return false;
+    const film = filmFor(active);
+    raiseSound(film);
+    film.play()?.catch(() => {
+      film.muted = true;
+      showSound('blocked');
+      film.play()?.catch(() => {});
+    });
+    return true;
+  }
+  function toggleSound() {
+    const film = filmFor(active);
+    wantSound = film.muted;
+    try { localStorage.setItem('portfolio-film-sound', wantSound ? 'on' : 'off'); } catch {}
+    if (wantSound) { raiseSound(film); return; }
+    gsap.killTweensOf(film);
+    film.muted = true;
+    showSound('off');
+  }
+
+  function togglePlay() {
+    const film = filmFor(active);
+    if (film.paused) film.play()?.catch(() => {});
+    else film.pause();
+    filmBox.classList.toggle('is-paused', !film.paused === false);
+  }
+  function wake() {
+    filmBox.classList.remove('is-idle');
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => filmBox.classList.add('is-idle'), 2200);
+  }
+
+  /* ----- Coming forward and going back ----- */
+  function finishClosing() {
+    if (!leaving) return;
+    gsap.killTweensOf([morph, filmBox]);
+    leaving.pause();
+    leaving.classList.remove('is-shown');
+    filmBox.style.opacity = 0;
+    overlay.classList.remove('is-on');
+    leaving = null;
+  }
+
+  function open(host) {
+    disarm();
+    if (!host.el.contains(document.elementFromPoint(pointer.x, pointer.y)) || qs('dialog[open]')) return;
+    finishClosing();
+    active = host;
+    openedAt = scrollY;
+    const film = filmFor(host);
+    paintStill(host);
+
+    const width = Math.round(Math.min(innerWidth * .88, (innerHeight - 64) * 16 / 9));
+    const height = Math.round(width * 9 / 16);
+    box = { left: Math.round((innerWidth - width) / 2), top: Math.round((innerHeight - height) / 2), width, height };
+    Object.assign(filmBox.style, { left: `${box.left}px`, top: `${box.top}px`, width: `${width}px`, height: `${height}px`, willChange: 'transform, opacity' });
+    zones = [{ left: box.left, top: box.top, right: box.left + width, bottom: box.top + height }, host.el.getBoundingClientRect()];
+    measure(host);
+    morph.p = 0;
+    paint();
+    filmBox.classList.remove('is-paused', 'is-waiting');
+    wake();
+    progress.style.transform = 'scaleX(0)';
+    overlay.classList.add('is-on', 'is-open');
+    document.dispatchEvent(new CustomEvent('film:toggle', { detail: { open: true } }));
+
+    gsap.killTweensOf([morph, filmBox]);
+    gsap.to(filmBox, { opacity: 1, duration: .22, ease: 'power1.out' });
+    gsap.to(morph, {
+      p: 1, duration: .9, ease: 'power3.out', onUpdate: paint,
+      // Standing flat and still at whole pixels: nothing resamples the picture.
+      onComplete: () => { filmBox.style.transform = 'none'; filmBox.style.willChange = 'auto'; }
+    });
+
+    const at = filmTime(host);
+    if (Math.abs(film.currentTime - at) > .3) film.currentTime = at;
+    speak(film);
+    // The film shows itself once it has a frame on screen; until then the still stands in.
+    const show = () => { if (filmFor(active || {}) === film) film.classList.add('is-shown'); };
+    film.requestVideoFrameCallback?.(show);
+    film.addEventListener('playing', () => setTimeout(show, 150), { once: true });
+  }
+
+  function close({ settle = false, jump = false } = {}) {
+    if (!active) return;
+    const host = active;
+    const film = filmFor(host);
+    active = null;
+    leaving = film;
+    clearTimeout(leaveTimer);
+    leaveTimer = 0;
+    if (settle) calm = host;
+    // Past the end of the loop, the film picks up where it was next time; within it, the loop decides.
+    const loop = host.loop();
+    const loopEnd = loop?.duration ? host.from + loop.duration : 0;
+    host.resume = !film.ended && film.currentTime > loopEnd ? film.currentTime : 0;
+    if (loopEnd && film.currentTime >= host.from && film.currentTime < loopEnd) loop.currentTime = Math.min(loop.duration - .05, film.currentTime - host.from + .5);
+
+    overlay.classList.remove('is-open');
+    document.dispatchEvent(new CustomEvent('film:toggle', { detail: { open: false } }));
+    if (jump) { finishClosing(); return; }
+    gsap.killTweensOf(film);
+    if (!film.muted) gsap.to(film, { volume: 0, duration: .3, ease: 'power1.in' });
+    gsap.killTweensOf([morph, filmBox]);
+    filmBox.style.willChange = 'transform, opacity';
+    measure(host);
+    gsap.to(morph, { p: 0, duration: .6, ease: 'power3.inOut', onUpdate: paint, onComplete: finishClosing });
+    gsap.to(filmBox, { opacity: 0, duration: .24, delay: .38, ease: 'power1.in' });
+  }
+
+  /* ----- While a film is open ----- */
+  addEventListener('scroll', () => {
+    lastScroll = performance.now();
+    if (armed) disarm();
+    if (active && Math.abs(scrollY - openedAt) > 8) close();
+  }, { passive: true });
+
+  addEventListener('pointermove', event => {
+    if (!active) return;
+    wake();
+    const { clientX: x, clientY: y } = event;
+    pointer = { x, y };
+    const over = zones.some(zone => x >= zone.left - 8 && x <= zone.right + 8 && y >= zone.top - 8 && y <= zone.bottom + 8);
+    if (over) {
+      clearTimeout(leaveTimer);
+      leaveTimer = 0;
+    } else if (!leaveTimer) {
+      leaveTimer = setTimeout(() => { leaveTimer = 0; close(); }, 140);
+    }
+  }, { passive: true });
+  root.addEventListener('pointerleave', () => close());
+
+  overlay.addEventListener('pointerdown', event => {
+    swallowClick = unlockSound() && Boolean(event.target.closest('.film-screen'));
+  });
+  overlay.addEventListener('click', event => {
+    if (swallowClick) { swallowClick = false; return; }
+    if (!active) return;
+    const track = event.target.closest('.film-track');
+    if (event.target.closest('.film-sound')) toggleSound();
+    else if (track) {
+      const film = filmFor(active);
+      const { left, width } = track.getBoundingClientRect();
+      if (film.duration) film.currentTime = (event.clientX - left) / width * film.duration;
+    } else if (event.target.closest('.film-screen')) togglePlay();
+    else close({ settle: true });
+  });
+  // In front of the page's own keys, so Space pauses the film instead of scrolling.
+  addEventListener('keydown', event => {
+    if (!active) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      close({ settle: true });
+      return;
+    }
+    unlockSound();
+    if (event.key === ' ') {
+      event.preventDefault();
+      togglePlay();
+    }
+  }, true);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) close({ jump: true }); });
+  addEventListener('resize', () => close({ jump: true }));
 }
 
 /* ---------- Without GSAP: things fade and sharpen in as they arrive ---------- */

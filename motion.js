@@ -218,17 +218,19 @@
     const camera = qs('.studio-camera', section);
     const ring = qs('.studio-ring', section);
     const wall = qs('.studio-wall', section);
-    const beam = qs('.studio-beam', section);
     const cone = qs('.studio-cone', section);
+    // The numbers room.js draws the light from. Without WebGL nothing reads them and the CSS wall and cone do the job.
+    const light = window.site.light || {};
     const intro = qs('.studio-intro', section);
     const hint = qs('.studio-hint', section);
     const words = qsa('.studio-finale span', section);
     const shade = qs('.studio-shade', section);
     const panel = qs('.studio-panel', section);
 
-    // On arrival the light comes down, spreads over the turntable, and the windows rise into place.
+    // On arrival a narrow shaft of light comes down, opens over the turntable, and the windows rise into place.
     gsap.timeline({ delay: .15 })
-      .fromTo(beam, { scaleY: 0 }, { scaleY: 1, duration: 1.3, ease: 'expo.inOut' })
+      .fromTo(light, { reach: 0 }, { reach: 1, duration: 1.3, ease: 'expo.inOut' })
+      .fromTo(light, { open: .06 }, { open: 1, duration: 1.4, ease: 'expo.out' }, .8)
       .fromTo(cone, { scaleX: .15, transformOrigin: '50% 0' }, { scaleX: 1, duration: 1.4, ease: 'expo.out' }, .8)
       .fromTo(qsa('.orbit-tilt', section), { y: () => innerHeight * .3 }, { y: 0, duration: 1.8, stagger: .12, ease: 'expo.out' }, .55);
 
@@ -255,17 +257,20 @@
       const wallX = angle => -(angle + THETA) * 2.4;
 
       // Timeline time is measured in screens of scrolling.
-      const FLY = 1, HOLD = .55, TURN = .85, FINALE = 1, EXIT = 1;
+      const FLY = 1, HOLD = .55, TURN = .85, FINALE = 1, EXIT = 1, ZOOM = 1.16;
       const holds = [], switches = [];
       const tl = gsap.timeline({ defaults: { ease: 'none' } });
       tl.fromTo(camera, { z: () => -(r() + w() * (desk ? 2.4 : 2)), y: () => screen() * (desk ? .3 : .22), rotationX: -14 }, { z: () => -r(), y: 0, rotationX: -2, duration: FLY, ease: 'power2.inOut' }, 0)
         .fromTo(ring, { rotationY: -THETA }, { rotationY: 0, duration: FLY, ease: 'power2.inOut' }, 0)
         .fromTo(wall, { x: wallX(-THETA) }, { x: wallX(0), duration: FLY, ease: 'power2.inOut' }, 0)
+        // The room closes in as the camera does, so the wall feels like it is really getting nearer.
+        .fromTo(light, { x: wallX(-THETA), zoom: 1 }, { x: wallX(0), zoom: ZOOM, duration: FLY, ease: 'power2.inOut' }, 0)
         // Up close the window stands at a slight angle, its far edge turned toward the list.
         .fromTo(dolly, { x: 0, y: 0, rotationY: 0 }, { x: shiftX, y: shiftY, rotationY: desk ? 12 : 0, duration: FLY, ease: 'power2.inOut' }, 0)
         .fromTo(intro, { y: 0, opacity: 1 }, { y: () => -screen() * .2, opacity: 0, duration: FLY * .5, ease: 'power1.in' }, 0)
         .fromTo(hint, { opacity: 1 }, { opacity: 0, duration: .2 }, 0)
-        .fromTo([beam, cone], { opacity: 1 }, { opacity: 0, duration: .45 }, .3)
+        .fromTo(cone, { opacity: 1 }, { opacity: 0, duration: .45 }, .3)
+        .fromTo(light, { opacity: 1 }, { opacity: 0, duration: .45 }, .3)
         .fromTo(panel, { opacity: 0, x: desk ? 48 : 0, y: desk ? 0 : 48 }, { opacity: 1, x: 0, y: 0, duration: .45, ease: 'power2.out' }, FLY - .45);
       let at = FLY;
       items.forEach((item, index) => {
@@ -277,12 +282,14 @@
         const angle = -(index + 1) * THETA;
         tl.to(ring, { rotationY: angle, duration: TURN, ease: 'power2.inOut' }, at)
           .to(wall, { x: wallX(angle), duration: TURN, ease: 'power2.inOut' }, at)
+          .to(light, { x: wallX(angle), duration: TURN, ease: 'power2.inOut' }, at)
           // The camera eases back while the turntable turns, then comes in on the next window.
           .to(camera, { z: () => -r() - w() * .24, duration: TURN / 2, ease: 'sine.inOut' }, at)
           .to(camera, { z: () => -r(), duration: TURN / 2, ease: 'sine.inOut' }, at + TURN / 2);
         switches.push(at + TURN / 2);
         at += TURN;
       });
+      const finale = at;
       // Finale: the intro window comes to the middle and "Meet" and "Carl" close in around it.
       tl.to(dolly, { x: 0, y: 0, rotationY: 0, duration: FINALE, ease: 'power2.inOut' }, at)
         .to(camera, { z: () => -r() + w() * (desk ? .14 : .04), duration: FINALE, ease: 'power2.inOut' }, at)
@@ -292,6 +299,7 @@
       at += FINALE;
       // On the way out the camera pulls back and the room dims while the next section slides over it.
       tl.to(camera, { z: () => -r() - w() * .6, rotationX: -8, duration: EXIT, ease: 'power1.in' }, at)
+        .to(light, { zoom: 1, duration: EXIT, ease: 'power1.in' }, at)
         .to(shade, { opacity: .7, duration: EXIT, ease: 'power1.in' }, at);
       const total = at + EXIT;
 
@@ -299,8 +307,11 @@
         const time = tl.time();
         show(switches.filter(point => time >= point).length);
         stage.classList.toggle('is-wide', time < FLY * .45);
+        // Faded out, the list must not catch the mouse meant for the windows behind it (it stays reachable by keyboard).
+        panel.classList.toggle('is-away', time < FLY - .25 || time > finale + FINALE * .2);
         setPhase(time < FLY * .5 ? 'home' : time > total - EXIT * .5 ? 'out' : 'work');
       });
+      panel.classList.add('is-away');
 
       const st = ScrollTrigger.create({
         trigger: section, start: 'top top', end: () => `+=${screen() * total}`,
