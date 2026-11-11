@@ -181,12 +181,17 @@
      list beside the window, phones keep it underneath. With reduced motion style.css does it all: the
      list turns the turntable in place and nothing flies. */
   const THETA = 48, RADIUS = 1.4; // the same turn and radius as --theta and --r in style.css
+  const LEAN = 8;                 // how far a laptop's lid leans back, as --lean in style.css
   function studio() {
     const section = qs('[data-studio]');
     const stage = section && qs('.studio-stage', section);
     if (!stage) return;
     const items = qsa('.orbit-item', section);
     const show = window.site?.showProject || (() => {});
+    const showStep = window.site?.showStep || (() => {});
+    // The 3D laptops, when the page has them (main.js). Their lids lean back, so the mouse leans them from there.
+    const lap = window.site?.laptops;
+    const lean = () => (root.classList.contains('laptops') ? LEAN : 0);
 
     // The window facing you leans a little toward the mouse.
     const fine = matchMedia('(hover: hover) and (pointer: fine)');
@@ -204,10 +209,10 @@
         tilts.forEach(tilt => {
           const on = tilt.item.classList.contains('is-front');
           tilt.x(on ? nx * 7 : 0);
-          tilt.y(on ? -ny * 5 : 0);
+          tilt.y(lean() + (on ? -ny * 5 : 0));
         });
       });
-      stage.addEventListener('pointerleave', () => { box = null; tilts.forEach(tilt => { tilt.x(0); tilt.y(0); }); });
+      stage.addEventListener('pointerleave', () => { box = null; tilts.forEach(tilt => { tilt.x(0); tilt.y(lean()); }); });
       addEventListener('scroll', () => { box = null; }, { passive: true });
     }
     if (!full) return;
@@ -218,19 +223,25 @@
     const camera = qs('.studio-camera', section);
     const ring = qs('.studio-ring', section);
     const wall = qs('.studio-wall', section);
-    const beam = qs('.studio-beam', section);
     const cone = qs('.studio-cone', section);
+    // The numbers room.js draws the light from. Without WebGL nothing reads them and the CSS wall and cone do the job.
+    const light = window.site.light || {};
     const intro = qs('.studio-intro', section);
     const hint = qs('.studio-hint', section);
     const words = qsa('.studio-finale span', section);
     const shade = qs('.studio-shade', section);
     const panel = qs('.studio-panel', section);
 
-    // On arrival the light comes down, spreads over the turntable, and the windows rise into place.
+    // On arrival a narrow shaft of light comes down and opens over the turntable. Then the laptops open, the middle
+    // one first; without them (no WebGL, or they failed to load) the windows rise into place instead.
     gsap.timeline({ delay: .15 })
-      .fromTo(beam, { scaleY: 0 }, { scaleY: 1, duration: 1.3, ease: 'expo.inOut' })
-      .fromTo(cone, { scaleX: .15, transformOrigin: '50% 0' }, { scaleX: 1, duration: 1.4, ease: 'expo.out' }, .8)
-      .fromTo(qsa('.orbit-tilt', section), { y: () => innerHeight * .3 }, { y: 0, duration: 1.8, stagger: .12, ease: 'expo.out' }, .55);
+      .fromTo(light, { reach: 0 }, { reach: 1, duration: 1.3, ease: 'expo.inOut' })
+      .fromTo(light, { open: .06 }, { open: 1, duration: 1.4, ease: 'expo.out' }, .8)
+      .fromTo(cone, { scaleX: .15, transformOrigin: '50% 0' }, { scaleX: 1, duration: 1.4, ease: 'expo.out' }, .8);
+    const tiltEls = qsa('.orbit-tilt', section);
+    const rise = delay => gsap.fromTo(tiltEls, { y: () => innerHeight * .3, rotationX: 0 }, { y: 0, duration: 1.8, stagger: .12, ease: 'expo.out', delay });
+    if (!lap) rise(.7);
+    else lap.whenReady.then(ok => (ok ? gsap.to(lap.lids, { open: 1, duration: 1.6, ease: 'power2.inOut', stagger: { each: .2, from: 'center' }, delay: .3 }) : rise(0)));
 
     // Tell the page which part of the studio is showing: home (the wide shot), work, or out (leaving).
     let phase = '';
@@ -249,58 +260,79 @@
       const r = () => w() * RADIUS;
       const screen = () => frame.offsetHeight;
       // Where the window facing you sits: left of the list on large screens, above it on phones.
-      const shiftX = () => desk ? -(panel.offsetWidth + parseFloat(getComputedStyle(panel).right)) / 2 : 0;
+      const shiftX = () => desk ? -(panel.offsetWidth + parseFloat(getComputedStyle(panel).right)) / 2 - (lap ? w() * .035 : 0) : 0;
       const shiftY = () => desk ? 0 : ((qs('#nav')?.offsetHeight || 64) + panel.offsetTop) / 2 - screen() / 2;
       // The wall slides a little the other way as the turntable turns, so the room seems to turn around you.
       const wallX = angle => -(angle + THETA) * 2.4;
 
-      // Timeline time is measured in screens of scrolling.
-      const FLY = 1, HOLD = .55, TURN = .85, FINALE = 1, EXIT = 1;
-      const holds = [], switches = [];
+      // Timeline time is measured in screens of scrolling. A project holds the screen for one STEP per step of its story.
+      const FLY = 1, STEP = .5, HOLD = .6, TURN = .85, FINALE = 1, EXIT = 1, ZOOM = 1.16;
+      const tabs = qsa('[role="tab"]', section);
+      const stepCount = items.map((item, index) => Math.max(1, qsa('.step', document.getElementById(tabs[index]?.getAttribute('aria-controls'))).length));
+      const stay = index => (stepCount[index] > 1 ? stepCount[index] * STEP : HOLD);
+      const starts = [], switches = [];
+      // How far back the wide shot stands, in screen widths: laptops need more room than flat windows did.
+      const far = lap ? (desk ? 3 : 2.5) : (desk ? 2.4 : 2);
       const tl = gsap.timeline({ defaults: { ease: 'none' } });
-      tl.fromTo(camera, { z: () => -(r() + w() * (desk ? 2.4 : 2)), y: () => screen() * (desk ? .3 : .22), rotationX: -14 }, { z: () => -r(), y: 0, rotationX: -2, duration: FLY, ease: 'power2.inOut' }, 0)
+      tl.fromTo(camera, { z: () => -(r() + w() * far), y: () => screen() * (desk ? (lap ? .25 : .3) : .22), rotationX: -14 }, { z: () => -r(), y: 0, rotationX: -2, duration: FLY, ease: 'power2.inOut' }, 0)
         .fromTo(ring, { rotationY: -THETA }, { rotationY: 0, duration: FLY, ease: 'power2.inOut' }, 0)
         .fromTo(wall, { x: wallX(-THETA) }, { x: wallX(0), duration: FLY, ease: 'power2.inOut' }, 0)
-        // Up close the window stands at a slight angle, its far edge turned toward the list.
+        // The room closes in as the camera does, so the wall feels like it is really getting nearer.
+        .fromTo(light, { x: wallX(-THETA), zoom: 1 }, { x: wallX(0), zoom: ZOOM, duration: FLY, ease: 'power2.inOut' }, 0)
+        // Up close the screen stands at a slight angle, its far edge turned toward the list.
         .fromTo(dolly, { x: 0, y: 0, rotationY: 0 }, { x: shiftX, y: shiftY, rotationY: desk ? 12 : 0, duration: FLY, ease: 'power2.inOut' }, 0)
         .fromTo(intro, { y: 0, opacity: 1 }, { y: () => -screen() * .2, opacity: 0, duration: FLY * .5, ease: 'power1.in' }, 0)
         .fromTo(hint, { opacity: 1 }, { opacity: 0, duration: .2 }, 0)
-        .fromTo([beam, cone], { opacity: 1 }, { opacity: 0, duration: .45 }, .3)
+        .fromTo(cone, { opacity: 1 }, { opacity: 0, duration: .45 }, .3)
+        .fromTo(light, { opacity: 1 }, { opacity: 0, duration: .45 }, .3)
         .fromTo(panel, { opacity: 0, x: desk ? 48 : 0, y: desk ? 0 : 48 }, { opacity: 1, x: 0, y: 0, duration: .45, ease: 'power2.out' }, FLY - .45);
       let at = FLY;
       items.forEach((item, index) => {
-        holds.push(at + HOLD / 2);
-        // Never quite still: the camera keeps drifting in while you read.
-        tl.to(camera, { z: () => -r() + w() * .05, duration: HOLD }, at);
-        at += HOLD;
+        starts.push(at);
+        // Never quite still: the camera keeps drifting in while you read, and swings a little as each step gives way to the next.
+        tl.to(camera, { z: () => -r() + w() * .05, duration: stay(index) }, at);
+        if (desk) for (let k = 1; k < stepCount[index]; k++) tl.to(dolly, { rotationY: k % 2 ? 7.5 : 12, duration: STEP, ease: 'sine.inOut' }, at + (k - .5) * STEP);
+        at += stay(index);
         if (index === items.length - 1) return;
         const angle = -(index + 1) * THETA;
         tl.to(ring, { rotationY: angle, duration: TURN, ease: 'power2.inOut' }, at)
           .to(wall, { x: wallX(angle), duration: TURN, ease: 'power2.inOut' }, at)
-          // The camera eases back while the turntable turns, then comes in on the next window.
+          .to(light, { x: wallX(angle), duration: TURN, ease: 'power2.inOut' }, at)
+          .to(dolly, { rotationY: desk ? 12 : 0, duration: TURN, ease: 'power2.inOut' }, at)
+          // The camera eases back while the turntable turns, then comes in on the next screen.
           .to(camera, { z: () => -r() - w() * .24, duration: TURN / 2, ease: 'sine.inOut' }, at)
           .to(camera, { z: () => -r(), duration: TURN / 2, ease: 'sine.inOut' }, at + TURN / 2);
         switches.push(at + TURN / 2);
         at += TURN;
       });
-      // Finale: the intro window comes to the middle and "Meet" and "Carl" close in around it.
+      const finale = at;
+      // Finale: the intro comes to the middle and "Meet" and "Carl" close in around it.
       tl.to(dolly, { x: 0, y: 0, rotationY: 0, duration: FINALE, ease: 'power2.inOut' }, at)
         .to(camera, { z: () => -r() + w() * (desk ? .14 : .04), duration: FINALE, ease: 'power2.inOut' }, at)
         .to(panel, { opacity: 0, x: desk ? 40 : 0, y: desk ? 0 : 40, duration: FINALE * .35, ease: 'power1.in' }, at)
         .fromTo(words[0], { xPercent: -115, opacity: 0 }, { xPercent: 0, opacity: 1, duration: FINALE * .75, ease: 'power3.out' }, at + FINALE * .2)
         .fromTo(words[1], { xPercent: 115, opacity: 0 }, { xPercent: 0, opacity: 1, duration: FINALE * .75, ease: 'power3.out' }, at + FINALE * .2);
       at += FINALE;
-      // On the way out the camera pulls back and the room dims while the next section slides over it.
+      // On the way out the camera pulls back, the lids close and the room dims while the next section slides over it.
       tl.to(camera, { z: () => -r() - w() * .6, rotationX: -8, duration: EXIT, ease: 'power1.in' }, at)
+        .to(light, { zoom: 1, duration: EXIT, ease: 'power1.in' }, at)
         .to(shade, { opacity: .7, duration: EXIT, ease: 'power1.in' }, at);
+      if (lap) tl.fromTo(lap, { fold: 0 }, { fold: 1, duration: EXIT * .6, ease: 'power2.in' }, at + EXIT * .05);
       const total = at + EXIT;
 
+      let before = 0;
       tl.eventCallback('onUpdate', () => {
-        const time = tl.time();
+        const time = tl.time(), dir = time < before ? -1 : 1;
+        before = time;
         show(switches.filter(point => time >= point).length);
+        // Every screen shows the step the scroll has reached in its own story, so it is already right when it turns to face you.
+        starts.forEach((start, index) => showStep(index, Math.floor((time - start) / STEP + .001), dir));
         stage.classList.toggle('is-wide', time < FLY * .45);
+        // Faded out, the list must not catch the mouse meant for the screens behind it (it stays reachable by keyboard).
+        panel.classList.toggle('is-away', time < FLY - .25 || time > finale + FINALE * .2);
         setPhase(time < FLY * .5 ? 'home' : time > total - EXIT * .5 ? 'out' : 'work');
       });
+      panel.classList.add('is-away');
 
       const st = ScrollTrigger.create({
         trigger: section, start: 'top top', end: () => `+=${screen() * total}`,
@@ -308,18 +340,20 @@
       });
 
       // The header's Home and Work, the list and the windows all fly the camera by moving the page.
-      const toHold = index => st.start + (st.end - st.start) * holds[index] / total;
+      // Where the page must be for a project's step to be on screen (its first, unless told otherwise).
+      const toHold = (index, k = 0) => st.start + (st.end - st.start) * (starts[index] + (stepCount[index] > 1 ? (Math.min(k, stepCount[index] - 1) + .5) * STEP : HOLD / 2)) / total;
       window.site.studioY = toHold;
       // Where the camera is still in the room (until the finale ends and the next section slides over).
       window.site.studioRange = () => [st.start, st.end - screen() * EXIT];
       const onPick = event => {
         event.preventDefault();
-        window.site.glideTo(toHold(event.detail.index), 1.4);
+        const { index, step } = event.detail;
+        // A step in the story on screen is a short hop; another project is a flight.
+        window.site.glideTo(toHold(index, step || 0), step === undefined ? 1.4 : .9);
       };
       // Tabbing into the list while the camera is out (before the fly-in, or after the finale) flies it to that project.
-      const tabs = qsa('[role="tab"]', section);
       const onFocus = event => {
-        if (scrollY >= toHold(0) - 4 && scrollY <= toHold(items.length - 1) + 4) return;
+        if (scrollY >= toHold(0) - 4 && scrollY <= toHold(items.length - 1, 99) + 4) return;
         const host = event.target.closest('[role="tab"], [role="tabpanel"]');
         const index = host ? tabs.findIndex(tab => tab === host || tab.getAttribute('aria-controls') === host.id) : 0;
         window.site.glideTo(toHold(Math.max(0, index)), 1.4);
