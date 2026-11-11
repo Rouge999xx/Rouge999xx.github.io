@@ -29,6 +29,8 @@
       if (meta) meta.setAttribute('content', theme === 'light' ? '#f5f4f0' : '#0a0f1a');
       root.classList.add('js');
       if (root.dataset.motion === 'full') root.classList.add('intro-pending');
+      // The studio's 3D laptops need full motion and WebGL 2. Until they are drawn, the windows they replace stay hidden.
+      if (root.dataset.motion === 'full' && 'WebGL2RenderingContext' in window) root.classList.add('laptops');
     })();
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -80,7 +82,7 @@
                   <div class="orbit-tilt">
                     <div class="window orbit-window">
                       <div class="window-bar"><span class="window-dots"><i></i><i></i><i></i></span><b>Flow Auto · Story workspace</b></div>
-                      <div class="orbit-body"><img decoding="async" src="img/flow-auto/scenes.webp" width="1600" height="1000" alt="" /></div>
+                      <div class="orbit-body"><img decoding="async" src="img/flow-auto/story.webp" width="1600" height="1000" alt="" /></div>
                     </div>
                   </div>
                   <span class="orbit-pool"></span>
@@ -88,28 +90,17 @@
                 <div class="orbit-item" data-orbit="1">
                   <div class="orbit-tilt">
                     <div class="window orbit-window">
-                      <div class="window-bar"><span class="window-dots"><i></i><i></i><i></i></span><b>HealthNest · Dashboard</b></div>
-                      <div class="orbit-body orbit-body--mock">
-                        <div class="mock">
-                          <div class="mock-side"><span class="mock-logo"></span><i class="is-on"></i><i></i><i></i><i></i></div>
-                          <div class="mock-main">
-                            <div class="mock-head"><strong>HealthNest</strong><span>● Active</span></div>
-                            <div class="mock-stats"><i></i><i></i><i></i></div>
-                            <div class="mock-chart"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-                            <div class="mock-list"><i></i><i></i><i></i><i></i></div>
-                            <div class="mock-rows"><i></i><i></i><i></i></div>
-                          </div>
-                        </div>
-                      </div>
+                      <div class="window-bar"><span class="window-dots"><i></i><i></i><i></i></span><b>HealthNest · Patient cases</b></div>
+                      <div class="orbit-body"><img decoding="async" src="img/healthnest/cases.webp" width="1600" height="1000" alt="" /></div>
                     </div>
                   </div>
                   <span class="orbit-pool"></span>
                 </div>
-                <div class="orbit-item" data-orbit="2" data-preview="videos/intro-preview.mp4" data-film="videos/intro.mp4" data-film-from="4.4">
+                <div class="orbit-item" data-orbit="2" data-shot="videos/intro-preview.jpg" data-preview="videos/intro-preview.mp4" data-film="videos/intro.mp4" data-film-from="4.4">
                   <div class="orbit-tilt">
                     <div class="window orbit-window">
                       <div class="window-bar"><span class="window-dots"><i></i><i></i><i></i></span><b>Meet Carl · intro.mp4</b></div>
-                      <div class="orbit-body"><img decoding="async" loading="lazy" src="videos/intro.jpg" width="1920" height="1080" alt="" /><span class="orbit-play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg>Play</span></div>
+                      <div class="orbit-body"><img decoding="async" loading="lazy" src="videos/intro-preview.jpg" width="1280" height="720" alt="" /><span class="orbit-play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg>Play</span></div>
                     </div>
                   </div>
                   <span class="orbit-pool"></span>
@@ -123,7 +114,7 @@
           <div class="studio-intro-inner" data-hero>
             <p class="status"><span class="status-dot" aria-hidden="true"></span>Available for internships &amp; freelance</p>
             <h1 class="studio-title" id="heroTitle" data-blur>I build software that feels <em>alive.</em></h1>
-            <p class="studio-sub">Computer Engineering student based in Cebu, Philippines. I make desktop systems, automation tools and polished digital experiences.</p>
+            <p class="studio-sub">Computer Engineering student in Cebu, Philippines. I build desktop apps and automation tools that take the repetitive work out of a job.</p>
           </div>
         </div>
         <p class="studio-hint" aria-hidden="true"><span>Scroll to step inside</span></p>
@@ -131,30 +122,50 @@
         <span class="studio-shade" aria-hidden="true"></span>
 
         <div class="studio-panel" id="work">
-          <div class="studio-panel-head">
-            <h2 class="eyebrow" id="workTitle">Selected work</h2>
-            <p class="studio-count" aria-hidden="true"><span class="count-roll"><i>01</i><i>02</i><i>03</i></span> / 03</p>
-          </div>
-          <div class="studio-tabs" role="tablist" aria-label="Projects" aria-orientation="vertical">
-            <button class="studio-tab" type="button" role="tab" id="tabFlow" aria-controls="panelFlow" aria-selected="true"><span>01</span><strong>Flow Auto</strong><small>Chrome &amp; Edge extension</small></button>
-            <button class="studio-tab" type="button" role="tab" id="tabHealth" aria-controls="panelHealth" aria-selected="false"><span>02</span><strong>HealthNest</strong><small>Windows desktop app</small></button>
-            <button class="studio-tab" type="button" role="tab" id="tabIntro" aria-controls="panelIntro" aria-selected="false"><span>03</span><strong>Meet Carl</strong><small>Intro video</small></button>
+          <h2 class="sr-only" id="workTitle">Selected work</h2>
+          <div class="studio-tabs" role="tablist" aria-label="Projects">
+            <button class="studio-tab" type="button" role="tab" id="tabFlow" aria-controls="panelFlow" aria-selected="true">Flow Auto</button>
+            <button class="studio-tab" type="button" role="tab" id="tabHealth" aria-controls="panelHealth" aria-selected="false">HealthNest</button>
+            <button class="studio-tab" type="button" role="tab" id="tabIntro" aria-controls="panelIntro" aria-selected="false">Meet Carl</button>
           </div>
           <div class="studio-details">
             <div class="studio-detail" role="tabpanel" id="panelFlow" aria-labelledby="tabFlow">
-              <p>A production line for AI video, with its own MCP server.</p>
-              <ul class="tags" aria-label="Built with"><li>React</li><li>TypeScript</li><li>Chrome MV3</li><li>MCP</li></ul>
-              <a class="button" href="flow-auto.html" data-studio-open>Open the case study<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+              <h3 class="detail-title">A production line for AI video.</h3>
+              <p class="detail-lead">A Chrome and Edge extension that turns a scene-by-scene script into finished, numbered 1080p videos on Google Flow.</p>
+              <ol class="steps" aria-label="How Flow Auto works">
+                <li class="step is-on" data-shot="img/flow-auto/story.webp"><button class="step-name" type="button"><span>01</span>Import</button><p>Paste a script. Every scene, batch and global rule is checked before you accept it.</p></li>
+                <li class="step" data-shot="videos/flow-auto-preview.jpg" data-clip><button class="step-name" type="button"><span>02</span>Reference</button><p>Storyboards and character sheets come from Flow, ChatGPT, Grok or Meta AI, saved as real PNGs.</p></li>
+                <li class="step" data-shot="img/flow-auto/settings.webp"><button class="step-name" type="button"><span>03</span>Generate</button><p>Each scene goes to Flow or Grok Imagine with its rules and references attached.</p></li>
+                <li class="step" data-shot="img/flow-auto/scenes.webp"><button class="step-name" type="button"><span>04</span>Run unattended</button><p>The queue survives a refresh or a crash, and it pauses to ask instead of guessing.</p></li>
+                <li class="step" data-shot="img/flow-auto/connect.webp"><button class="step-name" type="button"><span>05</span>Hand it to an AI</button><p>Its own MCP server gives Claude and Gemini 18 tools to read the queue, edit a scene and start a run.</p></li>
+              </ol>
+              <div class="detail-foot">
+                <a class="button" href="flow-auto.html" data-studio-open>Open the case study<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+                <ul class="tags" aria-label="Built with"><li>React</li><li>TypeScript</li><li>Chrome MV3</li><li>MCP</li></ul>
+              </div>
             </div>
             <div class="studio-detail" role="tabpanel" id="panelHealth" aria-labelledby="tabHealth">
-              <p>Maternal and child health monitoring, in one clear workflow.</p>
-              <ul class="tags" aria-label="Built with"><li>WinUI 3</li><li>C#</li><li>SQLite</li><li>.NET</li></ul>
-              <a class="button" href="healthnest.html" data-studio-open>Open the case study<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+              <h3 class="detail-title">One clear workflow for maternal and child health.</h3>
+              <p class="detail-lead">A Windows desktop app that keeps patient cases, appointments and status changes in one place.</p>
+              <ol class="steps" aria-label="What HealthNest keeps track of">
+                <li class="step is-on" data-shot="img/healthnest/cases.webp"><button class="step-name" type="button"><span>01</span>Patient cases</button><p>A profile and case notes for each mother and child, with the current status always in view.</p></li>
+                <li class="step" data-shot="img/healthnest/calendar.webp"><button class="step-name" type="button"><span>02</span>Appointments</button><p>A calendar for check-ups and follow-ups, so nothing slips between visits.</p></li>
+                <li class="step" data-shot="img/healthnest/status.webp"><button class="step-name" type="button"><span>03</span>Status over time</button><p>Every status change is recorded, so a health worker can see how each case is progressing.</p></li>
+              </ol>
+              <div class="detail-foot">
+                <a class="button" href="healthnest.html" data-studio-open>Open the case study<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+                <ul class="tags" aria-label="Built with"><li>WinUI 3</li><li>C#</li><li>SQLite</li><li>.NET</li></ul>
+              </div>
+              <p class="detail-note">The screens are an illustration of the app, with sample data.</p>
             </div>
             <div class="studio-detail" role="tabpanel" id="panelIntro" aria-labelledby="tabIntro">
-              <p>Who I am, what I build, and how I can help your team or business.</p>
-              <ul class="tags" aria-label="Made with"><li>Remotion</li><li>Narrated</li><li>1:13</li></ul>
-              <button class="button" type="button" data-theater-open>Play the intro<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg></button>
+              <h3 class="detail-title">A short film about who I am and what I build.</h3>
+              <p class="detail-lead">Seventy-three seconds, narrated and animated in Remotion: who I am, what I build, and how I can help your team or business.</p>
+              <p class="detail-hint">Rest the mouse on the screen to watch it with sound.</p>
+              <div class="detail-foot">
+                <button class="button" type="button" data-theater-open>Play the intro<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg></button>
+                <ul class="tags" aria-label="Made with"><li>Remotion</li><li>Narrated</li><li>1:13</li></ul>
+              </div>
             </div>
           </div>
         </div>
@@ -171,13 +182,13 @@
         <div class="marquee-track">
           <ul class="marquee-set" aria-label="Screens and tools">
             <li class="tile tile-shot"><img decoding="async" src="img/flow-auto/story.webp" width="1600" height="1000" alt="Flow Auto Story and continuity page with story name, rules version, story structure and master prompt." loading="lazy" /></li>
-            <li class="tile tile-stack"><span>01 · Languages</span><strong>C# · C · JavaScript · TypeScript · HTML · CSS</strong></li>
-            <li class="tile tile-shot"><img decoding="async" src="img/flow-auto/settings.webp" width="1600" height="1000" alt="Flow Auto Generation settings page with Standard or Agent interface, video provider, model, aspect ratio and duration." loading="lazy" /></li>
-            <li class="tile tile-stack"><span>02 · Desktop &amp; UI</span><strong>WinUI 3 · WinForms · .NET · XAML · React</strong></li>
-            <li class="tile tile-shot"><img decoding="async" src="img/flow-auto/connect.webp" width="1600" height="1000" alt="Flow Auto Connect Flow page for linking a Flow project, checking controls and locating page controls." loading="lazy" /></li>
-            <li class="tile tile-stack"><span>03 · Data</span><strong>SQLite · MySQL · MS Access · SQL · Data modeling</strong></li>
+            <li class="tile tile-stack"><span>Languages</span><strong>C# · C · JavaScript · TypeScript · HTML · CSS</strong></li>
+            <li class="tile tile-shot"><img decoding="async" src="img/healthnest/cases.webp" width="1600" height="1000" alt="Illustration of the HealthNest Patients screen: mothers and children listed with their status, beside one patient's profile and case notes." loading="lazy" /></li>
+            <li class="tile tile-stack"><span>Desktop &amp; UI</span><strong>WinUI 3 · WinForms · .NET · XAML · React</strong></li>
+            <li class="tile tile-shot"><img decoding="async" src="img/healthnest/calendar.webp" width="1600" height="1000" alt="Illustration of the HealthNest Appointments screen: a month of check-ups and follow-ups, with today's visits listed beside it." loading="lazy" /></li>
+            <li class="tile tile-stack"><span>Data</span><strong>SQLite · MySQL · MS Access · SQL · Data modeling</strong></li>
             <li class="tile tile-shot"><img decoding="async" src="img/flow-auto/scenes.webp" width="1600" height="1000" alt="Flow Auto Scenes and batches page with a run queue." loading="lazy" /></li>
-            <li class="tile tile-stack"><span>04 · Foundations</span><strong>Data structures · Algorithms · Numerical methods · Linear algebra</strong></li>
+            <li class="tile tile-stack"><span>Foundations</span><strong>Data structures · Algorithms · Numerical methods · Linear algebra</strong></li>
           </ul>
         </div>
       </div>
@@ -188,20 +199,19 @@
       <span class="sheet-cap" aria-hidden="true"></span>
       <div class="about-grid">
         <figure class="window about-photo" data-reveal>
-          <div class="window-bar" aria-hidden="true"><span class="window-dots"><i></i><i></i><i></i></span><b>carl@portfolio</b></div>
+          <div class="window-bar" aria-hidden="true"><span class="window-dots"><i></i><i></i><i></i></span><b>Carl Tampus</b></div>
           <picture>
             <source srcset="portrait.webp" type="image/webp" />
             <img decoding="async" src="2x2_CarlMarvicTampus.png" width="900" height="900" alt="Portrait of Carl Tampus" loading="lazy" />
           </picture>
-          <figcaption><span>~$ whoami</span><strong>builder · problem solver · student</strong></figcaption>
+          <figcaption><strong>Carl Marvic Tampus</strong><span>B.S. Computer Engineering · Cebu, Philippines</span></figcaption>
         </figure>
         <div class="about-copy">
-          <h2 class="eyebrow" id="aboutTitle">About</h2>
-          <p class="statement" data-blur-scrub>Engineering mindset, <em>human-centered output.</em> I like projects where software has a clear job: organize messy information, reduce repetitive work, and make a process easier for the person using it.</p>
+          <h2 class="statement" id="aboutTitle" data-blur-scrub>Engineering mindset, <em>human-centered output.</em> I like projects where software has a clear job: organize messy information, reduce repetitive work, and make a process easier for the person using it.</h2>
           <ol class="principles" data-stack>
-            <li><span>01</span><div><h3>Build for the workflow</h3><p>I start with what the user actually needs to accomplish, then shape the interface around that sequence.</p></div></li>
-            <li><span>02</span><div><h3>Make complexity legible</h3><p>Good software can be technically deep without feeling complicated. Structure, hierarchy, and feedback matter.</p></div></li>
-            <li><span>03</span><div><h3>Iterate in public</h3><p>I learn by building, testing, breaking, and refining, turning classroom concepts into working systems.</p></div></li>
+            <li><div><h3>Start from the job</h3><p>HealthNest keeps patient profiles, case status and the appointment calendar in one workflow, so nothing has to be pieced together from separate notes.</p></div></li>
+            <li><div><h3>Make it safe to leave running</h3><p>Flow Auto saves what it is about to do before it does it. After a crash it picks up where it was, and when a result is unclear it stops and asks.</p></div></li>
+            <li><div><h3>Let other tools drive it</h3><p>Flow Auto ships its own MCP server with 18 tools, so Claude and Gemini can run it, and it asks before anything that spends credits.</p></div></li>
           </ol>
           <dl class="facts" data-reveal>
             <div><dt>Degree</dt><dd>B.S. Computer Engineering</dd></div>
@@ -218,13 +228,13 @@
         <div class="contact-copy">
           <h2 class="display" id="contactTitle" data-blur>Have something worth <em>building?</em></h2>
           <svg class="contact-line" viewBox="0 0 600 72" aria-hidden="true" focusable="false" data-draw><path d="M4 58C80 52 150 42 230 46C300 50 350 60 392 48C432 36 442 10 416 9C390 8 394 42 436 52C490 64 552 46 596 32"/></svg>
-          <p class="contact-lead" data-blur-lines>I'm open to internships, freelance work, and interesting collaborations.</p>
-          <p class="aside-label">Currently open to collaborations</p>
+          <p class="contact-lead" data-blur-lines>I'm open to internships, freelance work and collaborations. Tell me what you're building.</p>
+          <p class="aside-label">Write to me directly</p>
           <div class="contact-actions">
             <a class="button" href="mailto:carltampus5@gmail.com">Start a conversation<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             <button class="chip" id="copyEmail" type="button" aria-label="Copy email address carltampus5@gmail.com">carltampus5@gmail.com<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
           </div>
-          <p class="aside-label">Connect on socials</p>
+          <p class="aside-label">Or find me here</p>
           <div class="socials">
             <a class="social" href="https://github.com/Rouge999xx" target="_blank" rel="noreferrer" aria-label="GitHub profile (opens in a new tab)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg></a>
             <a class="social" href="https://linkedin.com/in/carl-marvic-tampus-478a932b8" target="_blank" rel="noreferrer" aria-label="LinkedIn profile (opens in a new tab)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg></a>
@@ -278,5 +288,6 @@
   <script src="main.js" defer></script>
   <script src="room.js" defer></script>
   <script src="motion.js" defer></script>
+  <script type="module" src="laptops.js"></script>
 </body>
 </html>

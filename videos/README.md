@@ -7,7 +7,7 @@ The site plays these files from its video cards and the intro theater:
 | Meet Carl (intro, opens in the theater from the work studio) | `index.html` | `intro.mp4` | `intro.jpg` |
 | Flow Auto demo | `flow-auto.html` | `flow-auto.mp4` | `flow-auto.jpg` |
 
-The studio on the home page plays short muted loops on the windows facing you, each as MP4 with a WebM twin:
+The studio on the home page plays short muted loops on the laptop screens (Flow Auto's Reference step, and Meet Carl), each as MP4 with a WebM twin. Each loop also has a still, `*-preview.jpg`, shown until the clip has loaded: it is the frame 0.8s in, just past the loop's fade from black (`ffmpeg -ss 0.8 -i intro-preview.mp4 -frames:v 1 -q:v 3 intro-preview.jpg`).
 
 | Window | Clip | Cut from |
 | --- | --- | --- |

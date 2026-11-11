@@ -28,8 +28,10 @@ const FLOOR = -(GAP + BASE_T + .003);
 const RADIUS = 1.4; // the turntable's radius, as --r in style.css
 
 const LOOKS = {
-  dark: { shell: 0x8f98ab, deck: 0x0b0d12, key: 0x1b1e26, wall: 0x0a1020, lamp: 0x8cb4ff, lampPower: 7, fill: .5, key3: 2.4, reflect: .2, shadow: .55, pool: .5, ring: .16 },
-  light: { shell: 0xd5d7dc, deck: 0x1a1c21, key: 0x2a2d35, wall: 0xcfccc2, lamp: 0xfffaf0, lampPower: 3.2, fill: 1.1, key3: 2.6, reflect: .05, shadow: .3, pool: .12, ring: .3 }
+  // shell, deck, key: the body, the keyboard well and the keys. wall, lamp, lampPower: what the metal reflects.
+  // glow: the lamp's color in the glass and on the floor. The rest are strengths.
+  dark: { shell: 0x7d8594, deck: 0x0a0b0e, key: 0x17191e, wall: 0x0c0f16, lamp: 0xdfe8ff, lampPower: 5.5, glow: 0x8cb4ff, fill: .55, key3: 2.2, reflect: .22, shadow: .6, pool: .4, onKeys: .26, ring: .16 },
+  light: { shell: 0xd9dbe0, deck: 0x17191d, key: 0x25282f, wall: 0xcfccc2, lamp: 0xfffaf0, lampPower: 3, glow: 0xfffaf0, fill: 1.1, key3: 2.6, reflect: .05, shadow: .32, pool: .1, onKeys: .14, ring: .3 }
 };
 
 function start() {
@@ -43,7 +45,7 @@ function start() {
   const canvas = document.createElement('canvas');
   canvas.className = 'studio-laptops';
   canvas.setAttribute('aria-hidden', 'true');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, premultipliedAlpha: true, powerPreference: 'high-performance' });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, premultipliedAlpha: true });
   if (!renderer.capabilities.isWebGL2) throw new Error('WebGL 2 is needed');
   renderer.setClearColor(0x000000, 0);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -58,8 +60,8 @@ function start() {
   scene.add(lampLight, fill);
 
   /* ---------- Materials: one set, shared by the three laptops ---------- */
-  const shell = new THREE.MeshStandardMaterial({ metalness: 1, roughness: .4 });
-  const pad = new THREE.MeshStandardMaterial({ metalness: 1, roughness: .26 });
+  const shell = new THREE.MeshStandardMaterial({ metalness: .9, roughness: .38 });
+  const pad = new THREE.MeshStandardMaterial({ metalness: .9, roughness: .24 });
   const deck = new THREE.MeshStandardMaterial({ metalness: .3, roughness: .75 });
   const keyCap = new THREE.MeshStandardMaterial({ metalness: .1, roughness: .55 });
   const glass = new THREE.MeshStandardMaterial({ color: 0x030406, metalness: 0, roughness: .16 });
@@ -373,7 +375,7 @@ function start() {
     pad.color.set(look.shell).multiplyScalar(.9);
     deck.color.set(look.deck);
     keyCap.color.set(look.key);
-    lampColor.set(look.lamp).multiplyScalar(name === 'light' ? .5 : .6);
+    lampColor.set(look.glow).multiplyScalar(name === 'light' ? .5 : .6);
     lampLight.color.set(look.lamp);
     lampLight.intensity = look.key3;
     fill.intensity = look.fill;
@@ -454,7 +456,7 @@ function start() {
       laptop.uniforms.uDim.value = laptop.dim;
       const lit = power * laptop.dim;
       laptop.onKeys.material.uniforms.uColor.value.copy(laptop.tint);
-      laptop.onKeys.material.uniforms.uPower.value = lit * .5;
+      laptop.onKeys.material.uniforms.uPower.value = lit * look.onKeys;
       laptop.onFloor.material.uniforms.uColor.value.copy(laptop.tint).lerp(lampColor, .35);
       laptop.onFloor.material.uniforms.uPower.value = lit * look.pool;
       laptop.inFloor.material.uniforms.uPower.value = lit * look.reflect;
@@ -479,13 +481,21 @@ function start() {
   items.forEach(item => new MutationObserver(invalidate).observe(item, { attributes: true, attributeFilter: ['class'] }));
   if ('IntersectionObserver' in window) new IntersectionObserver(([entry]) => { onScreen = entry.isIntersecting; invalidate(); }).observe(stage);
   document.addEventListener('visibilitychange', invalidate);
-  canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); L.fail(); });
+  // If the browser takes the graphics context away, the windows come back in the laptops' place.
+  canvas.addEventListener('webglcontextlost', event => {
+    event.preventDefault();
+    gsap.ticker.remove(frame);
+    canvas.classList.remove('is-on');
+    root.classList.remove('laptops');
+    L.failed = true;
+  });
 
   L.show = show;
   L.invalidate = invalidate;
   L.view = { renderer, scene, camera, frame };
   // The first screen of each laptop, then the stage can open; the rest load while the visitor reads.
   Promise.all(laptops.map((laptop, i) => { laptop.at = L.at[i] || 0; return loadSlide(laptop, laptop.at); })).then(() => {
+    if (L.failed) return; // too late: the page has already gone back to its windows
     laptops.forEach(apply);
     renderer.compile(scene, camera);
     gsap.ticker.add(frame);

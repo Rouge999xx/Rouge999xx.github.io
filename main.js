@@ -403,10 +403,43 @@ qsa('[data-play-video]').forEach(link => link.addEventListener('click', () => {
 /* ---------- The studio: pick a project from the list, or from the turntable itself ---------- */
 const studio = qs('[data-studio]');
 let showProject = () => {};
+let showStep = () => {};
+let laptops = null;
 if (studio) {
   const tabs = qsa('[role="tab"]', studio);
   const details = tabs.map(tab => document.getElementById(tab.getAttribute('aria-controls')));
   const items = qsa('.orbit-item', studio);
+  // Each project's steps: the line in the list, and the picture its screen shows. A project without steps has one screen.
+  const steps = details.map((detail, i) => {
+    const list = qsa('.step', detail).map(el => ({ el, src: el.dataset.shot, clip: el.hasAttribute('data-clip') }));
+    return list.length ? list : [{ src: items[i]?.dataset.shot || qs('img', items[i])?.getAttribute('src'), clip: !!items[i]?.dataset.preview }];
+  });
+  const stepAt = items.map(() => 0);
+  items.forEach((item, i) => item.classList.toggle('is-clip', !!steps[i][0].clip));
+
+  // The 3D laptops (laptops.js) stand where the windows are and show the same pictures. The page hides the
+  // windows before its first paint (html.laptops); if the laptops never come, fail() brings the windows back.
+  if (root.classList.contains('laptops')) {
+    let settle, settled = false;
+    laptops = {
+      lids: items.map(() => ({ open: 0 })), // how far each lid is open (motion.js opens them)
+      fold: 0,                               // closes them all again on the way out
+      slides: steps.map(list => list.map(({ src, clip }) => ({ src, clip }))),
+      at: stepAt,
+      whenReady: new Promise(resolve => { settle = resolve; }),
+      ready() { settled = true; settle(true); },
+      fail() {
+        if (settled) return;
+        settled = laptops.failed = true;
+        root.classList.remove('laptops');
+        settle(false);
+      },
+      show() {},
+      invalidate() {}
+    };
+    setTimeout(() => laptops.fail(), 9000);
+  }
+
   let active = -1;
   showProject = index => {
     if (index === active || !tabs[index]) return;
@@ -430,7 +463,8 @@ if (studio) {
   let filmOpen = false;
   function preview() {
     items.forEach((item, i) => {
-      const on = !quiet && onScreen && studio.dataset.phase !== 'out' && (i === active || i === hoverIndex);
+      // Only a screen that is showing a clip plays: the other steps are still pictures.
+      const on = !quiet && onScreen && studio.dataset.phase !== 'out' && (i === active || i === hoverIndex) && !!steps[i][stepAt[i]].clip;
       if (item.classList.contains('is-playing') === on) return;
       item.classList.toggle('is-playing', on);
       const src = item.dataset.preview;
@@ -444,6 +478,8 @@ if (studio) {
         video.setAttribute('muted', '');
         video.setAttribute('playsinline', '');
         video.preload = 'auto';
+        // The clip opens on a short fade from black. Its first showing starts just past that, on the frame its still picture shows.
+        video.currentTime = .8;
         // MP4 for Safari and most browsers, WebM (same clip, next to it) for the rest.
         [[src, 'video/mp4'], [src.replace(/\.mp4$/, '.webm'), 'video/webm']].forEach(([url, type]) => {
           const source = document.createElement('source');
@@ -476,6 +512,33 @@ if (studio) {
     item.addEventListener('pointerenter', event => { if (event.pointerType === 'mouse') { hoverIndex = i; preview(); } });
     item.addEventListener('pointerleave', () => { hoverIndex = -1; preview(); });
   });
+  // Show step k of project i: its line in the list, and its picture on the screen.
+  // dir is the way the visitor is heading (1 forward, -1 back), so the next picture comes in from that side.
+  showStep = (i, k, dir = 1) => {
+    const list = steps[i];
+    if (!list) return;
+    k = Math.max(0, Math.min(list.length - 1, k));
+    if (k === stepAt[i]) return;
+    stepAt[i] = k;
+    list.forEach((step, n) => {
+      step.el?.classList.toggle('is-on', n === k);
+      if (n === k) step.el?.setAttribute('aria-current', 'step'); else step.el?.removeAttribute('aria-current');
+    });
+    details[i]?.style.setProperty('--step', k);
+    items[i].classList.toggle('is-clip', !!list[k].clip);
+    // The window shows the same picture (it is what you see without the laptops, and what a film starts from).
+    const picture = qs('.orbit-body img', items[i]);
+    if (picture && list[k].src) picture.src = list[k].src;
+    laptops?.show(i, k, dir);
+    preview();
+  };
+  steps.forEach((list, i) => list.forEach((step, k) => {
+    step.el?.querySelector('button')?.addEventListener('click', () => {
+      const go = studio.dispatchEvent(new CustomEvent('studio:pick', { detail: { index: i, step: k }, cancelable: true }));
+      if (go) { showProject(i); showStep(i, k, k > stepAt[i] ? 1 : -1); }
+    });
+    if (k === 0) step.el?.setAttribute('aria-current', 'step');
+  }));
   // motion.js gets the first say: while scrolling drives the camera, it glides there and the scroll calls showProject.
   const pick = index => {
     index = Math.max(0, Math.min(tabs.length - 1, index));
@@ -570,7 +633,8 @@ if (motion === 'full' && hasGsap && !navigator.connection?.saveData) {
     resume: 0,
     loop: () => qs('.orbit-preview', item),
     picture: () => qs('img', item),
-    away: () => studio?.dataset.phase === 'out'
+    // Out of the room, or on a step whose screen is a still picture, there is no film to bring forward.
+    away: () => studio?.dataset.phase === 'out' || !item.classList.contains('is-clip')
   }));
   videoCards.forEach(card => {
     const frame = qs('.video-frame', card);
@@ -959,4 +1023,4 @@ if (!hasGsap) {
   }
 }
 
-window.site = { motion, lenis, scrollToTarget, glideTo, showToast, showProject };
+window.site = { motion, lenis, scrollToTarget, glideTo, showToast, showProject, showStep, laptops };

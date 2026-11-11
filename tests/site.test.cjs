@@ -128,7 +128,7 @@ test('every page has the light/dark switch, defaults to navy and picks a theme b
   assert.match(css, /:root\[data-theme="light"\][^{]*\{[\s\S]*?--bg: #f5f4f0;/, 'light tokens');
 });
 
-test('the work studio lists each project as a tab with its own panel, and keeps the 3D stage out of the reading order', () => {
+test('the work studio lists each project as a tab with its own panel and steps, and keeps the 3D stage out of the reading order', () => {
   const page = html['index.html'];
   const tabs = [...page.matchAll(/<button class="studio-tab"[^>]*role="tab" id="([^"]+)" aria-controls="([^"]+)"/g)];
   assert.equal(tabs.length, 3, 'three projects in the studio');
@@ -143,4 +143,11 @@ test('the work studio lists each project as a tab with its own panel, and keeps 
   for (const [, clip] of page.matchAll(/data-preview="([^"]+)"/g)) {
     for (const file of [clip, clip.replace(/\.mp4$/, '.webm')]) assert.ok(fs.existsSync(path.join(ROOT, file)), `${file} is missing`);
   }
+  // Every step of a project's story names the picture its screen shows.
+  const shots = [...page.matchAll(/<li class="step[^"]*" data-shot="([^"]+)"/g)].map(match => match[1]);
+  assert.ok(shots.length >= 6, 'the projects tell their story in steps');
+  for (const shot of shots) assert.ok(fs.existsSync(path.join(ROOT, shot)), `${shot} is missing`);
+  // The 3D laptops are an extra on top of the windows: their module loads last, with three.js pinned.
+  assert.match(page, /<script type="module" src="laptops\.js"><\/script>\s*<\/body>/, 'laptops.js loads last');
+  assert.match(read('laptops.js'), /cdn\.jsdelivr\.net\/npm\/three@\d+\.\d+\.\d+\//, 'three.js is pinned');
 });
